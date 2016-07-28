@@ -47,7 +47,7 @@ func (backend *LocalStorage) Description() string {
 
 // LoadChunk loads a Chunk from disk
 func (backend *LocalStorage) LoadChunk(chunk Chunk) ([]byte, error) {
-	fileName := filepath.Join(backend.Path, "chunks", "chunk_"+chunk.ShaSum)
+	fileName := filepath.Join(backend.Path, "chunks", chunk.ShaSum)
 	b := []byte{}
 	b, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -58,7 +58,7 @@ func (backend *LocalStorage) LoadChunk(chunk Chunk) ([]byte, error) {
 
 // StoreChunk stores a single Chunk on disk
 func (backend *LocalStorage) StoreChunk(chunk Chunk, data *[]byte) (size uint64, err error) {
-	fileName := filepath.Join(backend.Path, "chunks", "chunk_"+chunk.ShaSum)
+	fileName := filepath.Join(backend.Path, "chunks", chunk.ShaSum)
 	if _, err = os.Stat(fileName); err == nil {
 		// Chunk is already stored
 		return 0, nil
