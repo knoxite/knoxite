@@ -1,0 +1,46 @@
+/*
+ * knoxite
+ *     Copyright (c) 2016, Christian Muehlhaeuser <muesli@gmail.com>
+ *
+ *   For license see LICENSE.txt
+ */
+
+package knoxite
+
+import (
+	"testing"
+)
+
+var (
+	password = "this_is_a_password"
+)
+
+func TestEncryption(t *testing.T) {
+	b := []byte("1234567890")
+	be, err := Encrypt(b, password)
+	if err != nil {
+		t.Error(err)
+	}
+
+	bd, err := Decrypt(be, password)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if string(b) != string(bd) {
+		t.Error("Data mismatch after encryption & decryption cycle.")
+	}
+}
+
+func TestEmptyPassword(t *testing.T) {
+	b := []byte("1234567890")
+	_, err := Encrypt(b, "")
+	if err == nil {
+		t.Error("Empty password must not be permitted")
+	}
+
+	_, err = Decrypt(b, "")
+	if err == nil {
+		t.Error("Empty password must not be permitted")
+	}
+}
