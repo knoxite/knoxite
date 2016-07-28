@@ -3,7 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
-	"knoxite"
+
+	"github.com/knoxite/knoxite"
 )
 
 // CmdSnapshot describes the command

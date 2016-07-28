@@ -6,7 +6,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"knoxite"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +15,8 @@ import (
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
+
+	"github.com/knoxite/knoxite"
 )
 
 // CmdMount describes the command

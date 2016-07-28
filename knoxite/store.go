@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"knoxite"
+	"github.com/knoxite/knoxite"
 )
 
 // CmdStore describes the command

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"knoxite"
+	"github.com/knoxite/knoxite"
 )
 
 // CmdRestore describes the command
