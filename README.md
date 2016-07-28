@@ -3,6 +3,15 @@ knoxite
 
 knoxite is a data storage, security & backup system.
 
+### It's secure
+knoxite uses AES-encryption to safely store your data.
+### It's flexible
+You can always extend your storage size or move your stored data to another machine.
+### It's efficient
+knoxite cleverly de-duplicates your data before storing it.
+### It's OpenSource
+knoxite is free software. Contribute and spread the word!
+
 ## Installation
 
 Make sure you have a working Go environment. Follow the [Go install instructions](http://golang.org/doc/install.html).
