@@ -22,3 +22,8 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+*~
+
+knoxite/knoxite
+server/server
