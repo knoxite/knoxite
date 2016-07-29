@@ -38,7 +38,9 @@ func (cmd CmdLs) Execute(args []string) error {
 
 	repository, err := knoxite.OpenRepository(cmd.global.Repo, cmd.global.Password)
 	if err == nil {
-		tab := NewTable([]string{"Perms", "User", "Group", "Size", "ModTime", "Name"}, []int64{-10, -5, -5, 12, -19, -48}, "No files found.")
+		tab := NewTable([]string{"Perms", "User", "Group", "Size", "ModTime", "Name"},
+			[]int64{-10, -5, -5, 12, -19, -48},
+			"No files found.")
 
 		_, snapshot, ferr := repository.FindSnapshot(args[0])
 		if ferr != nil {
@@ -46,7 +48,13 @@ func (cmd CmdLs) Execute(args []string) error {
 		}
 
 		for _, archive := range snapshot.Items {
-			tab.Rows = append(tab.Rows, []interface{}{archive.Mode, "user", "group", knoxite.SizeToString(archive.Size), archive.ModTime.Format(timeFormat), archive.Path})
+			tab.Rows = append(tab.Rows, []interface{}{
+				archive.Mode,
+				"user",
+				"group",
+				knoxite.SizeToString(archive.Size),
+				archive.ModTime.Format(timeFormat),
+				archive.Path})
 		}
 
 		tab.Print()

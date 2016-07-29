@@ -52,7 +52,8 @@ func (cmd CmdSnapshot) list(volID string) error {
 
 	for _, volume := range repository.Volumes {
 		if volID == volume.ID {
-			tab := NewTable([]string{"ID", "Date", "Original Size", "Storage Size", "Description"}, []int64{-8, -19, 13, 12, -48}, "No snapshots found. This volume is empty.")
+			tab := NewTable([]string{"ID", "Date", "Original Size", "Storage Size", "Description"},
+				[]int64{-8, -19, 13, 12, -48}, "No snapshots found. This volume is empty.")
 			totalSize := uint64(0)
 			totalStorageSize := uint64(0)
 
@@ -61,7 +62,12 @@ func (cmd CmdSnapshot) list(volID string) error {
 				if err != nil {
 					return err
 				}
-				tab.Rows = append(tab.Rows, []interface{}{snapshot.ID, snapshot.Date.Format(timeFormat), knoxite.SizeToString(snapshot.Stats.Size), knoxite.SizeToString(snapshot.Stats.StorageSize), snapshot.Description})
+				tab.Rows = append(tab.Rows, []interface{}{
+					snapshot.ID,
+					snapshot.Date.Format(timeFormat),
+					knoxite.SizeToString(snapshot.Stats.Size),
+					knoxite.SizeToString(snapshot.Stats.StorageSize),
+					snapshot.Description})
 				totalSize += snapshot.Stats.Size
 				totalStorageSize += snapshot.Stats.StorageSize
 			}
