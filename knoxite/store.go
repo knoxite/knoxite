@@ -57,42 +57,39 @@ func (cmd CmdStore) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
+	volume, err := repository.FindVolume(args[0])
+	if err != nil {
+		return err
+	}
+	snapshot, err := knoxite.NewSnapshot(cmd.Description)
+	if err != nil {
+		return err
+	}
 
-	for _, volume := range repository.Volumes {
-		if volume.ID == args[0] {
-			snapshot, err := knoxite.NewSnapshot(cmd.Description)
-			if err != nil {
-				return err
-			}
+	for _, target := range targets {
+		wd, gerr := os.Getwd()
+		if gerr != nil {
+			return gerr
+		}
+		progress, serr := snapshot.Add(wd, target, repository, strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none")
+		if serr != nil {
+			return serr
+		}
 
-			for _, target := range targets {
-				wd, err := os.Getwd()
-				if err != nil {
-					return err
-				}
-				progress, err := snapshot.Add(wd, target, repository, strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none")
-				if err != nil {
-					return err
-				}
-
-				for p := range progress {
-					fmt.Printf("\033[2K\r%s - [%s]", p.Stats.String(), p.Path)
-				}
-			}
-
-			fmt.Printf("\nSnapshot %s created: %s\n", snapshot.ID, snapshot.Stats.String())
-
-			/*	b, err := json.MarshalIndent(snapshot, "", "    ")
-				if err != nil {
-					return err
-				}
-				fmt.Printf("Snapshot created: %s\n", string(b))*/
-
-			snapshot.Save(&repository)
-			volume.AddSnapshot(snapshot.ID)
-			return repository.Save()
+		for p := range progress {
+			fmt.Printf("\033[2K\r%s - [%s]", p.Stats.String(), p.Path)
 		}
 	}
 
-	return errors.New("Could not find volume")
+	fmt.Printf("\nSnapshot %s created: %s\n", snapshot.ID, snapshot.Stats.String())
+
+	err = snapshot.Save(&repository)
+	if err != nil {
+		return err
+	}
+	err = volume.AddSnapshot(snapshot.ID)
+	if err != nil {
+		return err
+	}
+	return repository.Save()
 }
