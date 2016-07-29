@@ -10,7 +10,6 @@ package knoxite
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 )
 
 // A Repository is a collection of backup snapshots
@@ -37,7 +36,7 @@ func NewRepository(path, password string) (Repository, error) {
 		return repository, err
 	}
 	repository.Backend = backend
-	fmt.Printf("Using backend: %s\n", backend.Description())
+	//	fmt.Printf("Using backend: %s\n", backend.Description())
 
 	err = repository.init()
 	return repository, err
@@ -53,7 +52,7 @@ func OpenRepository(path, password string) (Repository, error) {
 		return repository, err
 	}
 	repository.Backend = backend
-	fmt.Printf("Using backend: %s\n", backend.Description())
+	//	fmt.Printf("Using backend: %s\n", backend.Description())
 
 	b, err := repository.Backend.LoadRepository()
 
