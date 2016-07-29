@@ -105,7 +105,7 @@ To restore the latest snapshot to /tmp/myhome, run:
     Creating file /tmp/myhome/knoxite (10 chunks).
     Creating file /tmp/myhome/main.go (1 chunks).
     ...
-    Restore done: 10 files, 1 dirs, 0 symlinks, 0 errors, 9.772 MiB Original Size, 9.772 MiB Storage Size
+    Restore done: 1337 files, 69 dirs, 0 symlinks, 0 errors, 9.772 GiB Original Size, 9.772 GiB Storage Size
 ```
 
 ### Mounting a snapshot
