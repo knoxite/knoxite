@@ -26,11 +26,13 @@ func TestCreateRepository(t *testing.T) {
 	_, err = NewRepository(dir, testPassword)
 	if err != nil {
 		t.Errorf("Failed creating repository: %s", err)
+		return
 	}
 
 	_, err = OpenRepository(dir, testPassword)
 	if err != nil {
 		t.Errorf("Failed opening repository: %s", err)
+		return
 	}
 }
 
