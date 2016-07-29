@@ -69,6 +69,17 @@ func (r *Repository) AddVolume(volume *Volume) error {
 	return nil
 }
 
+// FindVolume finds a volume within a repository
+func (r *Repository) FindVolume(id string) (*Volume, error) {
+	for _, volume := range r.Volumes {
+		if volume.ID == id {
+			return volume, nil
+		}
+	}
+
+	return &Volume{}, errors.New("Volume not found")
+}
+
 // FindSnapshot finds a snapshot within a repository
 func (r *Repository) FindSnapshot(id string) (*Volume, *Snapshot, error) {
 	for _, volume := range r.Volumes {
