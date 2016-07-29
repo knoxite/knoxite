@@ -7,7 +7,10 @@
 
 package knoxite
 
-import "net/url"
+import (
+	"errors"
+	"net/url"
+)
 
 // Backend is used to store and access data
 type Backend interface {
@@ -55,9 +58,11 @@ func BackendFromURL(path string) (Backend, error) {
 		return &HTTPStorage{
 			URL: path,
 		}, nil
-	default:
+	case "":
 		return &LocalStorage{
 			Path: path,
 		}, nil
+	default:
+		return nil, errors.New("Invalid repository url specified")
 	}
 }
