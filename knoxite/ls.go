@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os/user"
+	"strconv"
 
 	"github.com/knoxite/knoxite"
 )
@@ -48,10 +50,16 @@ func (cmd CmdLs) Execute(args []string) error {
 		}
 
 		for _, archive := range snapshot.Items {
+			username := strconv.FormatInt(int64(archive.UID), 10)
+			u, uerr := user.LookupId(username)
+			if uerr == nil {
+				username = u.Username
+			}
+			groupname := strconv.FormatInt(int64(archive.GID), 10)
 			tab.Rows = append(tab.Rows, []interface{}{
 				archive.Mode,
-				"user",
-				"group",
+				username,
+				groupname,
 				knoxite.SizeToString(archive.Size),
 				archive.ModTime.Format(timeFormat),
 				archive.Path})
