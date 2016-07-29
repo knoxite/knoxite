@@ -30,8 +30,8 @@ type ItemData struct {
 	Mode     os.FileMode `json:"mode"`               // file mode bits
 	ModTime  time.Time   `json:"modtime"`            // modification time
 	Size     uint64      `json:"size"`               // size
-	//	UID      uint
-	//	GID      uint
+	UID      uint32      `json:"uid"`                // owner
+	GID      uint32      `json:"gid"`                // group
 	Chunks   []Chunk     `json:"chunks,omitempty"`
 	Stats    Stat        `json:"-"`
 	AbsPath  string      `json:"-"`
@@ -59,12 +59,18 @@ func findFiles(rootPath string) chan ItemData {
 					return nil
 				}*/
 
+			statT, ok := toStatT(fi.Sys())
+			if !ok {
+				return fmt.Errorf("error reading metadata for: %s", path)
+			}
 			id := ItemData{
 				Path:     path,
 				AbsPath:  path,
-				FileInfo: fi,
 				Mode:     fi.Mode(),
 				ModTime:  fi.ModTime(),
+				UID:      statT.uid(),
+				GID:      statT.gid(),
+				FileInfo: fi,
 			}
 			if isSymLink(fi) {
 				symlink, err := os.Readlink(path)
