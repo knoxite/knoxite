@@ -11,18 +11,16 @@ import (
 	"testing"
 )
 
-var (
-	password = "this_is_a_password"
-)
-
 func TestEncryption(t *testing.T) {
+	testPassword := "this_is_a_password"
 	b := []byte("1234567890")
-	be, err := Encrypt(b, password)
+
+	be, err := Encrypt(b, testPassword)
 	if err != nil {
 		t.Error(err)
 	}
 
-	bd, err := Decrypt(be, password)
+	bd, err := Decrypt(be, testPassword)
 	if err != nil {
 		t.Error(err)
 	}
