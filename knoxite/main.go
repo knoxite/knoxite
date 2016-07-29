@@ -9,6 +9,7 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
+// Translations
 const (
 	TWrongNumArgs        = "wrong number of arguments, Usage: %s"
 	TSpecifyRepoLocation = "Please specify repository location (-r)"
