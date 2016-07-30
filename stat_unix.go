@@ -1,18 +1,8 @@
-// +build dragonfly linux netbsd openbsd freebsd solaris darwin
+// +build darwin dragonfly freebsd linux netbsd openbsd solaris
 
 package knoxite
 
 import "syscall"
-
-type statT interface {
-	dev() uint64
-	ino() uint64
-	nlink() uint64
-	uid() uint32
-	gid() uint32
-	rdev() uint64
-	size() int64
-}
 
 type statUnix syscall.Stat_t
 
