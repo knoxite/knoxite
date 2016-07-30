@@ -1,3 +1,5 @@
+// +build dragonfly linux netbsd openbsd freebsd solaris darwin
+
 package knoxite
 
 import "syscall"
