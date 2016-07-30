@@ -67,7 +67,7 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 					panic(err)
 				}
 				for cd := range chunkchan {
-					//					fmt.Printf("\tSplit %s (#%d, %d bytes), compression: %s, encryption: %s, sha256: %s\n", id.Path, cd.Num, cd.Size, CompressionText(cd.Compressed), EncryptionText(cd.Encrypted), cd.ShaSum)
+					// fmt.Printf("\tSplit %s (#%d, %d bytes), compression: %s, encryption: %s, sha256: %s\n", id.Path, cd.Num, cd.Size, CompressionText(cd.Compressed), EncryptionText(cd.Encrypted), cd.ShaSum)
 
 					// store this chunk
 					n, err := repository.Backend.StoreChunk(cd, cd.Data)

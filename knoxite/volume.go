@@ -81,6 +81,5 @@ func (cmd CmdVolume) list() error {
 	}
 
 	tab.Print()
-
 	return nil
 }
