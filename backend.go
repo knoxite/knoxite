@@ -55,11 +55,11 @@ func BackendFromURL(path string) (Backend, error) {
 	case "http":
 		fallthrough
 	case "https":
-		return &HTTPStorage{
+		return &StorageHTTP{
 			URL: path,
 		}, nil
 	case "":
-		return &LocalStorage{
+		return &StorageLocal{
 			Path: path,
 		}, nil
 	default:

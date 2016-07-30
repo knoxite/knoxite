@@ -17,33 +17,33 @@ import (
 	"net/http"
 )
 
-// HTTPStorage stores data on a remote HTTP server
-type HTTPStorage struct {
+// StorageHTTP stores data on a remote HTTP server
+type StorageHTTP struct {
 	URL string
 }
 
 // Location returns the type and location of the repository
-func (backend *HTTPStorage) Location() string {
+func (backend *StorageHTTP) Location() string {
 	return ""
 }
 
 // Close the backend
-func (backend *HTTPStorage) Close() error {
+func (backend *StorageHTTP) Close() error {
 	return nil
 }
 
 // Protocol Scheme supported by this backend
-func (backend *HTTPStorage) Protocol() string {
+func (backend *StorageHTTP) Protocol() string {
 	return "http"
 }
 
 // Description returns a user-friendly description for this backend
-func (backend *HTTPStorage) Description() string {
+func (backend *StorageHTTP) Description() string {
 	return "HTTP(S) Storage"
 }
 
 // LoadChunk loads a Chunk from network
-func (backend *HTTPStorage) LoadChunk(chunk Chunk) ([]byte, error) {
+func (backend *StorageHTTP) LoadChunk(chunk Chunk) ([]byte, error) {
 	//	fmt.Printf("Fetching from: %s.\n", backend.URL+"/download/"+chunk.ShaSum)
 	res, err := http.Get(backend.URL + "/download/" + chunk.ShaSum)
 	if err != nil {
@@ -59,7 +59,7 @@ func (backend *HTTPStorage) LoadChunk(chunk Chunk) ([]byte, error) {
 }
 
 // StoreChunk stores a single Chunk on network
-func (backend *HTTPStorage) StoreChunk(chunk Chunk, data *[]byte) (size uint64, err error) {
+func (backend *StorageHTTP) StoreChunk(chunk Chunk, data *[]byte) (size uint64, err error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -95,7 +95,7 @@ func (backend *HTTPStorage) StoreChunk(chunk Chunk, data *[]byte) (size uint64, 
 }
 
 // LoadSnapshot loads a snapshot
-func (backend *HTTPStorage) LoadSnapshot(id string) ([]byte, error) {
+func (backend *StorageHTTP) LoadSnapshot(id string) ([]byte, error) {
 	//	fmt.Printf("Fetching snapshot from: %s.\n", backend.URL+"/snapshot/"+id)
 	res, err := http.Get(backend.URL + "/snapshot/" + id)
 	if err != nil {
@@ -111,7 +111,7 @@ func (backend *HTTPStorage) LoadSnapshot(id string) ([]byte, error) {
 }
 
 // SaveSnapshot stores a snapshot
-func (backend *HTTPStorage) SaveSnapshot(id string, data []byte) error {
+func (backend *StorageHTTP) SaveSnapshot(id string, data []byte) error {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -147,12 +147,12 @@ func (backend *HTTPStorage) SaveSnapshot(id string, data []byte) error {
 }
 
 // InitRepository creates a new repository
-func (backend *HTTPStorage) InitRepository() error {
+func (backend *StorageHTTP) InitRepository() error {
 	return nil
 }
 
 // LoadRepository reads the metadata for a repository
-func (backend *HTTPStorage) LoadRepository() ([]byte, error) {
+func (backend *StorageHTTP) LoadRepository() ([]byte, error) {
 	//	fmt.Printf("Fetching repository from: %s.\n", backend.URL+"/repository")
 	res, err := http.Get(backend.URL + "/repository")
 	if err != nil {
@@ -168,7 +168,7 @@ func (backend *HTTPStorage) LoadRepository() ([]byte, error) {
 }
 
 // SaveRepository stores the metadata for a repository
-func (backend *HTTPStorage) SaveRepository(data []byte) error {
+func (backend *StorageHTTP) SaveRepository(data []byte) error {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 

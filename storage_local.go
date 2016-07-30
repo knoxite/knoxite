@@ -19,34 +19,34 @@ const (
 	repoFilename = "repository.knox"
 )
 
-// LocalStorage stores data on the local disk
-type LocalStorage struct {
+// StorageLocal stores data on the local disk
+type StorageLocal struct {
 	Path string
 	//	repository Repository
 }
 
 // Location returns the type and location of the repository
-func (backend *LocalStorage) Location() string {
+func (backend *StorageLocal) Location() string {
 	return ""
 }
 
 // Close the backend
-func (backend *LocalStorage) Close() error {
+func (backend *StorageLocal) Close() error {
 	return nil
 }
 
 // Protocol Scheme supported by this backend
-func (backend *LocalStorage) Protocol() string {
+func (backend *StorageLocal) Protocol() string {
 	return ""
 }
 
 // Description returns a user-friendly description for this backend
-func (backend *LocalStorage) Description() string {
+func (backend *StorageLocal) Description() string {
 	return "Local File Storage"
 }
 
 // LoadChunk loads a Chunk from disk
-func (backend *LocalStorage) LoadChunk(chunk Chunk) ([]byte, error) {
+func (backend *StorageLocal) LoadChunk(chunk Chunk) ([]byte, error) {
 	fileName := filepath.Join(backend.Path, "chunks", chunk.ShaSum)
 	b := []byte{}
 	b, err := ioutil.ReadFile(fileName)
@@ -57,7 +57,7 @@ func (backend *LocalStorage) LoadChunk(chunk Chunk) ([]byte, error) {
 }
 
 // StoreChunk stores a single Chunk on disk
-func (backend *LocalStorage) StoreChunk(chunk Chunk, data *[]byte) (size uint64, err error) {
+func (backend *StorageLocal) StoreChunk(chunk Chunk, data *[]byte) (size uint64, err error) {
 	fileName := filepath.Join(backend.Path, "chunks", chunk.ShaSum)
 	if _, err = os.Stat(fileName); err == nil {
 		// Chunk is already stored
@@ -72,7 +72,7 @@ func (backend *LocalStorage) StoreChunk(chunk Chunk, data *[]byte) (size uint64,
 }
 
 // LoadSnapshot loads a snapshot
-func (backend *LocalStorage) LoadSnapshot(id string) ([]byte, error) {
+func (backend *StorageLocal) LoadSnapshot(id string) ([]byte, error) {
 	b, err := ioutil.ReadFile(filepath.Join(backend.Path, "snapshots", id))
 	if err != nil {
 		fmt.Println(err)
@@ -82,12 +82,12 @@ func (backend *LocalStorage) LoadSnapshot(id string) ([]byte, error) {
 }
 
 // SaveSnapshot stores a snapshot
-func (backend *LocalStorage) SaveSnapshot(id string, b []byte) error {
+func (backend *StorageLocal) SaveSnapshot(id string, b []byte) error {
 	return ioutil.WriteFile(filepath.Join(backend.Path, "snapshots", id), b, 0600)
 }
 
 // InitRepository creates a new repository
-func (backend *LocalStorage) InitRepository() error {
+func (backend *StorageLocal) InitRepository() error {
 	fileName := filepath.Join(backend.Path, repoFilename)
 	if _, err := os.Stat(fileName); err == nil {
 		// Repo seems to already exist
@@ -98,7 +98,7 @@ func (backend *LocalStorage) InitRepository() error {
 }
 
 // LoadRepository reads the metadata for a repository
-func (backend *LocalStorage) LoadRepository() ([]byte, error) {
+func (backend *StorageLocal) LoadRepository() ([]byte, error) {
 	b, err := ioutil.ReadFile(filepath.Join(backend.Path, repoFilename))
 	if err != nil {
 		fmt.Println(err)
@@ -108,7 +108,7 @@ func (backend *LocalStorage) LoadRepository() ([]byte, error) {
 }
 
 // SaveRepository stores the metadata for a repository
-func (backend *LocalStorage) SaveRepository(b []byte) error {
+func (backend *StorageLocal) SaveRepository(b []byte) error {
 	fileName := filepath.Join(backend.Path, repoFilename)
 	err := ioutil.WriteFile(fileName, b, 0600)
 	if err == nil {
