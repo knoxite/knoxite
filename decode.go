@@ -112,13 +112,16 @@ func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, erro
 		stats.Files++
 		// fmt.Printf("Done: %d bytes total\n", totalSize)
 
+		// Restore modification time
 		err := os.Chtimes(path, arc.ModTime, arc.ModTime)
 		if err != nil {
 			return stats, err
 		}
 	}
 
-	return stats, nil
+	// Restore ownerships
+	err := os.Chown(path, int(arc.UID), int(arc.GID))
+	return stats, err
 }
 
 var (
