@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"knoxite"
 	"math"
 	"strings"
 	"syscall"
 	"unsafe"
+
+	"github.com/knoxite/knoxite"
 )
 
 const progressBarFormat = "[#>-]"
