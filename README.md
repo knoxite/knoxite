@@ -110,6 +110,17 @@ Creating file /tmp/myhome/main.go (1 chunks).
 Restore done: 1337 files, 69 dirs, 0 symlinks, 0 errors, 9.772 GiB Original Size, 9.772 GiB Storage Size
 ```
 
+### Cloning a snapshot
+It's easy to clone an existing snapshot, adding files to or updating existing files in it:
+
+```
+$ ./knoxite -r /tmp/knoxite -p "my_password" clone [snapshot ID] $HOME
+document.txt        2.779 MiB / 2.779 MiB [#############################################] 100.00%
+other.txt           6.196 MiB / 6.196 MiB [#############################################] 100.00%
+...
+Snapshot aefc4591 created: 1337 files, 69 dirs, 0 symlinks, 0 errors, 9.775 GiB Original Size, 9.775 GiB Storage Size
+```
+
 ### Mounting a snapshot
 You can even mount a snapshot (currently read-only, read-write is work-in-progress):
 
