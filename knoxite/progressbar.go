@@ -70,10 +70,16 @@ func (p *ProgressBar) Print() {
 
 	ti := getTerminalInfo()
 
+	text := p.Text
+	maxTextWidth := int(ti.Col) - 3 - int(p.Width) - len(sizes)
+	if len(p.Text) > maxTextWidth {
+		text = "..." + p.Text[len(p.Text)-maxTextWidth+3:]
+	}
+
 	// Print text
-	s := fmt.Sprintf("%s%s %s ",
-		p.Text,
-		strings.Repeat(" ", int(ti.Col)-len(p.Text)-2-int(p.Width)-len(sizes)),
+	s := fmt.Sprintf("%s%s  %s ",
+		text,
+		strings.Repeat(" ", maxTextWidth-len(text)),
 		sizes)
 	fmt.Print(s)
 
