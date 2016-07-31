@@ -24,18 +24,18 @@ const (
 // ItemData contains all metadata belonging to a file/directory
 // MUST BE encrypted
 type ItemData struct {
-	Path     string      `json:"path"`               // Where in filesystem does this belong to
-	Type     uint        `json:"type"`               // Is this a File, Directory or SymLink
-	PointsTo string      `json:"pointsto,omitempty"` // If this is a SymLink, where does it point to
-	Mode     os.FileMode `json:"mode"`               // file mode bits
-	ModTime  time.Time   `json:"modtime"`            // modification time
-	Size     uint64      `json:"size"`               // size
-	UID      uint32      `json:"uid"`                // owner
-	GID      uint32      `json:"gid"`                // group
-	Chunks   []Chunk     `json:"chunks,omitempty"`
-	Stats    Stat        `json:"-"`
-	AbsPath  string      `json:"-"`
-	FileInfo os.FileInfo `json:"-"`
+	Path        string      `json:"path"`               // Where in filesystem does this belong to
+	Type        uint        `json:"type"`               // Is this a File, Directory or SymLink
+	PointsTo    string      `json:"pointsto,omitempty"` // If this is a SymLink, where does it point to
+	Mode        os.FileMode `json:"mode"`               // file mode bits
+	ModTime     time.Time   `json:"modtime"`            // modification time
+	Size        uint64      `json:"size"`               // size
+	StorageSize uint64      `json:"storagesize"`        // size in storage
+	UID         uint32      `json:"uid"`                // owner
+	GID         uint32      `json:"gid"`                // group
+	Chunks      []Chunk     `json:"chunks,omitempty"`
+	AbsPath     string      `json:"-"`
+	FileInfo    os.FileInfo `json:"-"`
 }
 
 func findFiles(rootPath string) chan ItemData {
@@ -81,16 +81,12 @@ func findFiles(rootPath string) chan ItemData {
 
 				id.Type = SymLink
 				id.PointsTo = symlink
-				id.Stats.SymLinks++
 			} else if fi.IsDir() {
 				id.Type = Directory
-				id.Stats.Dirs++
 			} else {
 				id.Type = File
-				id.Stats.Files++
 				if isRegularFile(fi) {
 					id.Size = uint64(fi.Size())
-					id.Stats.Size += id.Size
 				}
 			}
 

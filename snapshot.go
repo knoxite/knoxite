@@ -70,18 +70,17 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 						panic(err)
 					}
 
-					id.Chunks = append(id.Chunks, cd)
-					id.Stats.StorageSize += n
-
-					progress <- newProgress(&id)
-
 					// release the memory, we don't need the data anymore
 					cd.Data = &[]byte{}
+
+					id.Chunks = append(id.Chunks, cd)
+					id.StorageSize += n
+
+					progress <- newProgress(&id)
 				}
 			}
 
-			snapshot.Items = append(snapshot.Items, id)
-			snapshot.Stats.Add(id.Stats)
+			snapshot.AddItem(&id)
 		}
 
 		defer func() {
@@ -131,4 +130,31 @@ func (snapshot *Snapshot) Save(repository *Repository) error {
 		err = repository.Backend.SaveSnapshot(snapshot.ID, encb)
 	}
 	return err
+}
+
+// AddItem adds an item to a snapshot
+func (snapshot *Snapshot) AddItem(id *ItemData) {
+	items := []ItemData{}
+	stats := Stat{}
+
+	found := false
+	for _, i := range snapshot.Items {
+		if i.Path == id.Path {
+			found = true
+
+			items = append(items, *id)
+			stats.AddItem(id)
+		} else {
+			items = append(items, i)
+			stats.AddItem(&i)
+		}
+	}
+
+	if !found {
+		items = append(items, *id)
+		stats.AddItem(id)
+	}
+
+	snapshot.Items = items
+	snapshot.Stats = stats
 }

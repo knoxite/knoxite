@@ -13,14 +13,16 @@ import (
 
 // Progress contains stats and current path
 type Progress struct {
-	Stats Stat
-	Path  string
+	Path        string
+	Size        uint64
+	StorageSize uint64
 }
 
 func newProgress(item *ItemData) Progress {
 	return Progress{
-		Path:  item.Path,
-		Stats: item.Stats,
+		Path:        item.Path,
+		Size:        item.Size,
+		StorageSize: item.StorageSize,
 	}
 }
 
@@ -34,7 +36,7 @@ type Stat struct {
 	Errors      uint64 `json:"errors"`
 }
 
-// Add accumulates other into s.
+// Add accumulates other into s
 func (s *Stat) Add(other Stat) {
 	s.Files += other.Files
 	s.Dirs += other.Dirs
@@ -42,6 +44,21 @@ func (s *Stat) Add(other Stat) {
 	s.Size += other.Size
 	s.StorageSize += other.StorageSize
 	s.Errors += other.Errors
+}
+
+// AddItem accumulates item into s
+func (s *Stat) AddItem(i *ItemData) {
+	s.Size += i.Size
+	s.StorageSize += i.StorageSize
+
+	switch i.Type {
+	case SymLink:
+		s.SymLinks++
+	case File:
+		s.Files++
+	case Directory:
+		s.Dirs++
+	}
 }
 
 // SizeToString prettifies sizes
