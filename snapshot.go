@@ -92,6 +92,19 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 	return progress, nil
 }
 
+// Clone clones a snapshot
+func (snapshot *Snapshot) Clone() (*Snapshot, error) {
+	s, err := NewSnapshot(snapshot.Description)
+	if err != nil {
+		return &s, err
+	}
+
+	s.Stats = snapshot.Stats
+	s.Items = snapshot.Items
+
+	return &s, nil
+}
+
 // OpenSnapshot opens an existing snapshot
 func openSnapshot(id string, repository *Repository) (Snapshot, error) {
 	snapshot := Snapshot{}
