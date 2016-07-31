@@ -29,6 +29,41 @@ func init() {
 	}
 }
 
+func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snapshot, targets []string) error {
+	for _, target := range targets {
+		wd, gerr := os.Getwd()
+		if gerr != nil {
+			return gerr
+		}
+
+		progress, serr := snapshot.Add(wd, target, *repository, strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none")
+		if serr != nil {
+			return serr
+		}
+
+		pb := NewProgressBar("", 0, 0)
+		lastPath := ""
+		for p := range progress {
+			pb.Total = int64(p.Stats.Size)
+			pb.Current = int64(p.Stats.StorageSize)
+
+			if p.Path != lastPath {
+				if len(lastPath) > 0 {
+					fmt.Println()
+				}
+				lastPath = p.Path
+				pb.Text = p.Path
+			}
+			pb.Print()
+
+			// fmt.Printf("\033[2K\r%s - [%s]", p.Stats.String(), p.Path)
+		}
+	}
+
+	fmt.Printf("\nSnapshot %s created: %s\n", snapshot.ID, snapshot.Stats.String())
+	return nil
+}
+
 // Usage describes this command's usage help-text
 func (cmd CmdStore) Usage() string {
 	return "VOLUME-ID DIR/FILE [DIR/FILE] [...]"
@@ -65,39 +100,10 @@ func (cmd CmdStore) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
-
-	for _, target := range targets {
-		wd, gerr := os.Getwd()
-		if gerr != nil {
-			return gerr
-		}
-
-		progress, serr := snapshot.Add(wd, target, repository, strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none")
-		if serr != nil {
-			return serr
-		}
-
-		pb := NewProgressBar("", 0, 0)
-		lastPath := ""
-		for p := range progress {
-			pb.Total = int64(p.Stats.Size)
-			pb.Current = int64(p.Stats.StorageSize)
-
-			if p.Path != lastPath {
-				if len(lastPath) > 0 {
-					fmt.Println()
-				}
-				lastPath = p.Path
-				pb.Text = p.Path
-			}
-			pb.Print()
-
-			// fmt.Printf("\033[2K\r%s - [%s]", p.Stats.String(), p.Path)
-		}
+	err = cmd.store(&repository, &snapshot, targets)
+	if err != nil {
+		return err
 	}
-
-	fmt.Printf("\nSnapshot %s created: %s\n", snapshot.ID, snapshot.Stats.String())
-
 	err = snapshot.Save(&repository)
 	if err != nil {
 		return err
