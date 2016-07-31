@@ -17,6 +17,13 @@ type Progress struct {
 	Path  string
 }
 
+func newProgress(item *ItemData) Progress {
+	return Progress{
+		Path:  item.Path,
+		Stats: item.Stats,
+	}
+}
+
 // Stat contains a bunch of stats counters
 type Stat struct {
 	Files       uint64 `json:"files"`

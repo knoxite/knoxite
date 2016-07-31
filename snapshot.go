@@ -54,11 +54,7 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 				id.Path = rel
 			}
 
-			p := Progress{
-				Path:  id.Path,
-				Stats: id.Stats,
-			}
-			progress <- p
+			progress <- newProgress(&id)
 
 			if isRegularFile(id.FileInfo) {
 				chunkchan, err := chunkFile(id.AbsPath, compress, encrypt, repository.Password)
@@ -77,11 +73,7 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 					id.Chunks = append(id.Chunks, cd)
 					id.Stats.StorageSize += n
 
-					p = Progress{
-						Path:  id.Path,
-						Stats: id.Stats,
-					}
-					progress <- p
+					progress <- newProgress(&id)
 
 					// release the memory, we don't need the data anymore
 					cd.Data = &[]byte{}
