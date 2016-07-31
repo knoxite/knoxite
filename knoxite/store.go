@@ -71,13 +71,24 @@ func (cmd CmdStore) Execute(args []string) error {
 		if gerr != nil {
 			return gerr
 		}
+
 		progress, serr := snapshot.Add(wd, target, repository, strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none")
 		if serr != nil {
 			return serr
 		}
 
+		pb := NewProgressBar("", 0, 0)
 		for p := range progress {
-			fmt.Printf("\033[2K\r%s - [%s]", p.Stats.String(), p.Path)
+			pb.Text = p.Path
+			pb.Total = int64(p.Stats.Size)
+			pb.Current = int64(p.Stats.StorageSize)
+
+			pb.Print()
+			// fmt.Printf("\033[2K\r%s - [%s]", p.Stats.String(), p.Path)
+
+			if pb.Total == pb.Current {
+				fmt.Println()
+			}
 		}
 	}
 
