@@ -59,7 +59,7 @@ func main() {
 	}
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		fmt.Fprintf(os.Stderr, "\n%v\n", err)
 		os.Exit(0)
 	}
 
