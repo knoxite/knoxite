@@ -68,8 +68,8 @@ Run the following command to create a new snapshot and store your home directory
 
 ```
 $ ./knoxite -r /tmp/knoxite -p "my_password" store [volume ID] $HOME -d "Backup of all my data"
-document.txt                    5.669 MiB / 5.669 MiB [#################################################] 100.00%
-other.txt                       4.137 MiB / 4.137 MiB [#################################################] 100.00%
+document.txt        5.669 MiB / 5.669 MiB [#############################################] 100.00%
+other.txt           4.137 MiB / 4.137 MiB [#############################################] 100.00%
 ...
 Snapshot cebc1213 created: 1337 files, 69 dirs, 0 symlinks, 0 errors, 9.772 GiB Original Size, 9.772 GiB Storage Size
 ```
