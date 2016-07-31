@@ -2,19 +2,21 @@ package main
 
 import (
 	"fmt"
+	"knoxite"
 	"math"
 	"strings"
 	"syscall"
 	"unsafe"
 )
 
-const progressBarFormat = "[=>-]"
+const progressBarFormat = "[#>-]"
 
 // ProgressBar is a helper for printing a progres bar
 type ProgressBar struct {
 	Text    string
 	Total   int64
 	Current int64
+	Width   uint
 }
 
 type terminalInfo struct {
@@ -38,11 +40,12 @@ func getTerminalInfo() terminalInfo {
 }
 
 // NewProgressBar returns a new progress bar
-func NewProgressBar(text string, total, current int64) *ProgressBar {
+func NewProgressBar(text string, total, current int64, width uint) *ProgressBar {
 	return &ProgressBar{
 		Text:    text,
 		Total:   total,
 		Current: current,
+		Width:   width,
 	}
 }
 
@@ -56,18 +59,38 @@ func (p *ProgressBar) Print() {
 	// Clear current line
 	fmt.Print("\033[2K\r")
 
-	// Print text
-	s := fmt.Sprintf("%s %.2f%% ", p.Text, pct*100)
-	fmt.Print(s)
+	sizes := fmt.Sprintf("%s / %s",
+		knoxite.SizeToString(uint64(p.Current)),
+		knoxite.SizeToString(uint64(p.Total)))
+
+	pcts := fmt.Sprintf("%.2f%%", pct*100)
+	for len(pcts) < 7 {
+		pcts = " " + pcts
+	}
 
 	ti := getTerminalInfo()
-	size := int(ti.Col) - len(s) - 3
+
+	// Print text
+	s := fmt.Sprintf("%s%s %s ",
+		p.Text,
+		strings.Repeat(" ", int(ti.Col)-len(p.Text)-2-int(p.Width)-len(sizes)),
+		sizes)
+	fmt.Print(s)
+
+	size := int(p.Width) - len(pcts) - 4
 	fill := math.Max(2, math.Floor((float64(size)*pct)+.5))
 
+	progChar := progressBarFormat[2]
+	if p.Current == p.Total {
+		progChar = progressBarFormat[1]
+	}
+
 	// Print progress bar
-	fmt.Printf("%c%s%c%s%c", progressBarFormat[0],
+	fmt.Printf("%c%s%c%s%c %s",
+		progressBarFormat[0],
 		strings.Repeat(string(progressBarFormat[1]), int(fill)-1),
-		progressBarFormat[2],
+		progChar,
 		strings.Repeat(string(progressBarFormat[3]), size-int(fill)),
-		progressBarFormat[4])
+		progressBarFormat[4],
+		pcts)
 }
