@@ -54,10 +54,9 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 				id.Path = rel
 			}
 
-			snapshot.Stats.Add(id.Stats)
 			p := Progress{
 				Path:  id.Path,
-				Stats: snapshot.Stats,
+				Stats: id.Stats,
 			}
 			progress <- p
 
@@ -77,11 +76,10 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 
 					id.Chunks = append(id.Chunks, cd)
 					id.Stats.StorageSize += n
-					snapshot.Stats.StorageSize += n
 
 					p = Progress{
 						Path:  id.Path,
-						Stats: snapshot.Stats,
+						Stats: id.Stats,
 					}
 					progress <- p
 
@@ -91,6 +89,7 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 			}
 
 			snapshot.Items = append(snapshot.Items, id)
+			snapshot.Stats.Add(id.Stats)
 		}
 
 		defer func() {
