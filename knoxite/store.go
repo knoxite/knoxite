@@ -44,8 +44,8 @@ func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snap
 		pb := NewProgressBar("", 0, 0)
 		lastPath := ""
 		for p := range progress {
-			pb.Total = int64(p.Stats.Size)
-			pb.Current = int64(p.Stats.StorageSize)
+			pb.Total = int64(p.Size)
+			pb.Current = int64(p.StorageSize)
 
 			if p.Path != lastPath {
 				if len(lastPath) > 0 {
