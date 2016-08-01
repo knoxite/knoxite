@@ -45,7 +45,7 @@ func (cmd CmdSnapshot) Execute(args []string) error {
 }
 
 func (cmd CmdSnapshot) list(volID string) error {
-	repository, err := knoxite.OpenRepository(cmd.global.Repo, cmd.global.Password)
+	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return err
 	}

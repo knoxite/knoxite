@@ -3,6 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"syscall"
+
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/knoxite/knoxite"
 )
@@ -55,11 +58,60 @@ func (cmd CmdRepository) init() error {
 			hostname = "unknown"
 		}*/
 
-	_, err := knoxite.NewRepository(cmd.global.Repo, cmd.global.Password)
+	_, err := newRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return fmt.Errorf("Creating repository at %s failed: %v", cmd.global.Repo, err)
 	}
 
 	fmt.Printf("Created new repository at %s\n", cmd.global.Repo)
 	return nil
+}
+
+func openRepository(path, password string) (knoxite.Repository, error) {
+	if password == "" {
+		var err error
+		password, err = readPassword("Enter password:")
+		if err != nil {
+			return knoxite.Repository{}, err
+		}
+	}
+
+	return knoxite.OpenRepository(path, password)
+}
+
+func newRepository(path, password string) (knoxite.Repository, error) {
+	if password == "" {
+		var err error
+		password, err = readPasswordTwice("Enter password:", "Confirm password:")
+		if err != nil {
+			return knoxite.Repository{}, err
+		}
+	}
+
+	return knoxite.NewRepository(path, password)
+}
+
+func readPassword(prompt string) (string, error) {
+	fmt.Print(prompt + " ")
+	buf, err := terminal.ReadPassword(int(syscall.Stdin))
+	fmt.Println()
+
+	return string(buf), err
+}
+
+func readPasswordTwice(prompt, promptConfirm string) (string, error) {
+	pw, err := readPassword(prompt)
+	if err != nil {
+		return pw, err
+	}
+
+	pwconfirm, err := readPassword(promptConfirm)
+	if err != nil {
+		return pw, err
+	}
+	if pw != pwconfirm {
+		return pw, errors.New("Passwords did not match")
+	}
+
+	return pw, nil
 }

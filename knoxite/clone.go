@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-
-	"github.com/knoxite/knoxite"
 )
 
 // CmdClone describes the command
@@ -49,7 +47,7 @@ func (cmd CmdClone) Execute(args []string) error {
 
 	// filter here? exclude/include?
 
-	repository, err := knoxite.OpenRepository(cmd.global.Repo, cmd.global.Password)
+	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return err
 	}

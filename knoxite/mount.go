@@ -57,7 +57,7 @@ func (cmd CmdMount) Execute(args []string) error {
 		return errors.New(TSpecifyRepoLocation)
 	}
 
-	repository, err := knoxite.OpenRepository(cmd.global.Repo, cmd.global.Password)
+	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return err
 	}

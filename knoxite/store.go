@@ -88,7 +88,7 @@ func (cmd CmdStore) Execute(args []string) error {
 
 	// filter here? exclude/include?
 
-	repository, err := knoxite.OpenRepository(cmd.global.Repo, cmd.global.Password)
+	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return err
 	}

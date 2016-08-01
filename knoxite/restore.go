@@ -41,7 +41,7 @@ func (cmd CmdRestore) Execute(args []string) error {
 		return errors.New("please specify a directory to restore to (--target)")
 	}
 
-	repository, err := knoxite.OpenRepository(cmd.global.Repo, cmd.global.Password)
+	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err == nil {
 		_, snapshot, ferr := repository.FindSnapshot(args[0])
 		if ferr != nil {

@@ -52,7 +52,7 @@ func (cmd CmdVolume) Execute(args []string) error {
 }
 
 func (cmd CmdVolume) init(name string) error {
-	repository, err := knoxite.OpenRepository(cmd.global.Repo, cmd.global.Password)
+	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err == nil {
 		vol, verr := knoxite.NewVolume(name, cmd.Description)
 		if verr == nil {
@@ -69,7 +69,7 @@ func (cmd CmdVolume) init(name string) error {
 }
 
 func (cmd CmdVolume) list() error {
-	repository, err := knoxite.OpenRepository(cmd.global.Repo, cmd.global.Password)
+	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return err
 	}
