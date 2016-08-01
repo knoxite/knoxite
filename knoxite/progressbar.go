@@ -5,7 +5,8 @@ import (
 	"math"
 	"strings"
 	"syscall"
-	"unsafe"
+
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/knoxite/knoxite"
 )
@@ -18,26 +19,6 @@ type ProgressBar struct {
 	Total   int64
 	Current int64
 	Width   uint
-}
-
-type terminalInfo struct {
-	Row    uint16
-	Col    uint16
-	Xpixel uint16
-	Ypixel uint16
-}
-
-func getTerminalInfo() terminalInfo {
-	ws := &terminalInfo{}
-	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
-		uintptr(syscall.Stdin),
-		uintptr(syscall.TIOCGWINSZ),
-		uintptr(unsafe.Pointer(ws)))
-
-	if int(retCode) == -1 {
-		panic(errno)
-	}
-	return *ws
 }
 
 // NewProgressBar returns a new progress bar
@@ -69,8 +50,8 @@ func (p *ProgressBar) Print() {
 		pcts = " " + pcts
 	}
 
-	ti := getTerminalInfo()
-	barWidth := uint(math.Min(float64(p.Width), float64(ti.Col)/3.0))
+	tiWidth, _, _ := terminal.GetSize(int(syscall.Stdin))
+	barWidth := uint(math.Min(float64(p.Width), float64(tiWidth)/3.0))
 
 	size := int(barWidth) - len(pcts) - 4
 	fill := int(math.Max(2, math.Floor((float64(size)*pct)+.5)))
@@ -79,7 +60,7 @@ func (p *ProgressBar) Print() {
 	}
 
 	text := p.Text
-	maxTextWidth := int(ti.Col) - 3 - int(barWidth) - len(sizes)
+	maxTextWidth := int(tiWidth) - 3 - int(barWidth) - len(sizes)
 	if len(p.Text) > maxTextWidth {
 		if len(p.Text)-maxTextWidth+3 < len(p.Text) {
 			text = "..." + p.Text[len(p.Text)-maxTextWidth+3:]
