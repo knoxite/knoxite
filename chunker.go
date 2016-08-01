@@ -13,6 +13,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"sync"
@@ -139,7 +140,7 @@ func chunkFile(filename string, compress, encrypt bool, password string) (chan C
 			partSize := int(math.Min(fileChunk, float64(fileSize-int64(i*fileChunk))))
 			partBuffer := make([]byte, partSize)
 
-			_, err = file.Read(partBuffer)
+			_, err = io.ReadFull(file, partBuffer)
 			if err != nil {
 				panic(err)
 			}
