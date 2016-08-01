@@ -70,11 +70,25 @@ func (p *ProgressBar) Print() {
 	}
 
 	ti := getTerminalInfo()
+	barWidth := uint(math.Min(float64(p.Width), float64(ti.Col)/3.0))
+
+	size := int(barWidth) - len(pcts) - 4
+	fill := int(math.Max(2, math.Floor((float64(size)*pct)+.5)))
+	if size < 16 {
+		barWidth = 0
+	}
 
 	text := p.Text
-	maxTextWidth := int(ti.Col) - 3 - int(p.Width) - len(sizes)
+	maxTextWidth := int(ti.Col) - 3 - int(barWidth) - len(sizes)
 	if len(p.Text) > maxTextWidth {
-		text = "..." + p.Text[len(p.Text)-maxTextWidth+3:]
+		if len(p.Text)-maxTextWidth+3 < len(p.Text) {
+			text = "..." + p.Text[len(p.Text)-maxTextWidth+3:]
+		} else {
+			text = ""
+		}
+	}
+	if maxTextWidth < 0 {
+		maxTextWidth = 0
 	}
 
 	// Print text
@@ -84,20 +98,19 @@ func (p *ProgressBar) Print() {
 		sizes)
 	fmt.Print(s)
 
-	size := int(p.Width) - len(pcts) - 4
-	fill := math.Max(2, math.Floor((float64(size)*pct)+.5))
+	if barWidth > 0 {
+		progChar := progressBarFormat[2]
+		if p.Current == p.Total {
+			progChar = progressBarFormat[1]
+		}
 
-	progChar := progressBarFormat[2]
-	if p.Current == p.Total {
-		progChar = progressBarFormat[1]
+		// Print progress bar
+		fmt.Printf("%c%s%c%s%c %s",
+			progressBarFormat[0],
+			strings.Repeat(string(progressBarFormat[1]), fill-1),
+			progChar,
+			strings.Repeat(string(progressBarFormat[3]), size-fill),
+			progressBarFormat[4],
+			pcts)
 	}
-
-	// Print progress bar
-	fmt.Printf("%c%s%c%s%c %s",
-		progressBarFormat[0],
-		strings.Repeat(string(progressBarFormat[1]), int(fill)-1),
-		progChar,
-		strings.Repeat(string(progressBarFormat[3]), size-int(fill)),
-		progressBarFormat[4],
-		pcts)
 }
