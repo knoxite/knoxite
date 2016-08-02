@@ -48,7 +48,25 @@ func (cmd CmdRestore) Execute(args []string) error {
 			return ferr
 		}
 
-		stats, derr := knoxite.DecodeSnapshot(repository, *snapshot, cmd.Target)
+		progress, derr := knoxite.DecodeSnapshot(repository, *snapshot, cmd.Target)
+		pb := NewProgressBar("", 0, 0, 60)
+		stats := knoxite.Stat{}
+		lastPath := ""
+
+		for p := range progress {
+			stats.Add(p.Statistics)
+			pb.Total = int64(p.StorageSize)
+			pb.Current = int64(p.Size)
+			if p.Path != lastPath {
+				if len(lastPath) > 0 {
+					fmt.Println()
+				}
+				lastPath = p.Path
+				pb.Text = p.Path
+			}
+			pb.Print()
+		}
+		fmt.Println()
 		if derr != nil {
 			return derr
 		}

@@ -21,22 +21,25 @@ import (
 )
 
 // DecodeSnapshot restores an entire snapshot to dst
-func DecodeSnapshot(repository Repository, snapshot Snapshot, dst string) (stats Stat, err error) {
-	for _, arc := range snapshot.Items {
-		path := filepath.Join(dst, arc.Path)
-		s, err := DecodeArchive(repository, arc, path)
-		if err != nil {
-			return stats, err
+func DecodeSnapshot(repository Repository, snapshot Snapshot, dst string) (prog chan Progress, err error) {
+	prog = make(chan Progress)
+	go func() {
+		for _, arc := range snapshot.Items {
+
+			path := filepath.Join(dst, arc.Path)
+			err := DecodeArchive(prog, repository, arc, path)
+			if err != nil {
+				panic(err)
+			}
 		}
+		close(prog)
+	}()
 
-		stats.Add(s)
-	}
-
-	return stats, nil
+	return prog, nil
 }
 
 // DecodeArchive restores a single archive to path
-func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, error) {
+func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, path string) error {
 	prog := Progress{}
 	prog.Path = arc.Path
 
@@ -58,7 +61,7 @@ func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, erro
 		os.MkdirAll(filepath.Dir(path), 0755)
 		f, ferr := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, arc.Mode)
 		if ferr != nil {
-			return stats, ferr
+			return ferr
 		}
 
 		for i := int(0); i < parts; i++ {
@@ -66,13 +69,13 @@ func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, erro
 				if int(chunk.Num) == i {
 					finalData, cerr := repository.Backend.LoadChunk(chunk)
 					if cerr != nil {
-						return stats, cerr
+						return cerr
 					}
 
 					if chunk.Encrypted == EncryptionAES {
 						data, err := Decrypt(finalData, repository.Password)
 						if err != nil {
-							return stats, err
+							return err
 						}
 
 						finalData = data
@@ -82,12 +85,12 @@ func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, erro
 						reader := bytes.NewReader(finalData)
 						zipreader, err := gzip.NewReader(reader)
 						if err != nil {
-							return stats, err
+							return err
 						}
 						defer zipreader.Close()
 						finalData, err = ioutil.ReadAll(zipreader)
 						if err != nil {
-							return stats, err
+							return err
 						}
 					}
 
@@ -97,16 +100,17 @@ func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, erro
 					prog.Size += uint64(len(finalData))
 
 					if chunk.DecryptedShaSum != shasum {
-						return stats, errors.New("ERROR: sha256 mismatch")
+						return errors.New("ERROR: sha256 mismatch")
 					}
 
 					// write/save buffer to disk
 					_, ferr := f.Write(finalData)
 					if ferr != nil {
-						return stats, ferr
+						return ferr
 					}
 					// fmt.Printf("Chunk OK: %d bytes, sha256: %s\n", size, chunk.DecryptedShaSum)
 				}
+				progress <- prog
 			}
 		}
 
@@ -118,14 +122,14 @@ func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, erro
 		// Restore modification time
 		err := os.Chtimes(path, arc.ModTime, arc.ModTime)
 		if err != nil {
-			return stats, err
+			return err
 		}
 	}
 
 	// Restore ownerships
 	err := os.Lchown(path, int(arc.UID), int(arc.GID))
 
-	return stats, err
+	return err
 }
 
 var (
