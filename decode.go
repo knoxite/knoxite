@@ -41,18 +41,18 @@ func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, erro
 	prog.Path = arc.Path
 
 	if arc.Type == Directory {
-		fmt.Printf("Creating directory %s\n", path)
+		//fmt.Printf("Creating directory %s\n", path)
 		os.MkdirAll(path, arc.Mode)
 		prog.Statistics.Dirs++
 	} else if arc.Type == SymLink {
-		fmt.Printf("Creating symlink %s -> %s\n", path, arc.PointsTo)
+		//fmt.Printf("Creating symlink %s -> %s\n", path, arc.PointsTo)
 		os.Symlink(arc.PointsTo, path)
 		prog.Statistics.SymLinks++
 	} else if arc.Type == File {
 		prog.Statistics.StorageSize = arc.StorageSize
 		prog.StorageSize = arc.StorageSize
 		parts := len(arc.Chunks)
-		fmt.Printf("Creating file %s (%d chunks).\n", path, parts)
+		//fmt.Printf("Creating file %s (%d chunks).\n", path, parts)
 
 		// write to disk
 		os.MkdirAll(filepath.Dir(path), 0755)
