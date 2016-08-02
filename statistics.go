@@ -16,6 +16,7 @@ type Progress struct {
 	Path        string
 	Size        uint64
 	StorageSize uint64
+	Statistics  Stat
 }
 
 func newProgress(item *ItemData) Progress {

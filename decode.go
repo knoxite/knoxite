@@ -37,17 +37,20 @@ func DecodeSnapshot(repository Repository, snapshot Snapshot, dst string) (stats
 
 // DecodeArchive restores a single archive to path
 func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, error) {
-	stats := Stat{}
+	prog := Progress{}
+	prog.Path = arc.Path
 
 	if arc.Type == Directory {
 		fmt.Printf("Creating directory %s\n", path)
 		os.MkdirAll(path, arc.Mode)
-		stats.Dirs++
+		prog.Statistics.Dirs++
 	} else if arc.Type == SymLink {
 		fmt.Printf("Creating symlink %s -> %s\n", path, arc.PointsTo)
 		os.Symlink(arc.PointsTo, path)
-		stats.SymLinks++
+		prog.Statistics.SymLinks++
 	} else if arc.Type == File {
+		prog.Statistics.StorageSize = arc.StorageSize
+		prog.StorageSize = arc.StorageSize
 		parts := len(arc.Chunks)
 		fmt.Printf("Creating file %s (%d chunks).\n", path, parts)
 
@@ -90,8 +93,8 @@ func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, erro
 
 					shasumdata := sha256.Sum256(finalData)
 					shasum := hex.EncodeToString(shasumdata[:])
-					stats.StorageSize += uint64(len(finalData))
-					stats.Size += uint64(len(finalData))
+					prog.Statistics.Size += uint64(len(finalData))
+					prog.Size += uint64(len(finalData))
 
 					if chunk.DecryptedShaSum != shasum {
 						return stats, errors.New("ERROR: sha256 mismatch")
@@ -109,7 +112,7 @@ func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, erro
 
 		f.Sync()
 		f.Close()
-		stats.Files++
+		prog.Statistics.Files++
 		// fmt.Printf("Done: %d bytes total\n", totalSize)
 
 		// Restore modification time
