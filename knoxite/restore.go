@@ -49,6 +49,9 @@ func (cmd CmdRestore) Execute(args []string) error {
 		}
 
 		progress, derr := knoxite.DecodeSnapshot(repository, *snapshot, cmd.Target)
+		if derr != nil {
+			return derr
+		}
 		pb := NewProgressBar("", 0, 0, 60)
 		stats := knoxite.Stat{}
 		lastPath := ""
@@ -67,9 +70,6 @@ func (cmd CmdRestore) Execute(args []string) error {
 			pb.Print()
 		}
 		fmt.Println()
-		if derr != nil {
-			return derr
-		}
 		fmt.Println("Restore done:", stats.String())
 		return nil
 	}
