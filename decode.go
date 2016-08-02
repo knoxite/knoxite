@@ -21,41 +21,47 @@ import (
 )
 
 // DecodeSnapshot restores an entire snapshot to dst
-func DecodeSnapshot(repository Repository, snapshot Snapshot, dst string) (stats Stat, err error) {
-	for _, arc := range snapshot.Items {
-		path := filepath.Join(dst, arc.Path)
-		s, err := DecodeArchive(repository, arc, path)
-		if err != nil {
-			return stats, err
+func DecodeSnapshot(repository Repository, snapshot Snapshot, dst string) (prog chan Progress, err error) {
+	prog = make(chan Progress)
+	go func() {
+		for _, arc := range snapshot.Items {
+
+			path := filepath.Join(dst, arc.Path)
+			err := DecodeArchive(prog, repository, arc, path)
+			if err != nil {
+				panic(err)
+			}
 		}
+		close(prog)
+	}()
 
-		stats.Add(s)
-	}
-
-	return stats, nil
+	return prog, nil
 }
 
 // DecodeArchive restores a single archive to path
-func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, error) {
-	stats := Stat{}
+func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, path string) error {
+	prog := Progress{}
+	prog.Path = arc.Path
 
 	if arc.Type == Directory {
-		fmt.Printf("Creating directory %s\n", path)
+		//fmt.Printf("Creating directory %s\n", path)
 		os.MkdirAll(path, arc.Mode)
-		stats.Dirs++
+		prog.Statistics.Dirs++
 	} else if arc.Type == SymLink {
-		fmt.Printf("Creating symlink %s -> %s\n", path, arc.PointsTo)
+		//fmt.Printf("Creating symlink %s -> %s\n", path, arc.PointsTo)
 		os.Symlink(arc.PointsTo, path)
-		stats.SymLinks++
+		prog.Statistics.SymLinks++
 	} else if arc.Type == File {
+		prog.Statistics.StorageSize = arc.StorageSize
+		prog.StorageSize = arc.StorageSize
 		parts := len(arc.Chunks)
-		fmt.Printf("Creating file %s (%d chunks).\n", path, parts)
+		//fmt.Printf("Creating file %s (%d chunks).\n", path, parts)
 
 		// write to disk
 		os.MkdirAll(filepath.Dir(path), 0755)
 		f, ferr := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, arc.Mode)
 		if ferr != nil {
-			return stats, ferr
+			return ferr
 		}
 
 		for i := int(0); i < parts; i++ {
@@ -63,13 +69,13 @@ func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, erro
 				if int(chunk.Num) == i {
 					finalData, cerr := repository.Backend.LoadChunk(chunk)
 					if cerr != nil {
-						return stats, cerr
+						return cerr
 					}
 
 					if chunk.Encrypted == EncryptionAES {
 						data, err := Decrypt(finalData, repository.Password)
 						if err != nil {
-							return stats, err
+							return err
 						}
 
 						finalData = data
@@ -79,50 +85,51 @@ func DecodeArchive(repository Repository, arc ItemData, path string) (Stat, erro
 						reader := bytes.NewReader(finalData)
 						zipreader, err := gzip.NewReader(reader)
 						if err != nil {
-							return stats, err
+							return err
 						}
 						defer zipreader.Close()
 						finalData, err = ioutil.ReadAll(zipreader)
 						if err != nil {
-							return stats, err
+							return err
 						}
 					}
 
 					shasumdata := sha256.Sum256(finalData)
 					shasum := hex.EncodeToString(shasumdata[:])
-					stats.StorageSize += uint64(len(finalData))
-					stats.Size += uint64(len(finalData))
+					prog.Statistics.Size += uint64(len(finalData))
+					prog.Size += uint64(len(finalData))
 
 					if chunk.DecryptedShaSum != shasum {
-						return stats, errors.New("ERROR: sha256 mismatch")
+						return errors.New("ERROR: sha256 mismatch")
 					}
 
 					// write/save buffer to disk
 					_, ferr := f.Write(finalData)
 					if ferr != nil {
-						return stats, ferr
+						return ferr
 					}
 					// fmt.Printf("Chunk OK: %d bytes, sha256: %s\n", size, chunk.DecryptedShaSum)
 				}
+				progress <- prog
 			}
 		}
 
 		f.Sync()
 		f.Close()
-		stats.Files++
+		prog.Statistics.Files++
 		// fmt.Printf("Done: %d bytes total\n", totalSize)
 
 		// Restore modification time
 		err := os.Chtimes(path, arc.ModTime, arc.ModTime)
 		if err != nil {
-			return stats, err
+			return err
 		}
 	}
 
 	// Restore ownerships
 	err := os.Lchown(path, int(arc.UID), int(arc.GID))
 
-	return stats, err
+	return err
 }
 
 var (
