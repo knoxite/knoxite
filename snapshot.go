@@ -53,6 +53,9 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 			if err == nil && !strings.HasPrefix(rel, "../") {
 				id.Path = rel
 			}
+			if isSpecialPath(id.Path) {
+				continue
+			}
 
 			progress <- newProgress(&id)
 
