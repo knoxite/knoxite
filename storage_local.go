@@ -57,18 +57,18 @@ func (backend *StorageLocal) LoadChunk(chunk Chunk) ([]byte, error) {
 }
 
 // StoreChunk stores a single Chunk on disk
-func (backend *StorageLocal) StoreChunk(chunk Chunk, data *[]byte) (size uint64, err error) {
+func (backend *StorageLocal) StoreChunk(chunk Chunk) (size uint64, err error) {
 	fileName := filepath.Join(backend.Path, "chunks", chunk.ShaSum)
 	if _, err = os.Stat(fileName); err == nil {
 		// Chunk is already stored
 		return 0, nil
 	}
 
-	err = ioutil.WriteFile(fileName, *data, 0600)
+	err = ioutil.WriteFile(fileName, *chunk.Data, 0600)
 	if err != nil {
 		fmt.Println(err)
 	}
-	return uint64(len(*data)), err
+	return uint64(len(*chunk.Data)), err
 }
 
 // LoadSnapshot loads a snapshot

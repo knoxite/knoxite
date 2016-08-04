@@ -29,7 +29,7 @@ type Backend interface {
 	// LoadChunk loads a single Chunk
 	LoadChunk(chunk Chunk) ([]byte, error)
 	// StoreChunk stores a single Chunk
-	StoreChunk(chunk Chunk, data *[]byte) (size uint64, err error)
+	StoreChunk(chunk Chunk) (size uint64, err error)
 
 	// LoadSnapshot loads a snapshot
 	LoadSnapshot(id string) ([]byte, error)
