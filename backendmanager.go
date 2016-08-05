@@ -12,6 +12,8 @@ import "errors"
 // BackendManager storfes data on multiple backends
 type BackendManager struct {
 	Backends []*Backend
+
+	lastUsedBackend int
 }
 
 // AddBackend adds a backend
@@ -43,12 +45,19 @@ func (backend *BackendManager) LoadChunk(chunk Chunk) ([]byte, error) {
 
 // StoreChunk stores a single Chunk on backends
 func (backend *BackendManager) StoreChunk(chunk Chunk) (size uint64, err error) {
-	for _, be := range backend.Backends {
-		_, err := (*be).StoreChunk(chunk)
-		if err != nil {
-			return 0, err
-		}
+	// Use storage backends in a round robin fashion to store chunks
+	backend.lastUsedBackend++
+	if backend.lastUsedBackend+1 > len(backend.Backends) {
+		backend.lastUsedBackend = 0
 	}
+
+	be := backend.Backends[backend.lastUsedBackend]
+	//	for _, be := range backend.Backends {
+	_, err = (*be).StoreChunk(chunk)
+	if err != nil {
+		return 0, err
+	}
+	//	}
 
 	return uint64(chunk.Size), nil
 }
