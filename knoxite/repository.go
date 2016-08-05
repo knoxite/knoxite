@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -96,12 +97,12 @@ func (cmd CmdRepository) cat() error {
 		return err
 	}
 
-	b, err := json.MarshalIndent(r, "", "    ")
+	var out bytes.Buffer
+	err = json.Indent(&out, r.RawJSON, "", "    ")
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("%s\n", string(b))
+	fmt.Printf("%s\n", string(out.Bytes()))
 	return nil
 }
 
