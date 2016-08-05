@@ -17,25 +17,22 @@ import (
 type Repository struct {
 	//	Owner   string    `json:"owner"`
 	Volumes []*Volume `json:"volumes"`
+	Paths   []string  `json:"storage"`
 
-	Path     string `json:"-"`
-	Password string `json:"-"`
-
-	Backend Backend
+	Backend  BackendManager `json:"-"`
+	Password string         `json:"-"`
 }
 
 // NewRepository returns a new repository
 func NewRepository(path, password string) (Repository, error) {
 	repository := Repository{
-		//		Owner:    owner,
-		Path:     path,
 		Password: password,
 	}
 	backend, err := BackendFromURL(path)
 	if err != nil {
 		return repository, err
 	}
-	repository.Backend = backend
+	repository.Backend.AddBackend(&backend)
 	//	fmt.Printf("Using backend: %s\n", backend.Description())
 
 	err = repository.init()
@@ -51,15 +48,23 @@ func OpenRepository(path, password string) (Repository, error) {
 	if err != nil {
 		return repository, err
 	}
-	repository.Backend = backend
 	//	fmt.Printf("Using backend: %s\n", backend.Description())
 
-	b, err := repository.Backend.LoadRepository()
+	b, err := backend.LoadRepository()
 
 	decb, err := Decrypt(b, password)
 	if err == nil {
 		err = json.Unmarshal(decb, &repository)
 	}
+
+	for _, url := range repository.Paths {
+		backend, berr := BackendFromURL(url)
+		if berr != nil {
+			return repository, berr
+		}
+		repository.Backend.AddBackend(&backend)
+	}
+
 	return repository, err
 }
 
@@ -104,6 +109,8 @@ func (r *Repository) init() error {
 
 // Save writes a repository's metadata
 func (r *Repository) Save() error {
+	r.Paths = r.Backend.Locations()
+
 	//	b, err := json.MarshalIndent(*r, "", "    ")
 	b, err := json.Marshal(*r)
 	if err != nil {
