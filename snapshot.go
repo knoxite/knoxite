@@ -9,6 +9,7 @@ package knoxite
 
 import (
 	"encoding/json"
+	"math"
 	"path/filepath"
 	"strings"
 	"time"
@@ -60,7 +61,14 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 			progress <- newProgress(&id)
 
 			if isRegularFile(id.FileInfo) {
-				chunkchan, err := chunkFile(id.AbsPath, compress, encrypt, repository.Password)
+				dataParts := int(math.Max(1, float64(len(repository.Backend.Backends))))
+				parityParts := 0
+
+				if len(repository.Backend.Backends) > 1 {
+					// If there are multiple storage backends, divide the data among them
+					parityParts = int(math.Max(1, float64(dataParts)/3.0))
+				}
+				chunkchan, err := chunkFile(id.AbsPath, compress, encrypt, repository.Password, dataParts, parityParts)
 				if err != nil {
 					panic(err)
 				}
@@ -74,7 +82,7 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 					}
 
 					// release the memory, we don't need the data anymore
-					cd.Data = &[]byte{}
+					cd.Data = &[][]byte{}
 
 					id.Chunks = append(id.Chunks, cd)
 					id.StorageSize += n
