@@ -24,7 +24,7 @@ type StorageHTTP struct {
 
 // Location returns the type and location of the repository
 func (backend *StorageHTTP) Location() string {
-	return ""
+	return backend.URL
 }
 
 // Close the backend

@@ -27,7 +27,7 @@ type StorageLocal struct {
 
 // Location returns the type and location of the repository
 func (backend *StorageLocal) Location() string {
-	return ""
+	return backend.Path
 }
 
 // Close the backend
