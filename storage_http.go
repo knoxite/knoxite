@@ -59,7 +59,7 @@ func (backend *StorageHTTP) LoadChunk(chunk Chunk) ([]byte, error) {
 }
 
 // StoreChunk stores a single Chunk on network
-func (backend *StorageHTTP) StoreChunk(chunk Chunk, data *[]byte) (size uint64, err error) {
+func (backend *StorageHTTP) StoreChunk(chunk Chunk) (size uint64, err error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -70,7 +70,7 @@ func (backend *StorageHTTP) StoreChunk(chunk Chunk, data *[]byte) (size uint64, 
 		return 0, err
 	}
 
-	_, err = fileWriter.Write(*data)
+	_, err = fileWriter.Write(*chunk.Data)
 	if err != nil {
 		return 0, err
 	}
@@ -91,7 +91,7 @@ func (backend *StorageHTTP) StoreChunk(chunk Chunk, data *[]byte) (size uint64, 
 		return 0, errors.New("Storing chunk failed")
 	}
 	//	fmt.Printf("\tUploaded chunk: %d bytes\n", len(*data))
-	return uint64(len(*data)), err
+	return uint64(len(*chunk.Data)), err
 }
 
 // LoadSnapshot loads a snapshot
