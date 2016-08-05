@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"syscall"
@@ -27,7 +28,7 @@ func init() {
 
 // Usage describes this command's usage help-text
 func (cmd CmdRepository) Usage() string {
-	return "[init]"
+	return "[init|add|cat]"
 }
 
 // Execute this command
@@ -42,6 +43,13 @@ func (cmd CmdRepository) Execute(args []string) error {
 	switch args[0] {
 	case "init":
 		return cmd.init()
+	case "add":
+		if len(args) < 2 {
+			return fmt.Errorf(TWrongNumArgs, cmd.Usage())
+		}
+		return cmd.add(args[1])
+	case "cat":
+		return cmd.cat()
 	}
 
 	return nil
@@ -64,6 +72,36 @@ func (cmd CmdRepository) init() error {
 	}
 
 	fmt.Printf("Created new repository at %s\n", cmd.global.Repo)
+	return nil
+}
+
+func (cmd CmdRepository) add(url string) error {
+	r, err := openRepository(cmd.global.Repo, cmd.global.Password)
+	if err != nil {
+		return err
+	}
+
+	backend, err := knoxite.BackendFromURL(url)
+	if err != nil {
+		return err
+	}
+	r.Backend.AddBackend(&backend)
+
+	return r.Save()
+}
+
+func (cmd CmdRepository) cat() error {
+	r, err := openRepository(cmd.global.Repo, cmd.global.Password)
+	if err != nil {
+		return err
+	}
+
+	b, err := json.MarshalIndent(r, "", "    ")
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%s\n", string(b))
 	return nil
 }
 
