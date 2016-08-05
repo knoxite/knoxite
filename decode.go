@@ -100,7 +100,7 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 					prog.Size += uint64(len(finalData))
 
 					if chunk.DecryptedShaSum != shasum {
-						return errors.New("ERROR: sha256 mismatch")
+						return errors.New("sha256 mismatch")
 					}
 
 					// write/save buffer to disk

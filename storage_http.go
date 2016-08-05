@@ -24,7 +24,7 @@ type StorageHTTP struct {
 
 // Location returns the type and location of the repository
 func (backend *StorageHTTP) Location() string {
-	return ""
+	return backend.URL
 }
 
 // Close the backend
@@ -32,9 +32,9 @@ func (backend *StorageHTTP) Close() error {
 	return nil
 }
 
-// Protocol Scheme supported by this backend
-func (backend *StorageHTTP) Protocol() string {
-	return "http"
+// Protocols returns the Protocol Schemes supported by this backend
+func (backend *StorageHTTP) Protocols() []string {
+	return []string{"http", "https"}
 }
 
 // Description returns a user-friendly description for this backend
@@ -54,12 +54,15 @@ func (backend *StorageHTTP) LoadChunk(chunk Chunk) ([]byte, error) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	if res.StatusCode != http.StatusOK {
+		return b, errors.New("Loading chunk failed")
+	}
 	//	fmt.Printf("Download finished: %d bytes\n", len(b))
 	return b, err
 }
 
 // StoreChunk stores a single Chunk on network
-func (backend *StorageHTTP) StoreChunk(chunk Chunk, data *[]byte) (size uint64, err error) {
+func (backend *StorageHTTP) StoreChunk(chunk Chunk) (size uint64, err error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -70,7 +73,7 @@ func (backend *StorageHTTP) StoreChunk(chunk Chunk, data *[]byte) (size uint64, 
 		return 0, err
 	}
 
-	_, err = fileWriter.Write(*data)
+	_, err = fileWriter.Write(*chunk.Data)
 	if err != nil {
 		return 0, err
 	}
@@ -91,7 +94,7 @@ func (backend *StorageHTTP) StoreChunk(chunk Chunk, data *[]byte) (size uint64, 
 		return 0, errors.New("Storing chunk failed")
 	}
 	//	fmt.Printf("\tUploaded chunk: %d bytes\n", len(*data))
-	return uint64(len(*data)), err
+	return uint64(len(*chunk.Data)), err
 }
 
 // LoadSnapshot loads a snapshot

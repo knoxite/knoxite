@@ -53,6 +53,9 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 			if err == nil && !strings.HasPrefix(rel, "../") {
 				id.Path = rel
 			}
+			if isSpecialPath(id.Path) {
+				continue
+			}
 
 			progress <- newProgress(&id)
 
@@ -65,7 +68,7 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 					// fmt.Printf("\tSplit %s (#%d, %d bytes), compression: %s, encryption: %s, sha256: %s\n", id.Path, cd.Num, cd.Size, CompressionText(cd.Compressed), EncryptionText(cd.Encrypted), cd.ShaSum)
 
 					// store this chunk
-					n, err := repository.Backend.StoreChunk(cd, cd.Data)
+					n, err := repository.Backend.StoreChunk(cd)
 					if err != nil {
 						panic(err)
 					}

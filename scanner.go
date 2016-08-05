@@ -101,6 +101,10 @@ func findFiles(rootPath string) chan ItemData {
 	return c
 }
 
+func isSpecialPath(path string) bool {
+	return path == "."
+}
+
 func isSymLink(fi os.FileInfo) bool {
 	return fi != nil && fi.Mode()&os.ModeSymlink != 0
 }

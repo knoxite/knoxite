@@ -27,7 +27,7 @@ type StorageLocal struct {
 
 // Location returns the type and location of the repository
 func (backend *StorageLocal) Location() string {
-	return ""
+	return backend.Path
 }
 
 // Close the backend
@@ -35,9 +35,9 @@ func (backend *StorageLocal) Close() error {
 	return nil
 }
 
-// Protocol Scheme supported by this backend
-func (backend *StorageLocal) Protocol() string {
-	return ""
+// Protocols returns the Protocol Schemes supported by this backend
+func (backend *StorageLocal) Protocols() []string {
+	return []string{""}
 }
 
 // Description returns a user-friendly description for this backend
@@ -50,25 +50,22 @@ func (backend *StorageLocal) LoadChunk(chunk Chunk) ([]byte, error) {
 	fileName := filepath.Join(backend.Path, "chunks", chunk.ShaSum)
 	b := []byte{}
 	b, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		fmt.Println(err)
-	}
 	return b, err
 }
 
 // StoreChunk stores a single Chunk on disk
-func (backend *StorageLocal) StoreChunk(chunk Chunk, data *[]byte) (size uint64, err error) {
+func (backend *StorageLocal) StoreChunk(chunk Chunk) (size uint64, err error) {
 	fileName := filepath.Join(backend.Path, "chunks", chunk.ShaSum)
 	if _, err = os.Stat(fileName); err == nil {
 		// Chunk is already stored
 		return 0, nil
 	}
 
-	err = ioutil.WriteFile(fileName, *data, 0600)
+	err = ioutil.WriteFile(fileName, *chunk.Data, 0600)
 	if err != nil {
 		fmt.Println(err)
 	}
-	return uint64(len(*data)), err
+	return uint64(len(*chunk.Data)), err
 }
 
 // LoadSnapshot loads a snapshot
