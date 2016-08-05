@@ -3,6 +3,9 @@
 *.a
 *.so
 
+# Editor files
+*.swp
+
 # Folders
 _obj
 _test
