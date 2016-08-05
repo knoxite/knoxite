@@ -44,7 +44,7 @@ func NewSnapshot(description string) (Snapshot, error) {
 }
 
 // Add adds a path to a Snapshot
-func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress, encrypt bool) (chan Progress, error) {
+func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress, encrypt bool, dataParts, parityParts uint) (chan Progress, error) {
 	progress := make(chan Progress)
 
 	go func() {
@@ -61,14 +61,8 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 			progress <- newProgress(&id)
 
 			if isRegularFile(id.FileInfo) {
-				dataParts := int(math.Max(1, float64(len(repository.Backend.Backends))))
-				parityParts := 0
-
-				if len(repository.Backend.Backends) > 1 {
-					// If there are multiple storage backends, divide the data among them
-					parityParts = int(math.Max(1, float64(dataParts)/3.0))
-				}
-				chunkchan, err := chunkFile(id.AbsPath, compress, encrypt, repository.Password, dataParts, parityParts)
+				dataParts = uint(math.Max(1, float64(dataParts)))
+				chunkchan, err := chunkFile(id.AbsPath, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
 				if err != nil {
 					panic(err)
 				}

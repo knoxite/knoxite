@@ -12,9 +12,10 @@ import (
 
 // CmdStore describes the command
 type CmdStore struct {
-	Description string `short:"d" long:"desc"        description:"a description or comment for this snapshot"`
-	Compression string `short:"c" long:"compression" description:"compression algo to use: none (default), gzip"`
-	Encryption  string `short:"e" long:"encryption"  description:"encryption algo to use: aes (default), none"`
+	Description      string `short:"d" long:"desc"        description:"a description or comment for this snapshot"`
+	Compression      string `short:"c" long:"compression" description:"compression algo to use: none (default), gzip"`
+	Encryption       string `short:"e" long:"encryption"  description:"encryption algo to use: aes (default), none"`
+	FailureTolerance uint   `short:"t" long:"tolerance"   description:"failure tolerance against n backend failures"`
 
 	global *GlobalOptions
 }
@@ -36,7 +37,12 @@ func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snap
 			return gerr
 		}
 
-		progress, serr := snapshot.Add(wd, target, *repository, strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none")
+		if uint(len(repository.Backend.Backends))-cmd.FailureTolerance <= 0 {
+			return errors.New("failure tolerance can't be equal or higher as the number of storage backends")
+		}
+
+		progress, serr := snapshot.Add(wd, target, *repository, strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none",
+			uint(len(repository.Backend.Backends))-cmd.FailureTolerance, cmd.FailureTolerance)
 		if serr != nil {
 			return serr
 		}
