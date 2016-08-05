@@ -13,7 +13,6 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -109,7 +108,7 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 		}
 	}
 
-	return []byte{}, errors.New("Could not reconstruct data")
+	return []byte{}, fmt.Errorf("Could not reconstruct data, got %d out of %d chunks (%d backends missing data)", parsFound, chunk.DataParts, chunk.DataParts-uint(parsFound))
 }
 
 // DecodeArchive restores a single archive to path
