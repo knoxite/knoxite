@@ -32,9 +32,9 @@ func (backend *StorageHTTP) Close() error {
 	return nil
 }
 
-// Protocol Scheme supported by this backend
-func (backend *StorageHTTP) Protocol() string {
-	return "http"
+// Protocols returns the Protocol Schemes supported by this backend
+func (backend *StorageHTTP) Protocols() []string {
+	return []string{"http", "https"}
 }
 
 // Description returns a user-friendly description for this backend

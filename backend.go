@@ -17,8 +17,8 @@ type Backend interface {
 	// Location returns the type and location of the repository
 	Location() string
 
-	// Protocol Scheme supported by this backend
-	Protocol() string
+	// Protocols returns the Protocol Schemes supported by this backend
+	Protocols() []string
 
 	// Description returns a user-friendly description for this backend
 	Description() string

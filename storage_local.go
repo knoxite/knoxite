@@ -35,9 +35,9 @@ func (backend *StorageLocal) Close() error {
 	return nil
 }
 
-// Protocol Scheme supported by this backend
-func (backend *StorageLocal) Protocol() string {
-	return ""
+// Protocols returns the Protocol Schemes supported by this backend
+func (backend *StorageLocal) Protocols() []string {
+	return []string{""}
 }
 
 // Description returns a user-friendly description for this backend
