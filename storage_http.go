@@ -54,6 +54,9 @@ func (backend *StorageHTTP) LoadChunk(chunk Chunk) ([]byte, error) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	if res.StatusCode != http.StatusOK {
+		return b, errors.New("Loading chunk failed")
+	}
 	//	fmt.Printf("Download finished: %d bytes\n", len(b))
 	return b, err
 }

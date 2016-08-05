@@ -50,9 +50,6 @@ func (backend *StorageLocal) LoadChunk(chunk Chunk) ([]byte, error) {
 	fileName := filepath.Join(backend.Path, "chunks", chunk.ShaSum)
 	b := []byte{}
 	b, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		fmt.Println(err)
-	}
 	return b, err
 }
 
