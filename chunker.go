@@ -49,13 +49,15 @@ func CompressionText(enum int) string {
 // Chunk stores an encrypted chunk alongside with its metadata
 // MUST BE encrypted
 type Chunk struct {
-	Data            *[]byte `json:"-"`
-	Size            int     `json:"size"`
-	DecryptedShaSum string  `json:"decrypted_sha256"`
-	ShaSum          string  `json:"sha256"`
-	Encrypted       int     `json:"encrypted"`
-	Compressed      int     `json:"compressed"`
-	Num             uint64  `json:"num"`
+	Data            *[][]byte `json:"-"`
+	DataParts       uint      `json:"data_parts"`
+	ParityParts     uint      `json:"parity_parts"`
+	Size            int       `json:"size"`
+	DecryptedShaSum string    `json:"decrypted_sha256"`
+	ShaSum          string    `json:"sha256"`
+	Encrypted       int       `json:"encrypted"`
+	Compressed      int       `json:"compressed"`
+	Num             uint64    `json:"num"`
 }
 
 type inputChunk struct {
@@ -63,7 +65,7 @@ type inputChunk struct {
 	Num  uint64
 }
 
-func processChunk(id int, compress, encrypt bool, password string, jobs <-chan inputChunk, results chan<- Chunk, wg *sync.WaitGroup) {
+func processChunk(id int, compress, encrypt bool, password string, dataParts, parityParts int, jobs <-chan inputChunk, results chan<- Chunk, wg *sync.WaitGroup) {
 	for j := range jobs {
 		//		fmt.Println("\tWorker", id, "processing job", j.Num, len(j.Data))
 
@@ -90,7 +92,8 @@ func processChunk(id int, compress, encrypt bool, password string, jobs <-chan i
 		decshasum := hex.EncodeToString(decshasumdata[:])
 
 		cd := Chunk{
-			Data:            &finalData,
+			DataParts:       uint(dataParts),
+			ParityParts:     uint(parityParts),
 			Size:            len(finalData),
 			DecryptedShaSum: decshasum,
 			ShaSum:          shasum,
@@ -104,6 +107,16 @@ func processChunk(id int, compress, encrypt bool, password string, jobs <-chan i
 		if !encrypt {
 			cd.Encrypted = EncryptionNone
 		}
+		if parityParts > 0 {
+			pars, err := redundantData(finalData, dataParts, parityParts)
+			if err != nil {
+				panic(err)
+			}
+			cd.Data = &pars
+		} else {
+			cd.DataParts = 1
+			cd.Data = &[][]byte{finalData}
+		}
 
 		results <- cd
 		wg.Done()
@@ -111,7 +124,7 @@ func processChunk(id int, compress, encrypt bool, password string, jobs <-chan i
 }
 
 // chunkFile divides filename into chunks of 1MiB each
-func chunkFile(filename string, compress, encrypt bool, password string) (chan Chunk, error) {
+func chunkFile(filename string, compress, encrypt bool, password string, dataParts, parityParts int) (chan Chunk, error) {
 	c := make(chan Chunk)
 
 	file, err := os.Open(filename)
@@ -131,7 +144,7 @@ func chunkFile(filename string, compress, encrypt bool, password string) (chan C
 	wg := &sync.WaitGroup{}
 	jobs := make(chan inputChunk)
 	for w := 1; w <= 4; w++ {
-		go processChunk(w, compress, encrypt, password, jobs, c, wg)
+		go processChunk(w, compress, encrypt, password, dataParts, parityParts, jobs, c, wg)
 	}
 
 	wg.Add(int(totalParts))

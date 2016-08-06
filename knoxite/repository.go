@@ -88,7 +88,13 @@ func (cmd CmdRepository) add(url string) error {
 	}
 	r.Backend.AddBackend(&backend)
 
-	return r.Save()
+	err = r.Save()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Added %s to repository\n", backend.Location())
+
+	return nil
 }
 
 func (cmd CmdRepository) cat() error {

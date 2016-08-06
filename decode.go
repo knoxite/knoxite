@@ -8,16 +8,18 @@
 package knoxite
 
 import (
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/klauspost/reedsolomon"
 )
 
 // DecodeSnapshot restores an entire snapshot to dst
@@ -36,6 +38,87 @@ func DecodeSnapshot(repository Repository, snapshot Snapshot, dst string) (prog 
 	}()
 
 	return prog, nil
+}
+
+func decodeChunk(repository Repository, chunk Chunk, finalData []byte) ([]byte, error) {
+	if chunk.Encrypted == EncryptionAES {
+		data, err := Decrypt(finalData, repository.Password)
+		if err != nil {
+			return []byte{}, err
+		}
+
+		finalData = data
+	}
+
+	if chunk.Compressed == CompressionGZip {
+		reader := bytes.NewReader(finalData)
+		zipreader, err := gzip.NewReader(reader)
+		if err != nil {
+			return []byte{}, err
+		}
+		defer zipreader.Close()
+		finalData, err = ioutil.ReadAll(zipreader)
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	shasumdata := sha256.Sum256(finalData)
+	shasum := hex.EncodeToString(shasumdata[:])
+
+	if chunk.DecryptedShaSum != shasum {
+		return []byte{}, fmt.Errorf("sha256 mismatch, expected %s got %s", chunk.DecryptedShaSum, shasum)
+	}
+
+	return finalData, nil
+}
+
+func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
+	if chunk.ParityParts > 0 {
+		enc, err := reedsolomon.New(int(chunk.DataParts), int(chunk.ParityParts))
+		if err != nil {
+			return []byte{}, err
+		}
+		pars := make([][]byte, chunk.DataParts+chunk.ParityParts)
+		parsFound := 0
+		parsMissing := 0
+		for i := 0; i < int(chunk.DataParts+chunk.ParityParts); i++ {
+			var cerr error
+			pars[i], cerr = repository.Backend.LoadChunk(chunk, uint(i))
+			if cerr != nil {
+				pars[i] = nil
+				parsMissing++
+				continue
+			}
+			parsFound++
+
+			if parsFound >= int(chunk.DataParts) {
+				var b bytes.Buffer
+				bufWriter := bufio.NewWriter(&b)
+
+				if parsMissing > 0 {
+					err = enc.Reconstruct(pars)
+					if err != nil {
+						continue
+					}
+				}
+				err = enc.Join(bufWriter, pars, chunk.Size)
+				if err != nil {
+					continue
+				}
+				bufWriter.Flush()
+				return decodeChunk(repository, chunk, b.Bytes())
+			}
+		}
+
+		return []byte{}, fmt.Errorf("Could not reconstruct data, got %d out of %d chunks (%d backends missing data)", parsFound, chunk.DataParts, chunk.DataParts-uint(parsFound))
+	} else {
+		data, err := repository.Backend.LoadChunk(chunk, 0)
+		if err != nil {
+			return []byte{}, err
+		}
+		return decodeChunk(repository, chunk, data)
+	}
 }
 
 // DecodeArchive restores a single archive to path
@@ -67,40 +150,9 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 		for i := int(0); i < parts; i++ {
 			for _, chunk := range arc.Chunks {
 				if int(chunk.Num) == i {
-					finalData, cerr := repository.Backend.LoadChunk(chunk)
+					finalData, cerr := loadChunk(repository, chunk)
 					if cerr != nil {
 						return cerr
-					}
-
-					if chunk.Encrypted == EncryptionAES {
-						data, err := Decrypt(finalData, repository.Password)
-						if err != nil {
-							return err
-						}
-
-						finalData = data
-					}
-
-					if chunk.Compressed == CompressionGZip {
-						reader := bytes.NewReader(finalData)
-						zipreader, err := gzip.NewReader(reader)
-						if err != nil {
-							return err
-						}
-						defer zipreader.Close()
-						finalData, err = ioutil.ReadAll(zipreader)
-						if err != nil {
-							return err
-						}
-					}
-
-					shasumdata := sha256.Sum256(finalData)
-					shasum := hex.EncodeToString(shasumdata[:])
-					prog.Statistics.Size += uint64(len(finalData))
-					prog.Size += uint64(len(finalData))
-
-					if chunk.DecryptedShaSum != shasum {
-						return errors.New("sha256 mismatch")
 					}
 
 					// write/save buffer to disk
@@ -108,9 +160,12 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 					if ferr != nil {
 						return ferr
 					}
+
+					prog.Statistics.Size += uint64(len(finalData))
+					prog.Size += uint64(len(finalData))
+					progress <- prog
 					// fmt.Printf("Chunk OK: %d bytes, sha256: %s\n", size, chunk.DecryptedShaSum)
 				}
-				progress <- prog
 			}
 		}
 
@@ -142,7 +197,7 @@ func init() {
 
 }
 
-// DecodeArchiveData restores a single archive to path
+// DecodeArchiveData returns the content of a single archive
 func DecodeArchiveData(repository Repository, arc ItemData) (dat []byte, stats Stat, err error) {
 	if arc.Type == File {
 		parts := len(arc.Chunks)
@@ -159,45 +214,15 @@ func DecodeArchiveData(repository Repository, arc ItemData) (dat []byte, stats S
 						continue
 					}
 
-					finalData, err := repository.Backend.LoadChunk(chunk)
-					origData := finalData
-					if err != nil {
-						return dat, stats, err
+					finalData, cerr := loadChunk(repository, chunk)
+					if cerr != nil {
+						return dat, stats, cerr
 					}
 
-					if chunk.Encrypted == EncryptionAES {
-						data, err := Decrypt(finalData, repository.Password)
-						if err != nil {
-							return dat, stats, err
-						}
-
-						finalData = data
-					}
-
-					if chunk.Compressed == CompressionGZip {
-						reader := bytes.NewReader(finalData)
-						zipreader, err := gzip.NewReader(reader)
-						if err != nil {
-							return dat, stats, err
-						}
-						defer zipreader.Close()
-						finalData, err = ioutil.ReadAll(zipreader)
-						if err != nil {
-							return dat, stats, err
-						}
-					}
-
-					shasumdata := sha256.Sum256(finalData)
-					shasum := hex.EncodeToString(shasumdata[:])
-					stats.StorageSize += uint64(len(origData))
+					stats.StorageSize += uint64(len(finalData))
 					stats.Size += uint64(len(finalData))
 
-					if chunk.DecryptedShaSum != shasum {
-						return dat, stats, errors.New("ERROR: sha256 mismatch")
-					}
-
 					dat = append(dat, finalData...)
-
 					cache[chunk.ShaSum] = finalData
 					mutex.Unlock()
 				}
@@ -224,42 +249,12 @@ func readArchiveChunk(repository Repository, arc ItemData, chunkNum uint64) (dat
 				continue
 			}
 
-			finalData, err := repository.Backend.LoadChunk(chunk)
+			finalData, err := loadChunk(repository, chunk)
 			if err != nil {
 				return dat, err
 			}
 
-			if chunk.Encrypted == EncryptionAES {
-				data, err := Decrypt(finalData, repository.Password)
-				if err != nil {
-					return dat, err
-				}
-
-				finalData = data
-			}
-
-			if chunk.Compressed == CompressionGZip {
-				reader := bytes.NewReader(finalData)
-				zipreader, err := gzip.NewReader(reader)
-				if err != nil {
-					return dat, err
-				}
-				defer zipreader.Close()
-				finalData, err = ioutil.ReadAll(zipreader)
-				if err != nil {
-					return dat, err
-				}
-			}
-
-			/*			shasumdata := sha256.Sum256(finalData)
-						shasum := hex.EncodeToString(shasumdata[:])
-
-						if chunk.DecryptedShaSum != shasum {
-							return dat, errors.New("ERROR: sha256 mismatch")
-						}*/
-
 			*dat = append(*dat, finalData...)
-
 			cache[chunk.ShaSum] = finalData
 			mutex.Unlock()
 		}

@@ -15,6 +15,7 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"strconv"
 )
 
 // StorageHTTP stores data on a remote HTTP server
@@ -43,37 +44,35 @@ func (backend *StorageHTTP) Description() string {
 }
 
 // LoadChunk loads a Chunk from network
-func (backend *StorageHTTP) LoadChunk(chunk Chunk) ([]byte, error) {
+func (backend *StorageHTTP) LoadChunk(shasum string, part uint) (*[]byte, error) {
 	//	fmt.Printf("Fetching from: %s.\n", backend.URL+"/download/"+chunk.ShaSum)
-	res, err := http.Get(backend.URL + "/download/" + chunk.ShaSum)
+	res, err := http.Get(backend.URL + "/download/" + shasum + "." + strconv.FormatUint(uint64(part), 10))
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer res.Body.Close()
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
+
 	if res.StatusCode != http.StatusOK {
-		return b, errors.New("Loading chunk failed")
+		return &[]byte{}, errors.New("Loading chunk failed")
 	}
-	//	fmt.Printf("Download finished: %d bytes\n", len(b))
-	return b, err
+
+	b, err := ioutil.ReadAll(res.Body)
+	return &b, err
 }
 
 // StoreChunk stores a single Chunk on network
-func (backend *StorageHTTP) StoreChunk(chunk Chunk) (size uint64, err error) {
+func (backend *StorageHTTP) StoreChunk(shasum string, part uint, data *[]byte) (size uint64, err error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
 	// this step is very important
-	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", chunk.ShaSum)
-	if err != nil {
+	fileWriter, werr := bodyWriter.CreateFormFile("uploadfile", shasum+"."+strconv.FormatUint(uint64(part), 10))
+	if werr != nil {
 		fmt.Println("error writing to buffer")
-		return 0, err
+		return 0, werr
 	}
 
-	_, err = fileWriter.Write(*chunk.Data)
+	_, err = fileWriter.Write(*data)
 	if err != nil {
 		return 0, err
 	}
@@ -93,8 +92,9 @@ func (backend *StorageHTTP) StoreChunk(chunk Chunk) (size uint64, err error) {
 	if resp.StatusCode != http.StatusOK {
 		return 0, errors.New("Storing chunk failed")
 	}
+
 	//	fmt.Printf("\tUploaded chunk: %d bytes\n", len(*data))
-	return uint64(len(*chunk.Data)), err
+	return uint64(len(*data)), err
 }
 
 // LoadSnapshot loads a snapshot

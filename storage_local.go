@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 const (
@@ -46,26 +47,26 @@ func (backend *StorageLocal) Description() string {
 }
 
 // LoadChunk loads a Chunk from disk
-func (backend *StorageLocal) LoadChunk(chunk Chunk) ([]byte, error) {
-	fileName := filepath.Join(backend.Path, "chunks", chunk.ShaSum)
+func (backend *StorageLocal) LoadChunk(shasum string, part uint) (*[]byte, error) {
+	fileName := filepath.Join(backend.Path, "chunks", shasum+"."+strconv.FormatUint(uint64(part), 10))
 	b := []byte{}
 	b, err := ioutil.ReadFile(fileName)
-	return b, err
+	return &b, err
 }
 
 // StoreChunk stores a single Chunk on disk
-func (backend *StorageLocal) StoreChunk(chunk Chunk) (size uint64, err error) {
-	fileName := filepath.Join(backend.Path, "chunks", chunk.ShaSum)
+func (backend *StorageLocal) StoreChunk(shasum string, part uint, data *[]byte) (size uint64, err error) {
+	fileName := filepath.Join(backend.Path, "chunks", shasum+"."+strconv.FormatUint(uint64(part), 10))
 	if _, err = os.Stat(fileName); err == nil {
 		// Chunk is already stored
 		return 0, nil
 	}
 
-	err = ioutil.WriteFile(fileName, *chunk.Data, 0600)
+	err = ioutil.WriteFile(fileName, *data, 0600)
 	if err != nil {
 		fmt.Println(err)
 	}
-	return uint64(len(*chunk.Data)), err
+	return uint64(len(*data)), err
 }
 
 // LoadSnapshot loads a snapshot

@@ -32,11 +32,11 @@ func (backend *BackendManager) Locations() []string {
 }
 
 // LoadChunk loads a Chunk from backends
-func (backend *BackendManager) LoadChunk(chunk Chunk) ([]byte, error) {
+func (backend *BackendManager) LoadChunk(chunk Chunk, part uint) ([]byte, error) {
 	for _, be := range backend.Backends {
-		b, err := (*be).LoadChunk(chunk)
+		b, err := (*be).LoadChunk(chunk.ShaSum, uint(part))
 		if err == nil {
-			return b, err
+			return *b, err
 		}
 	}
 
@@ -45,19 +45,21 @@ func (backend *BackendManager) LoadChunk(chunk Chunk) ([]byte, error) {
 
 // StoreChunk stores a single Chunk on backends
 func (backend *BackendManager) StoreChunk(chunk Chunk) (size uint64, err error) {
-	// Use storage backends in a round robin fashion to store chunks
-	backend.lastUsedBackend++
-	if backend.lastUsedBackend+1 > len(backend.Backends) {
-		backend.lastUsedBackend = 0
-	}
+	for i, data := range *chunk.Data {
+		// Use storage backends in a round robin fashion to store chunks
+		backend.lastUsedBackend++
+		if backend.lastUsedBackend+1 > len(backend.Backends) {
+			backend.lastUsedBackend = 0
+		}
 
-	be := backend.Backends[backend.lastUsedBackend]
-	//	for _, be := range backend.Backends {
-	_, err = (*be).StoreChunk(chunk)
-	if err != nil {
-		return 0, err
+		be := backend.Backends[backend.lastUsedBackend]
+		//	for _, be := range backend.Backends {
+		_, err = (*be).StoreChunk(chunk.ShaSum, uint(i), &data)
+		if err != nil {
+			return 0, err
+		}
+		//	}
 	}
-	//	}
 
 	return uint64(chunk.Size), nil
 }
