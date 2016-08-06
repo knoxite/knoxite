@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const storagePath = "/tmp/knox.storage"
+const storagePath = "/tmp/knoxite.storage"
 
 func authPath(w http.ResponseWriter, r *http.Request) (string, error) {
 	auth, _, ok := r.BasicAuth()
@@ -58,6 +58,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		file, handler, err := r.FormFile("uploadfile")
 		if err != nil {
 			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		defer file.Close()
@@ -65,6 +66,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		f, err := os.OpenFile(filepath.Join(path, "chunks", handler.Filename), os.O_WRONLY|os.O_CREATE, 0600)
 		if err != nil {
 			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		defer f.Close()
@@ -103,6 +105,7 @@ func uploadRepo(w http.ResponseWriter, r *http.Request) {
 	file, handler, err := r.FormFile("uploadfile")
 	if err != nil {
 		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer file.Close()
@@ -110,6 +113,7 @@ func uploadRepo(w http.ResponseWriter, r *http.Request) {
 	f, err := os.OpenFile(filepath.Join(path, "repository.knox"), os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer f.Close()
@@ -154,6 +158,7 @@ func uploadSnapshot(w http.ResponseWriter, r *http.Request) {
 	file, handler, err := r.FormFile("uploadfile")
 	if err != nil {
 		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer file.Close()
@@ -161,6 +166,7 @@ func uploadSnapshot(w http.ResponseWriter, r *http.Request) {
 	f, err := os.OpenFile(filepath.Join(path, "snapshots", handler.Filename), os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer f.Close()
