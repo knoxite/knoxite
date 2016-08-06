@@ -91,13 +91,7 @@ func processChunk(id int, compress, encrypt bool, password string, dataParts, pa
 		decshasumdata := sha256.Sum256(j.Data)
 		decshasum := hex.EncodeToString(decshasumdata[:])
 
-		pars, err := redundantData(finalData, dataParts, parityParts)
-		if err != nil {
-			panic(err)
-		}
-
 		cd := Chunk{
-			Data:            &pars,
 			DataParts:       uint(dataParts),
 			ParityParts:     uint(parityParts),
 			Size:            len(finalData),
@@ -112,6 +106,16 @@ func processChunk(id int, compress, encrypt bool, password string, dataParts, pa
 		}
 		if !encrypt {
 			cd.Encrypted = EncryptionNone
+		}
+		if parityParts > 0 {
+			pars, err := redundantData(finalData, dataParts, parityParts)
+			if err != nil {
+				panic(err)
+			}
+			cd.Data = &pars
+		} else {
+			cd.DataParts = 1
+			cd.Data = &[][]byte{finalData}
 		}
 
 		results <- cd

@@ -40,75 +40,85 @@ func DecodeSnapshot(repository Repository, snapshot Snapshot, dst string) (prog 
 	return prog, nil
 }
 
-func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
-	enc, err := reedsolomon.New(int(chunk.DataParts), int(chunk.ParityParts))
-	if err != nil {
-		return []byte{}, err
-	}
-	pars := make([][]byte, chunk.DataParts+chunk.ParityParts)
-	parsFound := 0
-	parsMissing := 0
-	for i := 0; i < int(chunk.DataParts+chunk.ParityParts); i++ {
-		var cerr error
-		pars[i], cerr = repository.Backend.LoadChunk(chunk, uint(i))
-		if cerr != nil {
-			pars[i] = nil
-			parsMissing++
-			continue
+func decodeChunk(repository Repository, chunk Chunk, finalData []byte) ([]byte, error) {
+	if chunk.Encrypted == EncryptionAES {
+		data, err := Decrypt(finalData, repository.Password)
+		if err != nil {
+			return []byte{}, err
 		}
-		parsFound++
 
-		if parsFound >= int(chunk.DataParts) {
-			var b bytes.Buffer
-			bufWriter := bufio.NewWriter(&b)
+		finalData = data
+	}
 
-			if parsMissing > 0 {
-				err = enc.Reconstruct(pars)
+	if chunk.Compressed == CompressionGZip {
+		reader := bytes.NewReader(finalData)
+		zipreader, err := gzip.NewReader(reader)
+		if err != nil {
+			return []byte{}, err
+		}
+		defer zipreader.Close()
+		finalData, err = ioutil.ReadAll(zipreader)
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	shasumdata := sha256.Sum256(finalData)
+	shasum := hex.EncodeToString(shasumdata[:])
+
+	if chunk.DecryptedShaSum != shasum {
+		return []byte{}, fmt.Errorf("sha256 mismatch, expected %s got %s", chunk.DecryptedShaSum, shasum)
+	}
+
+	return finalData, nil
+}
+
+func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
+	if chunk.ParityParts > 0 {
+		enc, err := reedsolomon.New(int(chunk.DataParts), int(chunk.ParityParts))
+		if err != nil {
+			return []byte{}, err
+		}
+		pars := make([][]byte, chunk.DataParts+chunk.ParityParts)
+		parsFound := 0
+		parsMissing := 0
+		for i := 0; i < int(chunk.DataParts+chunk.ParityParts); i++ {
+			var cerr error
+			pars[i], cerr = repository.Backend.LoadChunk(chunk, uint(i))
+			if cerr != nil {
+				pars[i] = nil
+				parsMissing++
+				continue
+			}
+			parsFound++
+
+			if parsFound >= int(chunk.DataParts) {
+				var b bytes.Buffer
+				bufWriter := bufio.NewWriter(&b)
+
+				if parsMissing > 0 {
+					err = enc.Reconstruct(pars)
+					if err != nil {
+						continue
+					}
+				}
+				err = enc.Join(bufWriter, pars, chunk.Size)
 				if err != nil {
 					continue
 				}
+				bufWriter.Flush()
+				return decodeChunk(repository, chunk, b.Bytes())
 			}
-			err = enc.Join(bufWriter, pars, chunk.Size)
-			if err != nil {
-				continue
-			}
-			bufWriter.Flush()
-			finalData := b.Bytes()
-
-			if chunk.Encrypted == EncryptionAES {
-				data, err := Decrypt(finalData, repository.Password)
-				if err != nil {
-					return []byte{}, err
-				}
-
-				finalData = data
-			}
-
-			if chunk.Compressed == CompressionGZip {
-				reader := bytes.NewReader(finalData)
-				zipreader, err := gzip.NewReader(reader)
-				if err != nil {
-					return []byte{}, err
-				}
-				defer zipreader.Close()
-				finalData, err = ioutil.ReadAll(zipreader)
-				if err != nil {
-					return []byte{}, err
-				}
-			}
-
-			shasumdata := sha256.Sum256(finalData)
-			shasum := hex.EncodeToString(shasumdata[:])
-
-			if chunk.DecryptedShaSum != shasum {
-				return []byte{}, fmt.Errorf("sha256 mismatch, expected %s got %s", chunk.DecryptedShaSum, shasum)
-			}
-
-			return finalData, nil
 		}
-	}
 
-	return []byte{}, fmt.Errorf("Could not reconstruct data, got %d out of %d chunks (%d backends missing data)", parsFound, chunk.DataParts, chunk.DataParts-uint(parsFound))
+		return []byte{}, fmt.Errorf("Could not reconstruct data, got %d out of %d chunks (%d backends missing data)", parsFound, chunk.DataParts, chunk.DataParts-uint(parsFound))
+	} else {
+		data, err := repository.Backend.LoadChunk(chunk, 0)
+		if err != nil {
+			return []byte{}, err
+		}
+		return decodeChunk(repository, chunk, data)
+	}
 }
 
 // DecodeArchive restores a single archive to path
