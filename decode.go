@@ -112,13 +112,13 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 		}
 
 		return []byte{}, fmt.Errorf("Could not reconstruct data, got %d out of %d chunks (%d backends missing data)", parsFound, chunk.DataParts, chunk.DataParts-uint(parsFound))
-	} else {
-		data, err := repository.Backend.LoadChunk(chunk, 0)
-		if err != nil {
-			return []byte{}, err
-		}
-		return decodeChunk(repository, chunk, data)
 	}
+
+	data, err := repository.Backend.LoadChunk(chunk, 0)
+	if err != nil {
+		return []byte{}, err
+	}
+	return decodeChunk(repository, chunk, data)
 }
 
 // DecodeArchive restores a single archive to path
