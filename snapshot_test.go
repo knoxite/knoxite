@@ -101,7 +101,7 @@ func TestCreateSnapshot(t *testing.T) {
 			t.Errorf("Failed finding snapshot: %s", err)
 			return
 		}
-		if snapshot.Date != snapshotOriginal.Date {
+		if !snapshot.Date.Equal(snapshotOriginal.Date) {
 			t.Errorf("Failed verifying snapshot date: %v != %v", snapshot.Date, snapshotOriginal.Date)
 		}
 		if snapshot.Description != snapshotOriginal.Description {
