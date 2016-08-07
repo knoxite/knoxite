@@ -47,16 +47,16 @@ func (backend *StorageLocal) Description() string {
 }
 
 // LoadChunk loads a Chunk from disk
-func (backend *StorageLocal) LoadChunk(shasum string, part uint) (*[]byte, error) {
-	fileName := filepath.Join(backend.Path, "chunks", shasum+"."+strconv.FormatUint(uint64(part), 10))
+func (backend *StorageLocal) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
+	fileName := filepath.Join(backend.Path, "chunks", shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
 	b := []byte{}
 	b, err := ioutil.ReadFile(fileName)
 	return &b, err
 }
 
 // StoreChunk stores a single Chunk on disk
-func (backend *StorageLocal) StoreChunk(shasum string, part uint, data *[]byte) (size uint64, err error) {
-	fileName := filepath.Join(backend.Path, "chunks", shasum+"."+strconv.FormatUint(uint64(part), 10))
+func (backend *StorageLocal) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
+	fileName := filepath.Join(backend.Path, "chunks", shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
 	if _, err = os.Stat(fileName); err == nil {
 		// Chunk is already stored
 		return 0, nil

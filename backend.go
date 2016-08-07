@@ -27,9 +27,9 @@ type Backend interface {
 	Close() error
 
 	// LoadChunk loads a single Chunk
-	LoadChunk(shasum string, part uint) (*[]byte, error)
+	LoadChunk(shasum string, part, totalParts uint) (*[]byte, error)
 	// StoreChunk stores a single Chunk
-	StoreChunk(shasum string, part uint, data *[]byte) (size uint64, err error)
+	StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error)
 
 	// LoadSnapshot loads a snapshot
 	LoadSnapshot(id string) ([]byte, error)

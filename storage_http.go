@@ -44,9 +44,9 @@ func (backend *StorageHTTP) Description() string {
 }
 
 // LoadChunk loads a Chunk from network
-func (backend *StorageHTTP) LoadChunk(shasum string, part uint) (*[]byte, error) {
+func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
 	//	fmt.Printf("Fetching from: %s.\n", backend.URL+"/download/"+chunk.ShaSum)
-	res, err := http.Get(backend.URL + "/download/" + shasum + "." + strconv.FormatUint(uint64(part), 10))
+	res, err := http.Get(backend.URL + "/download/" + shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,12 +61,12 @@ func (backend *StorageHTTP) LoadChunk(shasum string, part uint) (*[]byte, error)
 }
 
 // StoreChunk stores a single Chunk on network
-func (backend *StorageHTTP) StoreChunk(shasum string, part uint, data *[]byte) (size uint64, err error) {
+func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
 	// this step is very important
-	fileWriter, werr := bodyWriter.CreateFormFile("uploadfile", shasum+"."+strconv.FormatUint(uint64(part), 10))
+	fileWriter, werr := bodyWriter.CreateFormFile("uploadfile", shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
 	if werr != nil {
 		fmt.Println("error writing to buffer")
 		return 0, werr
