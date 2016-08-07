@@ -182,9 +182,7 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 	}
 
 	// Restore ownerships
-	err := os.Lchown(path, int(arc.UID), int(arc.GID))
-
-	return err
+	return os.Lchown(path, int(arc.UID), int(arc.GID))
 }
 
 var (
