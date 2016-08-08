@@ -40,7 +40,7 @@ func TestCreateRepositoryError(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	_, err := NewRepository("invalidprotocol://foo", testPassword)
-	if err == nil {
-		t.Errorf("Creating repository should have failed, but didn't")
+	if err != ErrInvalidRepositoryURL {
+		t.Errorf("Expected %v, got %v", ErrInvalidRepositoryURL, err)
 	}
 }

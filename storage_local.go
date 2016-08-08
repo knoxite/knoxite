@@ -20,6 +20,11 @@ const (
 	repoFilename = "repository.knox"
 )
 
+// Error declarations
+var (
+	ErrRepositoryExists = errors.New("Repository seems to already exist")
+)
+
 // StorageLocal stores data on the local disk
 type StorageLocal struct {
 	Path string
@@ -89,7 +94,7 @@ func (backend *StorageLocal) InitRepository() error {
 	fileName := filepath.Join(backend.Path, repoFilename)
 	if _, err := os.Stat(fileName); err == nil {
 		// Repo seems to already exist
-		return errors.New("Repository seems to already exist")
+		return ErrRepositoryExists
 	}
 
 	return nil

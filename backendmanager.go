@@ -16,6 +16,13 @@ type BackendManager struct {
 	lastUsedBackend int
 }
 
+// Error declarations
+var (
+	ErrLoadChunkFailed      = errors.New("Unable to load chunk from any storage backend")
+	ErrLoadSnapshotFailed   = errors.New("Unable to load repository from any storage backend")
+	ErrLoadRepositoryFailed = errors.New("Unable to load repository from any storage backend")
+)
+
 // AddBackend adds a backend
 func (backend *BackendManager) AddBackend(be *Backend) {
 	backend.Backends = append(backend.Backends, be)
@@ -40,7 +47,7 @@ func (backend *BackendManager) LoadChunk(chunk Chunk, part uint) ([]byte, error)
 		}
 	}
 
-	return []byte{}, errors.New("Unable to load chunk from any storage backend")
+	return []byte{}, ErrLoadChunkFailed
 }
 
 // StoreChunk stores a single Chunk on backends
@@ -73,7 +80,7 @@ func (backend *BackendManager) LoadSnapshot(id string) ([]byte, error) {
 		}
 	}
 
-	return []byte{}, errors.New("Unable to load snapshot from any storage backend")
+	return []byte{}, ErrLoadSnapshotFailed
 }
 
 // SaveSnapshot stores a snapshot on all storage backends
@@ -109,7 +116,7 @@ func (backend *BackendManager) LoadRepository() ([]byte, error) {
 		}
 	}
 
-	return []byte{}, errors.New("Unable to load repository from any storage backend")
+	return []byte{}, ErrLoadRepositoryFailed
 }
 
 // SaveRepository stores the metadata for a repository

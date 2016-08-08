@@ -44,6 +44,11 @@ type Backend interface {
 	SaveRepository(data []byte) error
 }
 
+// Error declarations
+var (
+	ErrInvalidRepositoryURL = errors.New("Invalid repository url specified")
+)
+
 // BackendFromURL returns the matching backend for path
 func BackendFromURL(path string) (Backend, error) {
 	u, err := url.Parse(path)
@@ -63,6 +68,6 @@ func BackendFromURL(path string) (Backend, error) {
 			Path: path,
 		}, nil
 	default:
-		return nil, errors.New("Invalid repository url specified")
+		return nil, ErrInvalidRepositoryURL
 	}
 }

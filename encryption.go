@@ -21,6 +21,11 @@ const (
 	EncryptionAES
 )
 
+// Error declarations
+var (
+	ErrInvalidPassword = errors.New("Empty password not permitted")
+)
+
 // EncryptionText returns a user-friendly string indicating the encryption algo that was used
 func EncryptionText(enum int) string {
 	switch enum {
@@ -59,7 +64,7 @@ func decryptAESCFB(dst, src, key, iv []byte) error {
 func Encrypt(data []byte, password string) ([]byte, error) {
 	var err error
 	if len(password) == 0 {
-		return []byte{}, errors.New("Empty password not permitted")
+		return []byte{}, ErrInvalidPassword
 	}
 
 	var key = sha256.Sum256([]byte(password))
@@ -83,7 +88,7 @@ func Encrypt(data []byte, password string) ([]byte, error) {
 func Decrypt(data []byte, password string) ([]byte, error) {
 	var err error
 	if len(password) == 0 {
-		return []byte{}, errors.New("Empty password not permitted")
+		return []byte{}, ErrInvalidPassword
 	}
 
 	var key = sha256.Sum256([]byte(password))

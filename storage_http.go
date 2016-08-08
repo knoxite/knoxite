@@ -18,6 +18,14 @@ import (
 	"strconv"
 )
 
+// Error declarations
+var (
+	ErrChunkNotFound         = errors.New("Loading chunk failed")
+	ErrStoreChunkFailed      = errors.New("Storing chunk failed")
+	ErrStoreSnapshotFailed   = errors.New("Storing snapshot failed")
+	ErrStoreRepositoryFailed = errors.New("Storing repository failed")
+)
+
 // StorageHTTP stores data on a remote HTTP server
 type StorageHTTP struct {
 	URL string
@@ -53,7 +61,7 @@ func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) (*[]
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return &[]byte{}, errors.New("Loading chunk failed")
+		return &[]byte{}, ErrChunkNotFound
 	}
 
 	b, err := ioutil.ReadAll(res.Body)
@@ -90,7 +98,7 @@ func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, dat
 		return 0, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return 0, errors.New("Storing chunk failed")
+		return 0, ErrStoreChunkFailed
 	}
 
 	//	fmt.Printf("\tUploaded chunk: %d bytes\n", len(*data))
@@ -143,7 +151,7 @@ func (backend *StorageHTTP) SaveSnapshot(id string, data []byte) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errors.New("Storing snapshot failed")
+		return ErrStoreSnapshotFailed
 	}
 	//	fmt.Printf("Uploaded snapshot: %d bytes\n", len(data))
 	return err
@@ -200,7 +208,7 @@ func (backend *StorageHTTP) SaveRepository(data []byte) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errors.New("Storing repository failed")
+		return ErrStoreRepositoryFailed
 	}
 	//	fmt.Printf("Uploaded repository: %d bytes\n", len(data))
 	return err

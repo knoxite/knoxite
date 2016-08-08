@@ -25,6 +25,12 @@ type Repository struct {
 	RawJSON []byte `json:"-"`
 }
 
+// Error declarations
+var (
+	ErrVolumeNotFound   = errors.New("Volume not found")
+	ErrSnapshotNotFound = errors.New("Snapshot not found")
+)
+
 // NewRepository returns a new repository
 func NewRepository(path, password string) (Repository, error) {
 	repository := Repository{
@@ -85,7 +91,7 @@ func (r *Repository) FindVolume(id string) (*Volume, error) {
 		}
 	}
 
-	return &Volume{}, errors.New("Volume not found")
+	return &Volume{}, ErrVolumeNotFound
 }
 
 // FindSnapshot finds a snapshot within a repository
@@ -97,7 +103,7 @@ func (r *Repository) FindSnapshot(id string) (*Volume, *Snapshot, error) {
 		}
 	}
 
-	return &Volume{}, &Snapshot{}, errors.New("Snapshot not found")
+	return &Volume{}, &Snapshot{}, ErrSnapshotNotFound
 }
 
 // Init creates a new repository

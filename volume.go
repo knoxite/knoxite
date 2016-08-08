@@ -7,11 +7,7 @@
 
 package knoxite
 
-import (
-	"errors"
-
-	uuid "github.com/nu7hatch/gouuid"
-)
+import uuid "github.com/nu7hatch/gouuid"
 
 // A Volume contains various snapshots
 // MUST BE encrypted
@@ -53,5 +49,5 @@ func (v *Volume) LoadSnapshot(id string, repository *Repository) (Snapshot, erro
 		}
 	}
 
-	return Snapshot{}, errors.New("Snapshot not found")
+	return Snapshot{}, ErrSnapshotNotFound
 }

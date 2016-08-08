@@ -33,12 +33,12 @@ func TestEncryption(t *testing.T) {
 func TestEmptyPassword(t *testing.T) {
 	b := []byte("1234567890")
 	_, err := Encrypt(b, "")
-	if err == nil {
-		t.Error("Empty password must not be permitted")
+	if err != ErrInvalidPassword {
+		t.Errorf("Expected %v, got %v", ErrInvalidPassword, err)
 	}
 
 	_, err = Decrypt(b, "")
-	if err == nil {
-		t.Error("Empty password must not be permitted")
+	if err != ErrInvalidPassword {
+		t.Errorf("Expected %v, got %v", ErrInvalidPassword, err)
 	}
 }
