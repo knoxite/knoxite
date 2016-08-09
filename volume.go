@@ -40,7 +40,7 @@ func (v *Volume) AddSnapshot(id string) error {
 	return nil
 }
 
-// LoadSnapshot loads a snapshot from a repository
+// LoadSnapshot loads a snapshot within a volume from a repository
 func (v *Volume) LoadSnapshot(id string, repository *Repository) (Snapshot, error) {
 	for _, snapshot := range v.Snapshots {
 		if snapshot == id {
