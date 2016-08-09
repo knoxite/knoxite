@@ -170,6 +170,13 @@ func TestFindUnknownSnapshot(t *testing.T) {
 		return
 	}
 
+	vol, err := NewVolume("test", "")
+	if err != nil {
+		t.Errorf("Failed creating volume: %s", err)
+		return
+	}
+	r.AddVolume(vol)
+
 	_, _, err = r.FindSnapshot("invalidID")
 	if err != ErrSnapshotNotFound {
 		t.Errorf("Expected %v, got %v", ErrSnapshotNotFound, err)
