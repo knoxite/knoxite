@@ -11,24 +11,8 @@ import (
 	"fmt"
 )
 
-// Progress contains stats and current path
-type Progress struct {
-	Path        string
-	Size        uint64
-	StorageSize uint64
-	Statistics  Stat
-}
-
-func newProgress(item *ItemData) Progress {
-	return Progress{
-		Path:        item.Path,
-		Size:        item.Size,
-		StorageSize: item.StorageSize,
-	}
-}
-
-// Stat contains a bunch of stats counters
-type Stat struct {
+// Stats contains a bunch of Stats counters
+type Stats struct {
 	Files       uint64 `json:"files"`
 	Dirs        uint64 `json:"dirs"`
 	SymLinks    uint64 `json:"symlinks"`
@@ -38,7 +22,7 @@ type Stat struct {
 }
 
 // Add accumulates other into s
-func (s *Stat) Add(other Stat) {
+func (s *Stats) Add(other Stats) {
 	s.Files += other.Files
 	s.Dirs += other.Dirs
 	s.SymLinks += other.SymLinks
@@ -48,7 +32,7 @@ func (s *Stat) Add(other Stat) {
 }
 
 // AddItem accumulates item into s
-func (s *Stat) AddItem(i *ItemData) {
+func (s *Stats) AddItem(i *ItemData) {
 	s.Size += i.Size
 	s.StorageSize += i.StorageSize
 
@@ -86,8 +70,8 @@ func SizeToString(size uint64) (str string) {
 	return
 }
 
-// String returns human-readable stats
-func (s Stat) String() string {
+// String returns human-readable Stats
+func (s Stats) String() string {
 	return fmt.Sprintf("%d files, %d dirs, %d symlinks, %d errors, %v Original Size, %v Storage Size",
 		s.Files, s.Dirs, s.SymLinks, s.Errors, SizeToString(s.Size), SizeToString(s.StorageSize))
 }

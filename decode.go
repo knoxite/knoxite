@@ -196,7 +196,7 @@ func init() {
 }
 
 // DecodeArchiveData returns the content of a single archive
-func DecodeArchiveData(repository Repository, arc ItemData) (dat []byte, stats Stat, err error) {
+func DecodeArchiveData(repository Repository, arc ItemData) (dat []byte, stats Stats, err error) {
 	if arc.Type == File {
 		parts := len(arc.Chunks)
 

@@ -53,7 +53,7 @@ func (cmd CmdRestore) Execute(args []string) error {
 			return derr
 		}
 		pb := NewProgressBar("", 0, 0, 60)
-		stats := knoxite.Stat{}
+		stats := knoxite.Stats{}
 		lastPath := ""
 
 		for p := range progress {

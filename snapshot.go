@@ -23,7 +23,7 @@ type Snapshot struct {
 	ID          string     `json:"id"`
 	Date        time.Time  `json:"date"`
 	Description string     `json:"description"`
-	Stats       Stat       `json:"stats"`
+	Stats       Stats      `json:"stats"`
 	Items       []ItemData `json:"items"`
 }
 
@@ -140,7 +140,7 @@ func (snapshot *Snapshot) Save(repository *Repository) error {
 // AddItem adds an item to a snapshot
 func (snapshot *Snapshot) AddItem(id *ItemData) {
 	items := []ItemData{}
-	stats := Stat{}
+	stats := Stats{}
 
 	found := false
 	for _, i := range snapshot.Items {
