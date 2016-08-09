@@ -41,7 +41,6 @@ func NewRepository(path, password string) (Repository, error) {
 		return repository, err
 	}
 	repository.Backend.AddBackend(&backend)
-	//	fmt.Printf("Using backend: %s\n", backend.Description())
 
 	err = repository.init()
 	return repository, err
@@ -56,7 +55,6 @@ func OpenRepository(path, password string) (Repository, error) {
 	if err != nil {
 		return repository, err
 	}
-	//	fmt.Printf("Using backend: %s\n", backend.Description())
 
 	b, err := backend.LoadRepository()
 
@@ -125,7 +123,6 @@ func (r *Repository) Save() error {
 	if err != nil {
 		return err
 	}
-	//	fmt.Printf("Repository created: %s\n", string(b))
 
 	encb, err := Encrypt(b, r.Password)
 	if err == nil {
