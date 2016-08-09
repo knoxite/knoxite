@@ -66,3 +66,25 @@ func TestCreateVolume(t *testing.T) {
 		}
 	}
 }
+
+func TestFindUnknownVolume(t *testing.T) {
+	testPassword := "this_is_a_password"
+
+	dir, err := ioutil.TempDir("", "knoxite")
+	if err != nil {
+		t.Errorf("Failed creating temporary dir for repository: %s", err)
+		return
+	}
+	defer os.RemoveAll(dir)
+
+	r, err := NewRepository(dir, testPassword)
+	if err != nil {
+		t.Errorf("Failed creating repository: %s", err)
+		return
+	}
+
+	_, err = r.FindVolume("invalidID")
+	if err != ErrVolumeNotFound {
+		t.Errorf("Expected %v, got %v", ErrVolumeNotFound, err)
+	}
+}
