@@ -9,12 +9,12 @@ package knoxite
 
 import (
 	"encoding/json"
+	uuid "github.com/nu7hatch/gouuid"
 	"math"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
-
-	uuid "github.com/nu7hatch/gouuid"
 )
 
 // A Snapshot is compiled by one or many archives
@@ -46,10 +46,30 @@ func NewSnapshot(description string) (Snapshot, error) {
 // Add adds a path to a Snapshot
 func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress, encrypt bool, dataParts, parityParts uint) (chan Progress, error) {
 	progress := make(chan Progress)
+	c := findFiles(path)
+	fwd := make(chan ItemData, 256) // TODO: reconsider buffer size
+	m := new(sync.Mutex)
+	var totalSize uint64 = 0
 
 	go func() {
-		c := findFiles(path)
 		for id := range c {
+			rel, err := filepath.Rel(cwd, id.Path)
+			if err == nil && !strings.HasPrefix(rel, "../") {
+				id.Path = rel
+			}
+			if isSpecialPath(id.Path) {
+				continue
+			}
+			m.Lock()
+			totalSize += id.Size
+			m.Unlock()
+			fwd <- id
+		}
+		close(fwd)
+	}()
+
+	go func() {
+		for id := range fwd {
 			rel, err := filepath.Rel(cwd, id.Path)
 			if err == nil && !strings.HasPrefix(rel, "../") {
 				id.Path = rel
@@ -81,18 +101,18 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 					id.Chunks = append(id.Chunks, cd)
 					id.StorageSize += n
 
-					progress <- newProgress(&id)
+					p := newProgress(&id)
+					m.Lock()
+					p.Statistics.StorageSize = totalSize
+					m.Unlock()
+					progress <- p
 				}
 			}
 
 			snapshot.AddItem(&id)
 		}
-
-		defer func() {
-			close(progress)
-		}()
+		close(progress)
 	}()
-
 	return progress, nil
 }
 
