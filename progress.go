@@ -13,5 +13,6 @@ func newProgress(item *ItemData) Progress {
 		Path:        item.Path,
 		Size:        item.Size,
 		StorageSize: item.StorageSize,
+		Statistics:  Stats{},
 	}
 }
