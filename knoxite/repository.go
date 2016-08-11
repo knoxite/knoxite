@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -67,6 +68,20 @@ func (cmd CmdRepository) init() error {
 			hostname = "unknown"
 		}*/
 
+	if exist := func() bool {
+		_, err := os.Stat(cmd.global.Repo)
+		if err == nil {
+			return true
+		}
+		if os.IsNotExist(err) {
+			return false
+		}
+		return true //could be a remote repository
+	}(); !exist {
+		if err := os.MkdirAll(cmd.global.Repo, os.ModePerm); err != nil {
+			return fmt.Errorf("Creating repository at %s failed: %v", cmd.global.Repo, err)
+		}
+	}
 	_, err := newRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return fmt.Errorf("Creating repository at %s failed: %v", cmd.global.Repo, err)
