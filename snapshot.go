@@ -45,27 +45,29 @@ func NewSnapshot(description string) (Snapshot, error) {
 }
 
 // Add adds a path to a Snapshot
-func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress, encrypt bool, dataParts, parityParts uint) (chan Progress, error) {
+func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository, compress, encrypt bool, dataParts, parityParts uint) (chan Progress, error) {
 	progress := make(chan Progress)
-	c := findFiles(path)
 	fwd := make(chan ItemData, 256) // TODO: reconsider buffer size
 	m := new(sync.Mutex)
-
 	var totalSize uint64
 
 	go func() {
-		for id := range c {
-			rel, err := filepath.Rel(cwd, id.Path)
-			if err == nil && !strings.HasPrefix(rel, "../") {
-				id.Path = rel
+		for _, path := range paths {
+			c := findFiles(path)
+
+			for id := range c {
+				rel, err := filepath.Rel(cwd, id.Path)
+				if err == nil && !strings.HasPrefix(rel, "../") {
+					id.Path = rel
+				}
+				if isSpecialPath(id.Path) {
+					continue
+				}
+				m.Lock()
+				totalSize += id.Size
+				m.Unlock()
+				fwd <- id
 			}
-			if isSpecialPath(id.Path) {
-				continue
-			}
-			m.Lock()
-			totalSize += id.Size
-			m.Unlock()
-			fwd <- id
 		}
 		close(fwd)
 	}()

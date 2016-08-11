@@ -65,7 +65,7 @@ func TestCreateSnapshot(t *testing.T) {
 			t.Errorf("Failed getting working dir: %s", err)
 			return
 		}
-		progress, err := snapshot.Add(wd, "snapshot_test.go", r, false, true, 1, 0)
+		progress, err := snapshot.Add(wd, []string{"snapshot_test.go"}, r, false, true, 1, 0)
 		if err != nil {
 			t.Errorf("Failed adding to snapshot: %s", err)
 		}

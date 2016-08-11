@@ -33,46 +33,44 @@ func init() {
 func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snapshot, targets []string) error {
 	fmt.Println()
 	overallProgressBar := NewProgressBar("Overall Progress", 0, 0, 60)
-	for _, target := range targets {
-		wd, gerr := os.Getwd()
-		if gerr != nil {
-			return gerr
+	wd, gerr := os.Getwd()
+	if gerr != nil {
+		return gerr
+	}
+
+	if uint(len(repository.Backend.Backends))-cmd.FailureTolerance <= 0 {
+		return errors.New("failure tolerance can't be equal or higher as the number of storage backends")
+	}
+
+	progress, serr := snapshot.Add(wd, targets, *repository, strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none",
+		uint(len(repository.Backend.Backends))-cmd.FailureTolerance, cmd.FailureTolerance)
+	if serr != nil {
+		return serr
+	}
+
+	fileProgressBar := NewProgressBar("", 0, 0, 60)
+	lastPath := ""
+	for p := range progress {
+		if p.Path != lastPath && lastPath != "" {
+			fmt.Println()
+		}
+		fileProgressBar.Total = int64(p.Size)
+		fileProgressBar.Current = int64(p.StorageSize)
+
+		overallProgressBar.Total = int64(p.Statistics.Size)
+		overallProgressBar.Current = int64(p.Statistics.StorageSize)
+
+		if p.Path != lastPath {
+			lastPath = p.Path
+			fileProgressBar.Text = p.Path
 		}
 
-		if uint(len(repository.Backend.Backends))-cmd.FailureTolerance <= 0 {
-			return errors.New("failure tolerance can't be equal or higher as the number of storage backends")
-		}
+		moveCursorUp(1)
+		fileProgressBar.Print()
+		moveCursorDown(1)
+		overallProgressBar.Print()
 
-		progress, serr := snapshot.Add(wd, target, *repository, strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none",
-			uint(len(repository.Backend.Backends))-cmd.FailureTolerance, cmd.FailureTolerance)
-		if serr != nil {
-			return serr
-		}
-
-		fileProgressBar := NewProgressBar("", 0, 0, 60)
-		lastPath := ""
-		for p := range progress {
-			if p.Path != lastPath && lastPath != "" {
-				fmt.Println()
-			}
-			fileProgressBar.Total = int64(p.Size)
-			fileProgressBar.Current = int64(p.StorageSize)
-
-			overallProgressBar.Total = int64(p.Statistics.Size)
-			overallProgressBar.Current = int64(p.Statistics.StorageSize)
-
-			if p.Path != lastPath {
-				lastPath = p.Path
-				fileProgressBar.Text = p.Path
-			}
-
-			moveCursorUp(1)
-			fileProgressBar.Print()
-			moveCursorDown(1)
-			overallProgressBar.Print()
-
-			// fmt.Printf("\033[2K\r%s - [%s]", p.Stats.String(), p.Path)
-		}
+		// fmt.Printf("\033[2K\r%s - [%s]", p.Stats.String(), p.Path)
 	}
 
 	fmt.Printf("\nSnapshot %s created: %s\n", snapshot.ID, snapshot.Stats.String())
