@@ -63,6 +63,10 @@ func BackendFromURL(path string) (Backend, error) {
 		return &StorageHTTP{
 			URL: path,
 		}, nil
+	case "dropbox":
+		return &StorageDropbox{
+			URL: path,
+		}, nil
 	case "":
 		return &StorageLocal{
 			Path: path,
