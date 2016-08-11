@@ -9,12 +9,13 @@ package knoxite
 
 import (
 	"encoding/json"
-	uuid "github.com/nu7hatch/gouuid"
 	"math"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	uuid "github.com/nu7hatch/gouuid"
 )
 
 // A Snapshot is compiled by one or many archives
