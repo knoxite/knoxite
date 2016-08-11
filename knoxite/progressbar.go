@@ -95,3 +95,12 @@ func (p *ProgressBar) Print() {
 			pcts)
 	}
 }
+
+func moveCursorUp(lines uint) {
+	fmt.Printf("\033[%dA", lines)
+}
+
+func moveCursorDown(lines uint) {
+	fmt.Printf("\033[%dB", lines)
+
+}
