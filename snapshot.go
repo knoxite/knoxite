@@ -50,7 +50,8 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 	c := findFiles(path)
 	fwd := make(chan ItemData, 256) // TODO: reconsider buffer size
 	m := new(sync.Mutex)
-	var totalSize uint64 = 0
+
+	var totalSize uint64
 
 	go func() {
 		for id := range c {
@@ -70,6 +71,7 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 	}()
 
 	go func() {
+		var totalTransferredSize uint64
 		for id := range fwd {
 			rel, err := filepath.Rel(cwd, id.Path)
 			if err == nil && !strings.HasPrefix(rel, "../") {
@@ -79,7 +81,12 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 				continue
 			}
 
-			progress <- newProgress(&id)
+			p := newProgress(&id)
+			m.Lock()
+			p.Statistics.Size = totalSize
+			p.Statistics.StorageSize = totalTransferredSize
+			m.Unlock()
+			progress <- p
 
 			if isRegularFile(id.FileInfo) {
 				dataParts = uint(math.Max(1, float64(dataParts)))
@@ -101,10 +108,12 @@ func (snapshot *Snapshot) Add(cwd, path string, repository Repository, compress,
 
 					id.Chunks = append(id.Chunks, cd)
 					id.StorageSize += n
+					totalTransferredSize += n
 
 					p := newProgress(&id)
 					m.Lock()
-					p.Statistics.StorageSize = totalSize
+					p.Statistics.Size = totalSize
+					p.Statistics.StorageSize = totalTransferredSize
 					m.Unlock()
 					progress <- p
 				}

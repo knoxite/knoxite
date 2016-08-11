@@ -33,7 +33,6 @@ func init() {
 func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snapshot, targets []string) error {
 	fmt.Println()
 	overallProgressBar := NewProgressBar("Overall Progress", 0, 0, 60)
-	var lastFileSize uint64 = 0
 	for _, target := range targets {
 		wd, gerr := os.Getwd()
 		if gerr != nil {
@@ -53,27 +52,23 @@ func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snap
 		fileProgressBar := NewProgressBar("", 0, 0, 60)
 		lastPath := ""
 		for p := range progress {
-			if p.Path != lastPath && p.Path != "" {
-				lastFileSize = 0
+			if p.Path != lastPath && lastPath != "" {
+				fmt.Println()
 			}
 			fileProgressBar.Total = int64(p.Size)
-
-			overallProgressBar.Current += int64(p.StorageSize - lastFileSize)
-
 			fileProgressBar.Current = int64(p.StorageSize)
-			overallProgressBar.Total = int64(p.Statistics.StorageSize)
 
-			lastFileSize = p.StorageSize
+			overallProgressBar.Total = int64(p.Statistics.Size)
+			overallProgressBar.Current = int64(p.Statistics.StorageSize)
 
 			if p.Path != lastPath {
 				lastPath = p.Path
 				fileProgressBar.Text = p.Path
 			}
 
-			moveCursorDown(1)
-			fileProgressBar.Print()
-
 			moveCursorUp(1)
+			fileProgressBar.Print()
+			moveCursorDown(1)
 			overallProgressBar.Print()
 
 			// fmt.Printf("\033[2K\r%s - [%s]", p.Stats.String(), p.Path)
