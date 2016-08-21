@@ -7,14 +7,23 @@
 
 package knoxite
 
+import (
+	"net/url"
+)
+
 // StorageAmazonS3 stores data on a remote AmazonS3
 type StorageAmazonS3 struct {
-	URL string
+	url url.URL
+}
+
+// NewStorageAmazonS3 returns a StorageAmazonS3 object.
+func NewStorageAmazonS3(URL url.URL) (*StorageAmazonS3, error) {
+	return &StorageAmazonS3{url: URL}, nil
 }
 
 // Location returns the type and location of the repository
 func (backend *StorageAmazonS3) Location() string {
-	return backend.URL
+	return backend.url.String()
 }
 
 // Close the backend
