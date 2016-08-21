@@ -24,7 +24,7 @@ func (backend *StorageAmazonS3) Close() error {
 
 // Protocols returns the Protocol Schemes supported by this backend
 func (backend *StorageAmazonS3) Protocols() []string {
-	return []string{"amazons3"}
+	return []string{"s3", "s3s"}
 }
 
 // Description returns a user-friendly description for this backend
