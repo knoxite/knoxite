@@ -120,6 +120,20 @@ func (backend *StorageAmazonS3) InitRepository() error {
 	} else {
 		return ErrRepositoryExists
 	}
+
+	repositoryBucketExist, err := backend.client.BucketExists(backend.bucketPrefix + "-repository")
+	if err != nil {
+		return err
+	}
+	if !repositoryBucketExist {
+		err = backend.client.MakeBucket(backend.bucketPrefix+"-repository", backend.region)
+		if err != nil {
+			return err
+		}
+	} else {
+		return ErrRepositoryExists
+	}
+
 	return nil
 }
 
