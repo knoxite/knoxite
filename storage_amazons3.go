@@ -96,7 +96,9 @@ func (backend *StorageAmazonS3) LoadSnapshot(id string) ([]byte, error) {
 
 // SaveSnapshot stores a snapshot
 func (backend *StorageAmazonS3) SaveSnapshot(id string, data []byte) error {
-	return ErrStoreSnapshotFailed
+	buf := bytes.NewBuffer(data)
+	_, err := backend.client.PutObject(backend.bucketPrefix+"-snapshots", id, buf, "application/octet-stream")
+	return err
 }
 
 // InitRepository creates a new repository
