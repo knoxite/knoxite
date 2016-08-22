@@ -140,7 +140,11 @@ func (backend *StorageAmazonS3) InitRepository() error {
 
 // LoadRepository reads the metadata for a repository
 func (backend *StorageAmazonS3) LoadRepository() ([]byte, error) {
-	return []byte{}, ErrLoadRepositoryFailed
+	obj, err := backend.client.GetObject(backend.bucketPrefix+"-repository", repoFilename)
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(obj)
 }
 
 // SaveRepository stores the metadata for a repository
