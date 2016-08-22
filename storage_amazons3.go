@@ -9,16 +9,48 @@ package knoxite
 
 import (
 	"net/url"
+	"strings"
+
+	"github.com/minio/minio-go"
 )
 
 // StorageAmazonS3 stores data on a remote AmazonS3
 type StorageAmazonS3 struct {
-	url url.URL
+	url          url.URL
+	bucketPrefix string
+	region       string
+	client       *minio.Client
 }
 
 // NewStorageAmazonS3 returns a StorageAmazonS3 object.
 func NewStorageAmazonS3(URL url.URL) (*StorageAmazonS3, error) {
-	return &StorageAmazonS3{url: URL}, nil
+
+	ssl := true
+	switch URL.Scheme {
+	case "s3":
+		ssl = false
+	case "s3s":
+		ssl = true
+	default:
+		panic("Invalid s3 url scheme")
+	}
+
+	regionAndBucketPrefix := strings.Split(URL.Path, "/")
+	if len(regionAndBucketPrefix) != 3 {
+		return &StorageAmazonS3{}, ErrInvalidRepositoryURL
+	}
+
+	pw, _ := URL.User.Password()
+	cl, err := minio.New(URL.Host, URL.User.Username(), pw, ssl)
+	if err != nil {
+		return &StorageAmazonS3{}, err
+	}
+
+	return &StorageAmazonS3{url: URL,
+		client:       cl,
+		region:       regionAndBucketPrefix[1],
+		bucketPrefix: regionAndBucketPrefix[2],
+	}, nil
 }
 
 // Location returns the type and location of the repository
@@ -63,6 +95,31 @@ func (backend *StorageAmazonS3) SaveSnapshot(id string, data []byte) error {
 
 // InitRepository creates a new repository
 func (backend *StorageAmazonS3) InitRepository() error {
+	chunkBucketExist, err := backend.client.BucketExists(backend.bucketPrefix + "_chunks")
+	if err != nil {
+		return err
+	}
+	if !chunkBucketExist {
+		err = backend.client.MakeBucket(backend.bucketPrefix+"_chunks", backend.region)
+		if err != nil {
+			return err
+		}
+	} else {
+		return ErrRepositoryExists
+	}
+
+	snapshotBucketExist, err := backend.client.BucketExists(backend.bucketPrefix + "_snapshots")
+	if err != nil {
+		return err
+	}
+	if !snapshotBucketExist {
+		err = backend.client.MakeBucket(backend.bucketPrefix+"_snapshots", backend.region)
+		if err != nil {
+			return err
+		}
+	} else {
+		return ErrRepositoryExists
+	}
 	return nil
 }
 
