@@ -8,6 +8,7 @@
 package knoxite
 
 import (
+	"bytes"
 	"net/url"
 	"strings"
 
@@ -144,5 +145,7 @@ func (backend *StorageAmazonS3) LoadRepository() ([]byte, error) {
 
 // SaveRepository stores the metadata for a repository
 func (backend *StorageAmazonS3) SaveRepository(data []byte) error {
-	return ErrStoreRepositoryFailed
+	buf := bytes.NewBuffer(data)
+	_, err := backend.client.PutObject(backend.bucketPrefix+"-repository", repoFilename, buf, "application/octet-stream")
+	return err
 }
