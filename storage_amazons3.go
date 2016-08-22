@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/minio/minio-go"
@@ -77,12 +78,27 @@ func (backend *StorageAmazonS3) Description() string {
 
 // LoadChunk loads a Chunk from network
 func (backend *StorageAmazonS3) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
-	return &[]byte{}, ErrChunkNotFound
+	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
+	obj, err := backend.client.GetObject(backend.bucketPrefix+"-chunks", fileName)
+	if err != nil {
+		return nil, err
+	}
+	data, err := ioutil.ReadAll(obj)
+	return &data, err
 }
 
 // StoreChunk stores a single Chunk on network
 func (backend *StorageAmazonS3) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
-	return 0, ErrStoreChunkFailed
+	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
+
+	if _, err := backend.client.StatObject(backend.bucketPrefix+"-chunks", fileName); err == nil {
+		// Chunk is already stored
+		return 0, nil
+	}
+
+	buf := bytes.NewBuffer(*data)
+	i, err := backend.client.PutObject(backend.bucketPrefix+"-chunks", fileName, buf, "application/octet-stream")
+	return uint64(i), err
 }
 
 // LoadSnapshot loads a snapshot
