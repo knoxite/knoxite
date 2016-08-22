@@ -9,6 +9,7 @@ package knoxite
 
 import (
 	"bytes"
+	"io/ioutil"
 	"net/url"
 	"strings"
 
@@ -86,7 +87,11 @@ func (backend *StorageAmazonS3) StoreChunk(shasum string, part, totalParts uint,
 
 // LoadSnapshot loads a snapshot
 func (backend *StorageAmazonS3) LoadSnapshot(id string) ([]byte, error) {
-	return []byte{}, ErrSnapshotNotFound
+	obj, err := backend.client.GetObject(backend.bucketPrefix+"-snapshots", id)
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(obj)
 }
 
 // SaveSnapshot stores a snapshot
