@@ -95,12 +95,12 @@ func (backend *StorageAmazonS3) SaveSnapshot(id string, data []byte) error {
 
 // InitRepository creates a new repository
 func (backend *StorageAmazonS3) InitRepository() error {
-	chunkBucketExist, err := backend.client.BucketExists(backend.bucketPrefix + "_chunks")
+	chunkBucketExist, err := backend.client.BucketExists(backend.bucketPrefix + "-chunks")
 	if err != nil {
 		return err
 	}
 	if !chunkBucketExist {
-		err = backend.client.MakeBucket(backend.bucketPrefix+"_chunks", backend.region)
+		err = backend.client.MakeBucket(backend.bucketPrefix+"-chunks", backend.region)
 		if err != nil {
 			return err
 		}
@@ -108,12 +108,12 @@ func (backend *StorageAmazonS3) InitRepository() error {
 		return ErrRepositoryExists
 	}
 
-	snapshotBucketExist, err := backend.client.BucketExists(backend.bucketPrefix + "_snapshots")
+	snapshotBucketExist, err := backend.client.BucketExists(backend.bucketPrefix + "-snapshots")
 	if err != nil {
 		return err
 	}
 	if !snapshotBucketExist {
-		err = backend.client.MakeBucket(backend.bucketPrefix+"_snapshots", backend.region)
+		err = backend.client.MakeBucket(backend.bucketPrefix+"-snapshots", backend.region)
 		if err != nil {
 			return err
 		}
