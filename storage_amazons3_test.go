@@ -52,3 +52,20 @@ func TestNewStorageAmazonS3(t *testing.T) {
 		t.Error(ErrInvalidRepositoryURL)
 	}
 }
+func createValidStorageAmazonS3Object() *StorageAmazonS3 {
+	s3, _ := NewStorageAmazonS3(*createValidStorageURL())
+	return s3
+}
+
+func createValidStorageURL() *url.URL {
+	accesskey := "USWUXHGYZQYFYFFIT3RE"
+	secretkey := "MOJRH0mkL1IPauahWITSVvyDrQbEEIwljvmxdq03"
+
+	// create a random bucket name every time to avoid collisions
+	rnd := make([]byte, 8)
+	rand.Read(rnd)
+	bucket := hex.EncodeToString(rnd)
+
+	validURL, _ := url.Parse("s3://" + accesskey + ":" + secretkey + "@127.0.0.1:9000/us-east-1/" + bucket)
+	return validURL
+}
