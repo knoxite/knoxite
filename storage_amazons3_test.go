@@ -51,13 +51,4 @@ func TestNewStorageAmazonS3(t *testing.T) {
 	if err == nil {
 		t.Error(ErrInvalidRepositoryURL)
 	}
-
-	missingBucket, err := url.Parse("s3://" + accesskey + ":" + secretkey + "@127.0.0.1:9000/us-east-1/")
-	if err == nil {
-		t.Error(ErrInvalidRepositoryURL)
-	}
-	_, err = NewStorageAmazonS3(*missingBucket)
-	if err != nil {
-		t.Error(err)
-	}
 }
