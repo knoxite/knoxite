@@ -9,6 +9,7 @@ package knoxite
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"net/url"
 	"strconv"
@@ -27,6 +28,10 @@ type StorageAmazonS3 struct {
 	client           *minio.Client
 }
 
+var (
+	ErrInvalidUsername = errors.New("Username wrong or missing")
+)
+
 // NewStorageAmazonS3 returns a StorageAmazonS3 object.
 func NewStorageAmazonS3(URL url.URL) (*StorageAmazonS3, error) {
 
@@ -40,12 +45,20 @@ func NewStorageAmazonS3(URL url.URL) (*StorageAmazonS3, error) {
 		panic("Invalid s3 url scheme")
 	}
 
+	if URL.User.Username() == "" {
+		return &StorageAmazonS3{}, ErrInvalidUsername
+	}
+
+	pw, pwexist := URL.User.Password()
+	if !pwexist {
+		return &StorageAmazonS3{}, ErrInvalidPassword
+	}
+
 	regionAndBucketPrefix := strings.Split(URL.Path, "/")
 	if len(regionAndBucketPrefix) != 3 {
 		return &StorageAmazonS3{}, ErrInvalidRepositoryURL
 	}
 
-	pw, _ := URL.User.Password()
 	cl, err := minio.New(URL.Host, URL.User.Username(), pw, ssl)
 	if err != nil {
 		return &StorageAmazonS3{}, err
