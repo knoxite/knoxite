@@ -14,7 +14,7 @@ fi
 chmod +x ./minio_test
 mkdir s3test
 
-set MINIO_ACCESS_KEY=USWUXHGYZQYFYFFIT3RE
-set MINIO_SECRET_KEY=MOJRH0mkL1IPauahWITSVvyDrQbEEIwljvmxdq03
+export MINIO_ACCESS_KEY=USWUXHGYZQYFYFFIT3RE
+export MINIO_SECRET_KEY=MOJRH0mkL1IPauahWITSVvyDrQbEEIwljvmxdq03
 
 ./minio_test server ./s3test &
