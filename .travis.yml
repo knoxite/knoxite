@@ -11,7 +11,7 @@ go:
   - 1.7
   - tip
 
-install: ./setup_minio_test_environment.sh
+before_install: ./setup_minio_test_environment.sh
 
 notifications:
   email:
