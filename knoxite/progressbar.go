@@ -13,7 +13,7 @@ import (
 
 const progressBarFormat = "[#>-]"
 
-// ProgressBar is a helper for printing a progres bar
+// ProgressBar is a helper for printing a progress bar
 type ProgressBar struct {
 	Text    string
 	Total   int64
