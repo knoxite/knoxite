@@ -1,4 +1,5 @@
 language: go
+gobuild_args: -v -tags ci
 
 os:
   - linux
