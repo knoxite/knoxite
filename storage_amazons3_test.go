@@ -1,3 +1,5 @@
+// +build ci
+
 /*
  * knoxite
  *     Copyright (c) 2016, Stefan Luecke <glaxx@glaxx.net>
