@@ -108,7 +108,7 @@ func (backend *StorageAmazonS3) LoadChunk(shasum string, part, totalParts uint) 
 func (backend *StorageAmazonS3) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
-	if _, err := backend.client.StatObject(backend.chunkBucket, fileName); err == nil {
+	if _, err = backend.client.StatObject(backend.chunkBucket, fileName); err == nil {
 		// Chunk is already stored
 		return 0, nil
 	}
