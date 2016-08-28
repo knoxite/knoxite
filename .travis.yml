@@ -12,7 +12,7 @@ go:
   - 1.7
   - tip
 
-before_install: ./integration_tests/setup_minio_test_environment.sh
+before_install: ./setup_minio_test_environment.sh
 
 notifications:
   email:
