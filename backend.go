@@ -64,9 +64,7 @@ func BackendFromURL(path string) (Backend, error) {
 			URL: path,
 		}, nil
 	case "dropbox":
-		return &StorageDropbox{
-			URL: path,
-		}, nil
+		return NewStorageDropbox(*u), nil
 	case "s3":
 		fallthrough
 	case "s3s":
