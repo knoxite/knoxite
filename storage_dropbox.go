@@ -98,10 +98,13 @@ func (backend *StorageDropbox) SaveSnapshot(id string, data []byte) error {
 // InitRepository creates a new repository
 func (backend *StorageDropbox) InitRepository() error {
 	if _, err := backend.db.CreateFolder(backend.url.Path); err != nil {
+		return ErrRepositoryExists
 	}
 	if _, err := backend.db.CreateFolder(filepath.Join(backend.url.Path, "snapshots")); err != nil {
+		return ErrRepositoryExists
 	}
 	if _, err := backend.db.CreateFolder(filepath.Join(backend.url.Path, "chunks")); err != nil {
+		return ErrRepositoryExists
 	}
 	return nil
 }
