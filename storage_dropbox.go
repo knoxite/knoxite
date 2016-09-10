@@ -2,6 +2,7 @@
  * knoxite
  *     Copyright (c) 2016, Christian Muehlhaeuser <muesli@gmail.com>
  *     Copyright (c) 2016, Nicolas Martin <penguwingithub@gmail.com>
+ *
  *   For license see LICENSE.txt
  */
 
@@ -9,11 +10,9 @@ package knoxite
 
 import (
 	"bytes"
+	"io/ioutil"
 	"net/url"
 	"path/filepath"
-
-	"io/ioutil"
-
 	"strconv"
 
 	"github.com/stacktic/dropbox"
@@ -67,7 +66,7 @@ func (backend *StorageDropbox) LoadChunk(shasum string, part, totalParts uint) (
 	return &data, err
 }
 
-// StoreChunk stores a single Chunk from dropbox
+// StoreChunk stores a single Chunk on dropbox
 func (backend *StorageDropbox) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
