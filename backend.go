@@ -69,6 +69,10 @@ func BackendFromURL(path string) (Backend, error) {
 		fallthrough
 	case "s3s":
 		return NewStorageAmazonS3(*u)
+	case "backblaze":
+		return &StorageBackblaze{
+			URL: path,
+		}, nil
 	case "":
 		return &StorageLocal{
 			Path: path,
