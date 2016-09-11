@@ -10,6 +10,7 @@ package knoxite
 import (
 	"errors"
 	"net/url"
+	"strings"
 )
 
 // Backend is used to store and access data
@@ -56,6 +57,10 @@ var (
 
 // BackendFromURL returns the matching backend for path
 func BackendFromURL(path string) (Backend, error) {
+	if strings.Index(path, "://") < 0 {
+		path = "file:///" + path
+	}
+
 	u, err := url.Parse(path)
 	if err != nil {
 		return nil, err
@@ -80,8 +85,8 @@ func BackendFromURL(path string) (Backend, error) {
 	case "s3s":
 		return NewStorageAmazonS3(*u)
 
-	case "":
-		return NewStorageLocal(path)
+	case "file":
+		return NewStorageLocal(path[8:])
 
 	default:
 		return nil, ErrInvalidRepositoryURL
