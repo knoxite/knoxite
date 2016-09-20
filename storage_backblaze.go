@@ -8,9 +8,16 @@
 
 package knoxite
 
+import "net/url"
+
 // StorageBackblaze stores data on a remote Backblaze
 type StorageBackblaze struct {
 	URL string
+}
+
+func NewStorageBackblaze(URL url.URL) (*StorageBackblaze, error) {
+	return &StorageBackblaze{}, nil
+
 }
 
 // Location returns the type and location of the repository
@@ -31,6 +38,10 @@ func (backend *StorageBackblaze) Protocols() []string {
 // Description returns a user-friendly description for this backend
 func (backend *StorageBackblaze) Description() string {
 	return "Backblaze Storage"
+}
+
+func (backend *StorageBackblaze) AvailableSpace() (uint64, error) {
+	return 0, ErrAvailableSpaceUnknown
 }
 
 // LoadChunk loads a Chunk from backblaze
