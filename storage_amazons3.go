@@ -28,13 +28,13 @@ type StorageAmazonS3 struct {
 	client           *minio.Client
 }
 
+// Error declarations
 var (
 	ErrInvalidUsername = errors.New("Username wrong or missing")
 )
 
-// NewStorageAmazonS3 returns a StorageAmazonS3 object.
+// NewStorageAmazonS3 returns a StorageAmazonS3 object
 func NewStorageAmazonS3(URL url.URL) (*StorageAmazonS3, error) {
-
 	ssl := true
 	switch URL.Scheme {
 	case "s3":
@@ -91,6 +91,11 @@ func (backend *StorageAmazonS3) Protocols() []string {
 // Description returns a user-friendly description for this backend
 func (backend *StorageAmazonS3) Description() string {
 	return "Amazon S3 Storage"
+}
+
+// AvailableSpace returns the free space on this backend
+func (backend *StorageAmazonS3) AvailableSpace() (uint64, error) {
+	return uint64(0), ErrAvailableSpaceUnknown
 }
 
 // LoadChunk loads a Chunk from network

@@ -77,7 +77,7 @@ func (cmd CmdVolume) list() error {
 	tab := NewTable([]string{"ID", "Name", "Description"},
 		[]int64{-8, -32, -48}, "No volumes found. This repository is empty.")
 	for _, volume := range repository.Volumes {
-		tab.Rows = append(tab.Rows, []interface{}{volume.ID, volume.Name, volume.Description})
+		tab.AppendRow([]interface{}{volume.ID, volume.Name, volume.Description})
 	}
 
 	tab.Print()

@@ -10,6 +10,7 @@ package knoxite
 import (
 	"errors"
 	"net/url"
+	"path/filepath"
 )
 
 // Backend is used to store and access data
@@ -26,10 +27,13 @@ type Backend interface {
 	// Close the backend
 	Close() error
 
+	// AvailableSpace returns the free space in bytes on this backend
+	AvailableSpace() (uint64, error)
+
 	// LoadChunk loads a single Chunk
 	LoadChunk(shasum string, part, totalParts uint) (*[]byte, error)
 	// StoreChunk stores a single Chunk
-	StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error)
+	StoreChunk(shasum string, part, totalParts uint, data *[]byte) (uint64, error)
 
 	// LoadSnapshot loads a snapshot
 	LoadSnapshot(id string) ([]byte, error)
@@ -46,7 +50,8 @@ type Backend interface {
 
 // Error declarations
 var (
-	ErrInvalidRepositoryURL = errors.New("Invalid repository url specified")
+	ErrInvalidRepositoryURL  = errors.New("Invalid repository url specified")
+	ErrAvailableSpaceUnknown = errors.New("Available space is unknown or undefined")
 )
 
 // BackendFromURL returns the matching backend for path
@@ -63,21 +68,23 @@ func BackendFromURL(path string) (Backend, error) {
 		return &StorageHTTP{
 			URL: path,
 		}, nil
+
 	case "dropbox":
 		return NewStorageDropbox(*u), nil
+
 	case "s3":
 		fallthrough
 	case "s3s":
 		return NewStorageAmazonS3(*u)
-	case "backblaze":
-		return &StorageBackblaze{
-			URL: path,
-		}, nil
 	case "":
-		return &StorageLocal{
-			Path: path,
-		}, nil
+		return NewStorageLocal(path)
+
 	default:
 		return nil, ErrInvalidRepositoryURL
 	}
+}
+
+// SubDirForChunk files a chunk into a subdir, based on the chunks name
+func SubDirForChunk(id string) string {
+	return filepath.Join(id[0:2], id[2:4])
 }

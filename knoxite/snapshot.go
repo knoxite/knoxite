@@ -65,7 +65,7 @@ func (cmd CmdSnapshot) list(volID string) error {
 		if err != nil {
 			return err
 		}
-		tab.Rows = append(tab.Rows, []interface{}{
+		tab.AppendRow([]interface{}{
 			snapshot.ID,
 			snapshot.Date.Format(timeFormat),
 			knoxite.SizeToString(snapshot.Stats.Size),
@@ -75,7 +75,7 @@ func (cmd CmdSnapshot) list(volID string) error {
 		totalStorageSize += snapshot.Stats.StorageSize
 	}
 
-	tab.Summary = []interface{}{"", "", knoxite.SizeToString(totalSize), knoxite.SizeToString(totalStorageSize), ""}
+	tab.SetSummary([]interface{}{"", "", knoxite.SizeToString(totalSize), knoxite.SizeToString(totalStorageSize), ""})
 	tab.Print()
 	return nil
 }
