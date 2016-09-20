@@ -41,7 +41,7 @@ func (cmd CmdLs) Execute(args []string) error {
 	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err == nil {
 		tab := NewTable([]string{"Perms", "User", "Group", "Size", "ModTime", "Name"},
-			[]int64{-10, -5, -5, 12, -19, -48},
+			[]int64{-10, -8, -5, 12, -19, -48},
 			"No files found.")
 
 		_, snapshot, ferr := repository.FindSnapshot(args[0])
