@@ -28,6 +28,21 @@ func NewTable(headers []string, widths []int64, emptyText string) Table {
 	}
 }
 
+// AppendRow adds a row to the end of the table
+func (t *Table) AppendRow(row []interface{}) {
+	for col, v := range row {
+		s := fmt.Sprint(v)
+		if float64(len(s)) > math.Abs(float64(t.Widths[col])) {
+			l := int64(len(s))
+			if t.Widths[col] < 0 {
+				l *= -1
+			}
+			t.Widths[col] = l
+		}
+	}
+	t.Rows = append(t.Rows, row)
+}
+
 // Print writes the entire table to stdout
 func (t Table) Print() error {
 	totalWidth := int64(0)
