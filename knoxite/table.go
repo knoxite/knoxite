@@ -58,9 +58,14 @@ func (t *Table) SetSummary(summary []interface{}) {
 func (t *Table) Print() error {
 	totalWidth := int64(0)
 	format := ""
-	for _, w := range t.widths {
-		format += "%" + strconv.FormatInt(w, 10) + "s  "
-		totalWidth += int64(math.Abs(float64(w))) + 2
+	for i, w := range t.widths {
+		margin := 2
+		if i == len(t.widths)-1 {
+			// Don't add margin for the last column
+			margin = 0
+		}
+		format += "%" + strconv.FormatInt(w, 10) + "s" + strings.Repeat(" ", margin)
+		totalWidth += int64(math.Abs(float64(w))) + int64(margin)
 	}
 
 	// print header
@@ -84,9 +89,14 @@ func (t *Table) Print() error {
 func (t *Table) PrintSummary() error {
 	totalWidth := int64(0)
 	format := ""
-	for _, w := range t.widths {
-		format += "%" + strconv.FormatInt(w, 10) + "s  "
-		totalWidth += int64(math.Abs(float64(w))) + 2
+	for i, w := range t.widths {
+		margin := 2
+		if i == len(t.widths)-1 {
+			// Don't add margin for the last column
+			margin = 0
+		}
+		format += "%" + strconv.FormatInt(w, 10) + "s" + strings.Repeat(" ", margin)
+		totalWidth += int64(math.Abs(float64(w))) + int64(margin)
 	}
 
 	// print divider
