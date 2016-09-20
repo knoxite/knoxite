@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/knoxite/knoxite"
+	"github.com/muesli/gotable"
 )
 
 // CmdVolume describes the command
@@ -74,7 +75,7 @@ func (cmd CmdVolume) list() error {
 		return err
 	}
 
-	tab := NewTable([]string{"ID", "Name", "Description"},
+	tab := gotable.NewTable([]string{"ID", "Name", "Description"},
 		[]int64{-8, -32, -48}, "No volumes found. This repository is empty.")
 	for _, volume := range repository.Volumes {
 		tab.AppendRow([]interface{}{volume.ID, volume.Name, volume.Description})

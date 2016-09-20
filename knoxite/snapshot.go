@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/knoxite/knoxite"
+	"github.com/muesli/gotable"
 )
 
 // CmdSnapshot describes the command
@@ -55,7 +56,7 @@ func (cmd CmdSnapshot) list(volID string) error {
 		return err
 	}
 
-	tab := NewTable([]string{"ID", "Date", "Original Size", "Storage Size", "Description"},
+	tab := gotable.NewTable([]string{"ID", "Date", "Original Size", "Storage Size", "Description"},
 		[]int64{-8, -19, 13, 12, -48}, "No snapshots found. This volume is empty.")
 	totalSize := uint64(0)
 	totalStorageSize := uint64(0)
