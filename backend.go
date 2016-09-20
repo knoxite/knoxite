@@ -27,10 +27,13 @@ type Backend interface {
 	// Close the backend
 	Close() error
 
+	// AvailableSpace returns the free space in bytes on this backend
+	AvailableSpace() (uint64, error)
+
 	// LoadChunk loads a single Chunk
 	LoadChunk(shasum string, part, totalParts uint) (*[]byte, error)
 	// StoreChunk stores a single Chunk
-	StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error)
+	StoreChunk(shasum string, part, totalParts uint, data *[]byte) (uint64, error)
 
 	// LoadSnapshot loads a snapshot
 	LoadSnapshot(id string) ([]byte, error)
