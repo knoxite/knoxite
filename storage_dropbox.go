@@ -56,8 +56,9 @@ func (backend *StorageDropbox) Description() string {
 // LoadChunk loads a Chunk from dropbox
 func (backend *StorageDropbox) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
+	path := filepath.Join(backend.url.Path, "chunks", fileName)
 
-	obj, _, err := backend.db.Download(filepath.Join(backend.url.Path, "chunks", fileName), "", 0)
+	obj, _, err := backend.db.Download(path, "", 0)
 	if err != nil {
 		return nil, err
 	}
@@ -69,13 +70,16 @@ func (backend *StorageDropbox) LoadChunk(shasum string, part, totalParts uint) (
 // StoreChunk stores a single Chunk on dropbox
 func (backend *StorageDropbox) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
+	path := filepath.Join(backend.url.Path, "chunks", fileName)
 
-	if _, err := backend.db.Metadata(fileName, false, false, "", "", 1); err != nil {
+	if entry, err := backend.db.Metadata(path, false, false, "", "", 1); err == nil {
 		// Chunk is already stored
-		return 0, nil
+		if int(entry.Bytes) == len(*data) {
+			return 0, nil
+		}
 	}
 
-	_, err = backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(*data)), len(*data), filepath.Join(backend.url.Path, "chunks", fileName), true, "")
+	_, err = backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(*data)), len(*data), path, true, "")
 	return uint64(len(*data)), err
 }
 
