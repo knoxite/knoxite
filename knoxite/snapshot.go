@@ -75,7 +75,7 @@ func (cmd CmdSnapshot) list(volID string) error {
 		totalStorageSize += snapshot.Stats.StorageSize
 	}
 
-	tab.Summary = []interface{}{"", "", knoxite.SizeToString(totalSize), knoxite.SizeToString(totalStorageSize), ""}
+	tab.SetSummary([]interface{}{"", "", knoxite.SizeToString(totalSize), knoxite.SizeToString(totalStorageSize), ""})
 	tab.Print()
 	return nil
 }
