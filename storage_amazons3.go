@@ -35,7 +35,6 @@ var (
 
 // NewStorageAmazonS3 returns a StorageAmazonS3 object
 func NewStorageAmazonS3(URL url.URL) (*StorageAmazonS3, error) {
-
 	ssl := true
 	switch URL.Scheme {
 	case "s3":
