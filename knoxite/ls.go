@@ -7,7 +7,10 @@ import (
 	"strconv"
 
 	"github.com/knoxite/knoxite"
+	"github.com/muesli/gotable"
 )
+
+const timeFormat = "2006-01-02 15:04:05"
 
 // CmdLs describes the command
 type CmdLs struct {
@@ -40,7 +43,7 @@ func (cmd CmdLs) Execute(args []string) error {
 
 	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err == nil {
-		tab := NewTable([]string{"Perms", "User", "Group", "Size", "ModTime", "Name"},
+		tab := gotable.NewTable([]string{"Perms", "User", "Group", "Size", "ModTime", "Name"},
 			[]int64{-10, -8, -5, 12, -19, -48},
 			"No files found.")
 

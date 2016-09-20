@@ -10,6 +10,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/knoxite/knoxite"
+	"github.com/muesli/gotable"
 )
 
 // CmdRepository describes the command
@@ -120,7 +121,7 @@ func (cmd CmdRepository) info() error {
 		return err
 	}
 
-	tab := NewTable([]string{"Storage URL", "Available Space"},
+	tab := gotable.NewTable([]string{"Storage URL", "Available Space"},
 		[]int64{-48, 15},
 		"No backends found.")
 
