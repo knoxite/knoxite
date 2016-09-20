@@ -62,9 +62,10 @@ func (backend *StorageDropbox) Description() string {
 
 // LoadChunk loads a Chunk from dropbox
 func (backend *StorageDropbox) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
-	path := filepath.Join(backend.chunkPath, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
+	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))
+	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
 
-	obj, _, err := backend.db.Download(path, "", 0)
+	obj, _, err := backend.db.Download(fileName, "", 0)
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +76,13 @@ func (backend *StorageDropbox) LoadChunk(shasum string, part, totalParts uint) (
 
 // StoreChunk stores a single Chunk on dropbox
 func (backend *StorageDropbox) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (uint64, error) {
-	path := filepath.Join(backend.chunkPath, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
+	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))
+	if _, err := backend.db.CreateFolder(path); err != nil {
+		return 0, err
+	}
+	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
 
-	if entry, err := backend.db.Metadata(path, false, false, "", "", 1); err == nil {
+	if entry, err := backend.db.Metadata(fileName, false, false, "", "", 1); err == nil {
 		// Chunk is already stored
 		if int(entry.Bytes) == len(*data) {
 			return 0, nil
@@ -85,7 +90,7 @@ func (backend *StorageDropbox) StoreChunk(shasum string, part, totalParts uint, 
 	}
 
 	//FIXME: this doesn't really chunk anything - it always picks the full data block's size
-	entry, err := backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(*data)), len(*data), path, true, "")
+	entry, err := backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(*data)), len(*data), fileName, true, "")
 	return uint64(entry.Bytes), err
 }
 
