@@ -28,11 +28,12 @@ type StorageAmazonS3 struct {
 	client           *minio.Client
 }
 
+// Error declarations
 var (
 	ErrInvalidUsername = errors.New("Username wrong or missing")
 )
 
-// NewStorageAmazonS3 returns a StorageAmazonS3 object.
+// NewStorageAmazonS3 returns a StorageAmazonS3 object
 func NewStorageAmazonS3(URL url.URL) (*StorageAmazonS3, error) {
 
 	ssl := true
