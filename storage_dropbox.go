@@ -20,15 +20,21 @@ import (
 
 // StorageDropbox stores data on a remote Dropbox
 type StorageDropbox struct {
-	url url.URL
-	db  dropbox.Dropbox
+	url            url.URL
+	chunkPath      string
+	snapshotPath   string
+	repositoryPath string
+	db             dropbox.Dropbox
 }
 
 // NewStorageDropbox returns a StorageDropbox object
 func NewStorageDropbox(url url.URL) *StorageDropbox {
 	storageDB := StorageDropbox{
-		url: url,
-		db:  *dropbox.NewDropbox(),
+		url:            url,
+		chunkPath:      filepath.Join(url.Path, "chunks"),
+		snapshotPath:   filepath.Join(url.Path, "snapshots"),
+		repositoryPath: filepath.Join(url.Path, repoFilename),
+		db:             *dropbox.NewDropbox(),
 	}
 	storageDB.db.SetAccessToken(url.User.Username())
 	return &storageDB
@@ -56,8 +62,7 @@ func (backend *StorageDropbox) Description() string {
 
 // LoadChunk loads a Chunk from dropbox
 func (backend *StorageDropbox) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
-	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
-	path := filepath.Join(backend.url.Path, "chunks", fileName)
+	path := filepath.Join(backend.chunkPath, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
 
 	obj, _, err := backend.db.Download(path, "", 0)
 	if err != nil {
@@ -70,8 +75,7 @@ func (backend *StorageDropbox) LoadChunk(shasum string, part, totalParts uint) (
 
 // StoreChunk stores a single Chunk on dropbox
 func (backend *StorageDropbox) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (uint64, error) {
-	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
-	path := filepath.Join(backend.url.Path, "chunks", fileName)
+	path := filepath.Join(backend.chunkPath, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
 
 	if entry, err := backend.db.Metadata(path, false, false, "", "", 1); err == nil {
 		// Chunk is already stored
@@ -87,7 +91,7 @@ func (backend *StorageDropbox) StoreChunk(shasum string, part, totalParts uint, 
 
 // LoadSnapshot loads a snapshot
 func (backend *StorageDropbox) LoadSnapshot(id string) ([]byte, error) {
-	path := filepath.Join(backend.url.Path, "snapshots", id)
+	path := filepath.Join(backend.snapshotPath, id)
 	// Getting obj as type io.ReadCloser and reading it out in order to get bytes returned
 	obj, _, err := backend.db.Download(path, "", 0)
 	if err != nil {
@@ -98,7 +102,7 @@ func (backend *StorageDropbox) LoadSnapshot(id string) ([]byte, error) {
 
 // SaveSnapshot stores a snapshot
 func (backend *StorageDropbox) SaveSnapshot(id string, data []byte) error {
-	path := filepath.Join(backend.url.Path, "snapshots", id)
+	path := filepath.Join(backend.snapshotPath, id)
 	_, err := backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(data)), len(data), path, true, "")
 	return err
 }
@@ -108,10 +112,10 @@ func (backend *StorageDropbox) InitRepository() error {
 	if _, err := backend.db.CreateFolder(backend.url.Path); err != nil {
 		return ErrRepositoryExists
 	}
-	if _, err := backend.db.CreateFolder(filepath.Join(backend.url.Path, "snapshots")); err != nil {
+	if _, err := backend.db.CreateFolder(backend.snapshotPath); err != nil {
 		return ErrRepositoryExists
 	}
-	if _, err := backend.db.CreateFolder(filepath.Join(backend.url.Path, "chunks")); err != nil {
+	if _, err := backend.db.CreateFolder(backend.chunkPath); err != nil {
 		return ErrRepositoryExists
 	}
 	return nil
@@ -119,7 +123,7 @@ func (backend *StorageDropbox) InitRepository() error {
 
 // LoadRepository reads the metadata for a repository
 func (backend *StorageDropbox) LoadRepository() ([]byte, error) {
-	obj, _, err := backend.db.Download(filepath.Join(backend.url.Path, repoFilename), "", 0)
+	obj, _, err := backend.db.Download(backend.repositoryPath, "", 0)
 	if err != nil {
 		return nil, err
 	}
@@ -128,6 +132,6 @@ func (backend *StorageDropbox) LoadRepository() ([]byte, error) {
 
 // SaveRepository stores the metadata for a repository
 func (backend *StorageDropbox) SaveRepository(data []byte) error {
-	_, err := backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(data)), len(data), filepath.Join(backend.url.Path, repoFilename), true, "")
+	_, err := backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(data)), len(data), backend.repositoryPath, true, "")
 	return err
 }
