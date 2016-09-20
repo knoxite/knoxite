@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"syscall"
 )
 
 const (
@@ -62,6 +63,15 @@ func (backend *StorageLocal) Protocols() []string {
 // Description returns a user-friendly description for this backend
 func (backend *StorageLocal) Description() string {
 	return "Local File Storage"
+}
+
+// AvailableSpace returns the free space on this backend
+func (backend *StorageLocal) AvailableSpace() (uint64, error) {
+	var stat syscall.Statfs_t
+	syscall.Statfs(backend.path, &stat)
+
+	// Available blocks * size per block = available space in bytes
+	return stat.Bavail * uint64(stat.Bsize), nil
 }
 
 // LoadChunk loads a Chunk from disk

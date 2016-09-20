@@ -60,6 +60,16 @@ func (backend *StorageDropbox) Description() string {
 	return "Dropbox Storage"
 }
 
+// AvailableSpace returns the free space on this backend
+func (backend *StorageDropbox) AvailableSpace() (uint64, error) {
+	account, err := backend.db.GetAccountInfo()
+	if err != nil {
+		return 0, err
+	}
+
+	return uint64(account.QuotaInfo.Quota - account.QuotaInfo.Shared - account.QuotaInfo.Normal), nil
+}
+
 // LoadChunk loads a Chunk from dropbox
 func (backend *StorageDropbox) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
 	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))

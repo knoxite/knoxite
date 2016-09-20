@@ -51,6 +51,11 @@ func (backend *StorageHTTP) Description() string {
 	return "HTTP(S) Storage"
 }
 
+// AvailableSpace returns the free space on this backend
+func (backend *StorageHTTP) AvailableSpace() (uint64, error) {
+	return uint64(0), ErrAvailableSpaceUnknown
+}
+
 // LoadChunk loads a Chunk from network
 func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
 	//	fmt.Printf("Fetching from: %s.\n", backend.URL+"/download/"+chunk.ShaSum)

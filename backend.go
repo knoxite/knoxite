@@ -47,7 +47,8 @@ type Backend interface {
 
 // Error declarations
 var (
-	ErrInvalidRepositoryURL = errors.New("Invalid repository url specified")
+	ErrInvalidRepositoryURL  = errors.New("Invalid repository url specified")
+	ErrAvailableSpaceUnknown = errors.New("Available space is unknown or undefined")
 )
 
 // BackendFromURL returns the matching backend for path

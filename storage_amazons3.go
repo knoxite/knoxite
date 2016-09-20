@@ -93,6 +93,11 @@ func (backend *StorageAmazonS3) Description() string {
 	return "Amazon S3 Storage"
 }
 
+// AvailableSpace returns the free space on this backend
+func (backend *StorageAmazonS3) AvailableSpace() (uint64, error) {
+	return uint64(0), ErrAvailableSpaceUnknown
+}
+
 // LoadChunk loads a Chunk from network
 func (backend *StorageAmazonS3) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
