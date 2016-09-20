@@ -24,6 +24,7 @@ type StorageDropbox struct {
 	db  dropbox.Dropbox
 }
 
+// NewStorageDropbox returns a StorageDropbox object
 func NewStorageDropbox(url url.URL) *StorageDropbox {
 	storageDB := StorageDropbox{
 		url: url,
@@ -68,7 +69,7 @@ func (backend *StorageDropbox) LoadChunk(shasum string, part, totalParts uint) (
 }
 
 // StoreChunk stores a single Chunk on dropbox
-func (backend *StorageDropbox) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
+func (backend *StorageDropbox) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (uint64, error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 	path := filepath.Join(backend.url.Path, "chunks", fileName)
 
@@ -79,14 +80,16 @@ func (backend *StorageDropbox) StoreChunk(shasum string, part, totalParts uint, 
 		}
 	}
 
-	_, err = backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(*data)), len(*data), path, true, "")
-	return uint64(len(*data)), err
+	//FIXME: this doesn't really chunk anything - it always picks the full data block's size
+	entry, err := backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(*data)), len(*data), path, true, "")
+	return uint64(entry.Bytes), err
 }
 
 // LoadSnapshot loads a snapshot
 func (backend *StorageDropbox) LoadSnapshot(id string) ([]byte, error) {
+	path := filepath.Join(backend.url.Path, "snapshots", id)
 	// Getting obj as type io.ReadCloser and reading it out in order to get bytes returned
-	obj, _, err := backend.db.Download(filepath.Join(backend.url.Path, "snapshots", id), "", 0)
+	obj, _, err := backend.db.Download(path, "", 0)
 	if err != nil {
 		return nil, err
 	}
@@ -95,8 +98,9 @@ func (backend *StorageDropbox) LoadSnapshot(id string) ([]byte, error) {
 
 // SaveSnapshot stores a snapshot
 func (backend *StorageDropbox) SaveSnapshot(id string, data []byte) error {
-	_, ErrStoreSnapshotFailed := backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(data)), len(data), filepath.Join(backend.url.Path, "snapshots", id), true, "")
-	return ErrStoreSnapshotFailed
+	path := filepath.Join(backend.url.Path, "snapshots", id)
+	_, err := backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(data)), len(data), path, true, "")
+	return err
 }
 
 // InitRepository creates a new repository
