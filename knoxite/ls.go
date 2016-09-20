@@ -56,7 +56,7 @@ func (cmd CmdLs) Execute(args []string) error {
 				username = u.Username
 			}
 			groupname := strconv.FormatInt(int64(archive.GID), 10)
-			tab.Rows = append(tab.Rows, []interface{}{
+			tab.AppendRow([]interface{}{
 				archive.Mode,
 				username,
 				groupname,

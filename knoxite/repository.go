@@ -126,7 +126,7 @@ func (cmd CmdRepository) info() error {
 
 	for _, be := range r.Backend.Backends {
 		space, _ := (*be).AvailableSpace()
-		tab.Rows = append(tab.Rows, []interface{}{
+		tab.AppendRow([]interface{}{
 			(*be).Location(),
 			knoxite.SizeToString(space)})
 	}
