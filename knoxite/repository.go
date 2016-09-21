@@ -70,12 +70,12 @@ func (cmd CmdRepository) init() error {
 			hostname = "unknown"
 		}*/
 
-	_, err := newRepository(cmd.global.Repo, cmd.global.Password)
+	r, err := newRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return fmt.Errorf("Creating repository at %s failed: %v", cmd.global.Repo, err)
 	}
 
-	fmt.Printf("Created new repository at %s\n", cmd.global.Repo)
+	fmt.Printf("Created new repository at %s\n", (*r.Backend.Backends[0]).Location())
 	return nil
 }
 
