@@ -10,6 +10,7 @@ package knoxite
 
 import (
 	"bytes"
+	"encoding/base64"
 	"io/ioutil"
 	"net/url"
 	"path/filepath"
@@ -24,20 +25,33 @@ type StorageDropbox struct {
 	chunkPath      string
 	snapshotPath   string
 	repositoryPath string
-	db             dropbox.Dropbox
+	db             *dropbox.Dropbox
 }
 
 // NewStorageDropbox returns a StorageDropbox object
-func NewStorageDropbox(url url.URL) *StorageDropbox {
-	storageDB := StorageDropbox{
-		url:            url,
-		chunkPath:      filepath.Join(url.Path, "chunks"),
-		snapshotPath:   filepath.Join(url.Path, "snapshots"),
-		repositoryPath: filepath.Join(url.Path, repoFilename),
-		db:             *dropbox.NewDropbox(),
+func NewStorageDropbox(u url.URL) *StorageDropbox {
+	storage := StorageDropbox{
+		url:            u,
+		chunkPath:      filepath.Join(u.Path, "chunks"),
+		snapshotPath:   filepath.Join(u.Path, "snapshots"),
+		repositoryPath: filepath.Join(u.Path, repoFilename),
+		db:             dropbox.NewDropbox(),
 	}
-	storageDB.db.SetAccessToken(url.User.Username())
-	return &storageDB
+
+	ak, _ := base64.StdEncoding.DecodeString("aXF1bGs0a25vajIydGttCg==")
+	as, _ := base64.StdEncoding.DecodeString("N3htbmlhcDV0cmE5NTE5Cg==")
+	storage.db.SetAppInfo(string(ak), string(as))
+
+	if storage.url.User == nil || len(storage.url.User.Username()) == 0 {
+		if err := storage.db.Auth(); err != nil {
+			panic(err)
+		}
+		storage.url.User = url.User(storage.db.AccessToken())
+	} else {
+		storage.db.SetAccessToken(storage.url.User.Username())
+	}
+
+	return &storage
 }
 
 // Location returns the type and location of the repository
