@@ -38,8 +38,8 @@ func NewStorageDropbox(u url.URL) *StorageDropbox {
 		db:             dropbox.NewDropbox(),
 	}
 
-	ak, _ := base64.StdEncoding.DecodeString("aXF1bGs0a25vajIydGttCg==")
-	as, _ := base64.StdEncoding.DecodeString("N3htbmlhcDV0cmE5NTE5Cg==")
+	ak, _ := base64.StdEncoding.DecodeString("aXF1bGs0a25vajIydGtt")
+	as, _ := base64.StdEncoding.DecodeString("N3htbmlhcDV0cmE5NTE5")
 	storage.db.SetAppInfo(string(ak), string(as))
 
 	if storage.url.User == nil || len(storage.url.User.Username()) == 0 {
