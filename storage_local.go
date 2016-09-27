@@ -8,40 +8,21 @@
 package knoxite
 
 import (
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-	"strconv"
 	"syscall"
-)
-
-const (
-	repoFilename = "repository.knox"
-)
-
-// Error declarations
-var (
-	ErrRepositoryExists = errors.New("Repository seems to already exist")
 )
 
 // StorageLocal stores data on the local disk
 type StorageLocal struct {
-	path           string
-	chunkPath      string
-	snapshotPath   string
-	repositoryPath string
+	StorageFilesystem
 }
 
 // NewStorageLocal returns a StorageLocal object
 func NewStorageLocal(path string) (*StorageLocal, error) {
-	storage := StorageLocal{
-		path:           path,
-		chunkPath:      filepath.Join(path, "chunks"),
-		snapshotPath:   filepath.Join(path, "snapshots"),
-		repositoryPath: filepath.Join(path, repoFilename),
-	}
+	storage := StorageLocal{}
+	storagefs, _ := NewStorageFilesystem(path, &storage)
+	storage.StorageFilesystem = storagefs
 	return &storage, nil
 }
 
@@ -67,6 +48,7 @@ func (backend *StorageLocal) Description() string {
 
 // AvailableSpace returns the free space on this backend
 func (backend *StorageLocal) AvailableSpace() (uint64, error) {
+	//FIXME: make this cross-platform compatible
 	var stat syscall.Statfs_t
 	syscall.Statfs(backend.path, &stat)
 
@@ -74,81 +56,28 @@ func (backend *StorageLocal) AvailableSpace() (uint64, error) {
 	return stat.Bavail * uint64(stat.Bsize), nil
 }
 
-// LoadChunk loads a Chunk from disk
-func (backend *StorageLocal) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
-	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))
-	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
-	b := []byte{}
-	b, err := ioutil.ReadFile(fileName)
+// CreatePath creates a dir including all its parents dirs, when required
+func (backend *StorageLocal) CreatePath(path string) error {
+	return os.MkdirAll(path, 0700)
+}
+
+// Stat stats a file on disk
+func (backend StorageLocal) Stat(path string) (uint64, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return 0, err
+	}
+	return uint64(stat.Size()), err
+}
+
+// ReadFile reads a file from disk
+func (backend StorageLocal) ReadFile(path string) (*[]byte, error) {
+	b, err := ioutil.ReadFile(path)
 	return &b, err
 }
 
-// StoreChunk stores a single Chunk on disk
-func (backend *StorageLocal) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
-	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))
-	os.MkdirAll(path, 0700)
-	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
-	if _, err = os.Stat(fileName); err == nil {
-		// Chunk is already stored
-		return 0, nil
-	}
-
-	err = ioutil.WriteFile(fileName, *data, 0600)
-	if err != nil {
-		fmt.Println(err)
-	}
+// WriteFile writes a file to disk
+func (backend StorageLocal) WriteFile(path string, data *[]byte) (size uint64, err error) {
+	err = ioutil.WriteFile(path, *data, 0600)
 	return uint64(len(*data)), err
-}
-
-// LoadSnapshot loads a snapshot
-func (backend *StorageLocal) LoadSnapshot(id string) ([]byte, error) {
-	b, err := ioutil.ReadFile(filepath.Join(backend.snapshotPath, id))
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return b, err
-}
-
-// SaveSnapshot stores a snapshot
-func (backend *StorageLocal) SaveSnapshot(id string, b []byte) error {
-	return ioutil.WriteFile(filepath.Join(backend.snapshotPath, id), b, 0600)
-}
-
-// InitRepository creates a new repository
-func (backend *StorageLocal) InitRepository() error {
-	if _, err := os.Stat(backend.repositoryPath); err == nil {
-		// Repo seems to already exist
-		return ErrRepositoryExists
-	}
-	paths := []string{backend.chunkPath, backend.snapshotPath}
-	for _, path := range paths {
-		if stat, serr := os.Stat(path); serr == nil {
-			if !stat.IsDir() {
-				return errors.New("Repository contains an invalid file named " + path)
-			}
-		} else {
-			err := os.Mkdir(path, 0700)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// LoadRepository reads the metadata for a repository
-func (backend *StorageLocal) LoadRepository() ([]byte, error) {
-	b, err := ioutil.ReadFile(backend.repositoryPath)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return b, err
-}
-
-// SaveRepository stores the metadata for a repository
-func (backend *StorageLocal) SaveRepository(b []byte) error {
-	return ioutil.WriteFile(backend.repositoryPath, b, 0600)
 }

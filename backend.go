@@ -10,7 +10,6 @@ package knoxite
 import (
 	"errors"
 	"net/url"
-	"path/filepath"
 )
 
 // Backend is used to store and access data
@@ -50,6 +49,7 @@ type Backend interface {
 
 // Error declarations
 var (
+	ErrRepositoryExists      = errors.New("Repository seems to already exist")
 	ErrInvalidRepositoryURL  = errors.New("Invalid repository url specified")
 	ErrAvailableSpaceUnknown = errors.New("Available space is unknown or undefined")
 )
@@ -83,9 +83,4 @@ func BackendFromURL(path string) (Backend, error) {
 	default:
 		return nil, ErrInvalidRepositoryURL
 	}
-}
-
-// SubDirForChunk files a chunk into a subdir, based on the chunks name
-func SubDirForChunk(id string) string {
-	return filepath.Join(id[0:2], id[2:4])
 }
