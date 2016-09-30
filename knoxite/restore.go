@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/knoxite/knoxite"
+	"github.com/muesli/goprogressbar"
 )
 
 // CmdRestore describes the command
@@ -52,7 +53,7 @@ func (cmd CmdRestore) Execute(args []string) error {
 		if derr != nil {
 			return derr
 		}
-		pb := NewProgressBar("", 0, 0, 60)
+		pb := goprogressbar.NewProgressBar("", 0, 0, 60)
 		stats := knoxite.Stats{}
 		lastPath := ""
 
@@ -66,6 +67,9 @@ func (cmd CmdRestore) Execute(args []string) error {
 				}
 				lastPath = p.Path
 				pb.Text = p.Path
+				pb.RightAlignedText = fmt.Sprintf("%s / %s",
+					knoxite.SizeToString(uint64(pb.Current)),
+					knoxite.SizeToString(uint64(pb.Total)))
 			}
 			pb.Print()
 		}

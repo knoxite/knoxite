@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/knoxite/knoxite"
+	"github.com/muesli/goprogressbar"
 )
 
 // CmdStore describes the command
@@ -32,7 +33,7 @@ func init() {
 
 func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snapshot, targets []string) error {
 	fmt.Println()
-	overallProgressBar := NewProgressBar("Overall Progress", 0, 0, 60)
+	overallProgressBar := goprogressbar.NewProgressBar("Overall Progress", 0, 0, 60)
 	wd, gerr := os.Getwd()
 	if gerr != nil {
 		return gerr
@@ -48,7 +49,7 @@ func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snap
 		return serr
 	}
 
-	fileProgressBar := NewProgressBar("", 0, 0, 60)
+	fileProgressBar := goprogressbar.NewProgressBar("", 0, 0, 60)
 	lastPath := ""
 	for p := range progress {
 		if p.Path != lastPath && lastPath != "" {
@@ -56,21 +57,25 @@ func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snap
 		}
 		fileProgressBar.Total = int64(p.Size)
 		fileProgressBar.Current = int64(p.StorageSize)
+		fileProgressBar.RightAlignedText = fmt.Sprintf("%s / %s",
+			knoxite.SizeToString(uint64(fileProgressBar.Current)),
+			knoxite.SizeToString(uint64(fileProgressBar.Total)))
 
 		overallProgressBar.Total = int64(p.Statistics.Size)
 		overallProgressBar.Current = int64(p.Statistics.StorageSize)
+		overallProgressBar.RightAlignedText = fmt.Sprintf("%s / %s",
+			knoxite.SizeToString(uint64(overallProgressBar.Current)),
+			knoxite.SizeToString(uint64(overallProgressBar.Total)))
 
 		if p.Path != lastPath {
 			lastPath = p.Path
 			fileProgressBar.Text = p.Path
 		}
 
-		moveCursorUp(1)
+		goprogressbar.MoveCursorUp(1)
 		fileProgressBar.Print()
-		moveCursorDown(1)
+		goprogressbar.MoveCursorDown(1)
 		overallProgressBar.Print()
-
-		// fmt.Printf("\033[2K\r%s - [%s]", p.Stats.String(), p.Path)
 	}
 
 	fmt.Printf("\nSnapshot %s created: %s\n", snapshot.ID, snapshot.Stats.String())

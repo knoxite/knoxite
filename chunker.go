@@ -14,9 +14,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"sync"
+
+	"github.com/muesli/chunker"
 )
 
 // Which compression algo
@@ -133,13 +134,7 @@ func chunkFile(filename string, compress, encrypt bool, password string, dataPar
 		return c, err
 	}
 
-	fileInfo, _ := file.Stat()
-	fileSize := fileInfo.Size()
 	const fileChunk = 1 * (1 << 20) // 1 MB, change this to your requirement
-
-	// calculate total number of parts the file will be chunked into
-	totalParts := uint64(math.Ceil(float64(fileSize) / float64(fileChunk)))
-	// fmt.Printf("Splitting %s to %d pieces.\n", filename, totalParts)
 
 	wg := &sync.WaitGroup{}
 	jobs := make(chan inputChunk)
@@ -147,21 +142,29 @@ func chunkFile(filename string, compress, encrypt bool, password string, dataPar
 		go processChunk(w, compress, encrypt, password, dataParts, parityParts, jobs, c, wg)
 	}
 
-	wg.Add(int(totalParts))
+	wg.Add(1)
 	go func() {
-		for i := uint64(0); i < totalParts; i++ {
-			partSize := int(math.Min(fileChunk, float64(fileSize-int64(i*fileChunk))))
-			partBuffer := make([]byte, partSize)
+		chunker := chunker.New(file, chunker.Pol(0x3DA3358B4DC173))
 
-			_, err = io.ReadFull(file, partBuffer)
+		i := uint64(0)
+		for {
+			partBuffer := make([]byte, fileChunk)
+			chunk, err := chunker.Next(partBuffer)
+			if err == io.EOF {
+				wg.Done()
+				break
+			}
 			if err != nil {
 				panic(err)
 			}
+
+			wg.Add(1)
 			j := inputChunk{
-				Data: partBuffer,
+				Data: chunk.Data,
 				Num:  i,
 			}
 
+			i++
 			jobs <- j
 		}
 		file.Close()
