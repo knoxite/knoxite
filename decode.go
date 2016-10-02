@@ -13,10 +13,13 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 
 	"github.com/klauspost/reedsolomon"
@@ -234,7 +237,7 @@ func DecodeArchiveData(repository Repository, arc ItemData) (dat []byte, stats S
 	return dat, stats, nil
 }
 
-func readArchiveChunk(repository Repository, arc ItemData, chunkNum uint64) (dat *[]byte, err error) {
+func readArchiveChunk(repository Repository, arc ItemData, chunkNum uint) (dat *[]byte, err error) {
 	dat = &[]byte{}
 	for _, chunk := range arc.Chunks {
 		if chunk.Num == chunkNum {
@@ -261,16 +264,48 @@ func readArchiveChunk(repository Repository, arc ItemData, chunkNum uint64) (dat
 	return dat, nil
 }
 
+func indexOfChunk(arc ItemData, chunkNum uint) (int, error) {
+	for i, chunk := range arc.Chunks {
+		if chunk.Num == chunkNum {
+			return i, nil
+		}
+	}
+
+	return 0, errors.New("Could not find chunk #" + strconv.FormatUint(uint64(chunkNum), 10))
+}
+
+func chunkForOffset(arc ItemData, offset int) (uint, int, error) {
+	size := 0
+	for i := 0; i < len(arc.Chunks); i++ {
+		idx, err := indexOfChunk(arc, uint(i))
+		if err != nil {
+			break
+		}
+
+		chunk := arc.Chunks[idx]
+		if size+chunk.OriginalSize > offset {
+			internalOffset := offset - size
+			return chunk.Num, internalOffset, nil
+		}
+
+		size += chunk.OriginalSize
+	}
+
+	if offset >= size {
+		return 0, 0, io.EOF
+	}
+	return 0, 0, errors.New("Could not find offset #" + strconv.FormatInt(int64(offset), 10))
+}
+
 // ReadArchive reads from an archive
-func ReadArchive(repository Repository, arc ItemData, offset int64, size int) (dat *[]byte, err error) {
+func ReadArchive(repository Repository, arc ItemData, offset int, size int) (dat *[]byte, err error) {
 	dat = &[]byte{}
 	//	fmt.Println("Read req:", offset, size)
 	if arc.Type == File {
-		const fileChunk = 1 * (1 << 20) // 1 MB, change this to your requirement
-
-		// calculate needed part for offset
-		neededPart := uint64(float64(offset) / float64(fileChunk))
-		internalOffset := offset % fileChunk
+		neededPart, internalOffset, err := chunkForOffset(arc, offset)
+		if err != nil {
+			return dat, err
+		}
 
 		for len(*dat) < size {
 			b, err := readArchiveChunk(repository, arc, neededPart)
@@ -285,8 +320,8 @@ func ReadArchive(repository Repository, arc ItemData, offset int64, size int) (d
 				//return dat, err
 				panic(err)
 			}
-			if len(d) >= size {
-				*dat = append(*dat, d[:size]...)
+			if len(d)+len(*dat) > size {
+				*dat = append(*dat, d[:size-len(*dat)]...)
 			} else {
 				*dat = append(*dat, d...)
 			}

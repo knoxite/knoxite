@@ -53,17 +53,18 @@ type Chunk struct {
 	Data            *[][]byte `json:"-"`
 	DataParts       uint      `json:"data_parts"`
 	ParityParts     uint      `json:"parity_parts"`
+	OriginalSize    int       `json:"original_size"`
 	Size            int       `json:"size"`
 	DecryptedShaSum string    `json:"decrypted_sha256"`
 	ShaSum          string    `json:"sha256"`
 	Encrypted       int       `json:"encrypted"`
 	Compressed      int       `json:"compressed"`
-	Num             uint64    `json:"num"`
+	Num             uint      `json:"num"`
 }
 
 type inputChunk struct {
 	Data []byte
-	Num  uint64
+	Num  uint
 }
 
 func processChunk(id int, compress, encrypt bool, password string, dataParts, parityParts int, jobs <-chan inputChunk, results chan<- Chunk, wg *sync.WaitGroup) {
@@ -95,6 +96,7 @@ func processChunk(id int, compress, encrypt bool, password string, dataParts, pa
 		cd := Chunk{
 			DataParts:       uint(dataParts),
 			ParityParts:     uint(parityParts),
+			OriginalSize:    len(j.Data),
 			Size:            len(finalData),
 			DecryptedShaSum: decshasum,
 			ShaSum:          shasum,
@@ -146,7 +148,7 @@ func chunkFile(filename string, compress, encrypt bool, password string, dataPar
 	go func() {
 		chunker := chunker.New(file, chunker.Pol(0x3DA3358B4DC173))
 
-		i := uint64(0)
+		i := uint(0)
 		for {
 			partBuffer := make([]byte, fileChunk)
 			chunk, err := chunker.Next(partBuffer)
