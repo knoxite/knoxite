@@ -6,6 +6,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -207,12 +208,16 @@ func (node *Node) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.Op
 
 // Read reads from a file
 func (node *Node) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
-	d, err := knoxite.ReadArchive(*node.Repository, node.Item, req.Offset, req.Size)
+	d, err := knoxite.ReadArchive(*node.Repository, node.Item, int(req.Offset), req.Size)
 	if err != nil {
-		return err
+		if err != io.EOF {
+			return err
+		}
+		resp.Data = nil
+	} else {
+		resp.Data = *d
 	}
 
-	resp.Data = *d
 	return nil
 }
 
