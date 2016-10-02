@@ -9,7 +9,7 @@ package knoxite
 
 import "errors"
 
-// BackendManager storfes data on multiple backends
+// BackendManager stores data on multiple backends
 type BackendManager struct {
 	Backends []*Backend
 
