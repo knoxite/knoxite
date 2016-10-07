@@ -140,36 +140,38 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 	} else if arc.Type == File {
 		prog.Statistics.StorageSize = arc.StorageSize
 		prog.StorageSize = arc.StorageSize
-		parts := len(arc.Chunks)
+		parts := uint(len(arc.Chunks))
 		//fmt.Printf("Creating file %s (%d chunks).\n", path, parts)
 
 		// write to disk
 		os.MkdirAll(filepath.Dir(path), 0755)
-		f, ferr := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, arc.Mode)
-		if ferr != nil {
-			return ferr
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, arc.Mode)
+		if err != nil {
+			return err
 		}
 
-		for i := int(0); i < parts; i++ {
-			for _, chunk := range arc.Chunks {
-				if int(chunk.Num) == i {
-					finalData, cerr := loadChunk(repository, chunk)
-					if cerr != nil {
-						return cerr
-					}
-
-					// write/save buffer to disk
-					_, ferr := f.Write(finalData)
-					if ferr != nil {
-						return ferr
-					}
-
-					prog.Statistics.Size += uint64(len(finalData))
-					prog.Size += uint64(len(finalData))
-					progress <- prog
-					// fmt.Printf("Chunk OK: %d bytes, sha256: %s\n", size, chunk.DecryptedShaSum)
-				}
+		for i := uint(0); i < parts; i++ {
+			idx, erri := indexOfChunk(arc, i)
+			if erri != nil {
+				return erri
 			}
+
+			chunk := arc.Chunks[idx]
+			data, errc := loadChunk(repository, chunk)
+			if errc != nil {
+				return errc
+			}
+
+			// write/save buffer to disk
+			_, err = f.Write(data)
+			if err != nil {
+				return err
+			}
+
+			prog.Statistics.Size += uint64(len(data))
+			prog.Size += uint64(len(data))
+			progress <- prog
+			// fmt.Printf("Chunk OK: %d bytes, sha256: %s\n", size, chunk.DecryptedShaSum)
 		}
 
 		f.Sync()
@@ -178,7 +180,7 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 		// fmt.Printf("Done: %d bytes total\n", totalSize)
 
 		// Restore modification time
-		err := os.Chtimes(path, arc.ModTime, arc.ModTime)
+		err = os.Chtimes(path, arc.ModTime, arc.ModTime)
 		if err != nil {
 			return err
 		}
@@ -201,37 +203,36 @@ func init() {
 // DecodeArchiveData returns the content of a single archive
 func DecodeArchiveData(repository Repository, arc ItemData) (dat []byte, stats Stats, err error) {
 	if arc.Type == File {
-		parts := len(arc.Chunks)
+		parts := uint(len(arc.Chunks))
 
-		for i := int(0); i < parts; i++ {
-			for _, chunk := range arc.Chunks {
-				if int(chunk.Num) == i {
-					mutex.Lock()
-					cacheData, ok := cache[chunk.ShaSum]
-					if ok {
-						fmt.Println("Using cached chunk", chunk.ShaSum)
-						dat = append(dat, cacheData...)
-						mutex.Unlock()
-						continue
-					}
-
-					finalData, cerr := loadChunk(repository, chunk)
-					if cerr != nil {
-						return dat, stats, cerr
-					}
-
-					stats.StorageSize += uint64(len(finalData))
-					stats.Size += uint64(len(finalData))
-
-					dat = append(dat, finalData...)
-					cache[chunk.ShaSum] = finalData
-					mutex.Unlock()
-				}
+		for i := uint(0); i < parts; i++ {
+			idx, err := indexOfChunk(arc, i)
+			if err != nil {
+				return dat, stats, err
 			}
+
+			chunk := arc.Chunks[idx]
+			mutex.Lock()
+			cacheData, ok := cache[chunk.ShaSum]
+			if ok {
+				fmt.Println("Using cached chunk", chunk.ShaSum)
+				dat = append(dat, cacheData...)
+				mutex.Unlock()
+			} else {
+				finalData, err := loadChunk(repository, chunk)
+				if err != nil {
+					return dat, stats, err
+				}
+				dat = append(dat, finalData...)
+				cache[chunk.ShaSum] = finalData
+				mutex.Unlock()
+			}
+
+			stats.StorageSize += uint64(len(dat))
+			stats.Size += uint64(len(dat))
 		}
 
 		stats.Files++
-		// fmt.Printf("Done: %d bytes total\n", totalSize)
 	}
 
 	return dat, stats, nil
@@ -239,27 +240,29 @@ func DecodeArchiveData(repository Repository, arc ItemData) (dat []byte, stats S
 
 func readArchiveChunk(repository Repository, arc ItemData, chunkNum uint) (dat *[]byte, err error) {
 	dat = &[]byte{}
-	for _, chunk := range arc.Chunks {
-		if chunk.Num == chunkNum {
-			mutex.Lock()
-			cacheData, ok := cache[chunk.ShaSum]
-			if ok {
-				//				fmt.Println("Using cached chunk", chunk.ShaSum)
-				*dat = append(*dat, cacheData...)
-				mutex.Unlock()
-				continue
-			}
-
-			finalData, err := loadChunk(repository, chunk)
-			if err != nil {
-				return dat, err
-			}
-
-			*dat = append(*dat, finalData...)
-			cache[chunk.ShaSum] = finalData
-			mutex.Unlock()
-		}
+	idx, err := indexOfChunk(arc, chunkNum)
+	if err != nil {
+		return dat, err
 	}
+
+	chunk := arc.Chunks[idx]
+	mutex.Lock()
+	cacheData, ok := cache[chunk.ShaSum]
+	if ok {
+		// fmt.Println("Using cached chunk", chunk.ShaSum)
+		*dat = append(*dat, cacheData...)
+		mutex.Unlock()
+		return dat, nil
+	}
+
+	finalData, err := loadChunk(repository, chunk)
+	if err != nil {
+		return dat, err
+	}
+
+	*dat = append(*dat, finalData...)
+	cache[chunk.ShaSum] = finalData
+	mutex.Unlock()
 
 	return dat, nil
 }
@@ -279,7 +282,7 @@ func chunkForOffset(arc ItemData, offset int) (uint, int, error) {
 	for i := 0; i < len(arc.Chunks); i++ {
 		idx, err := indexOfChunk(arc, uint(i))
 		if err != nil {
-			break
+			return 0, 0, errors.New("Could not find offset #" + strconv.FormatInt(int64(offset), 10))
 		}
 
 		chunk := arc.Chunks[idx]
@@ -291,10 +294,7 @@ func chunkForOffset(arc ItemData, offset int) (uint, int, error) {
 		size += chunk.OriginalSize
 	}
 
-	if offset >= size {
-		return 0, 0, io.EOF
-	}
-	return 0, 0, errors.New("Could not find offset #" + strconv.FormatInt(int64(offset), 10))
+	return 0, 0, io.EOF
 }
 
 // ReadArchive reads from an archive
