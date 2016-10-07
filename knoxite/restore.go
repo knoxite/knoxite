@@ -61,15 +61,16 @@ func (cmd CmdRestore) Execute(args []string) error {
 			stats.Add(p.Statistics)
 			pb.Total = int64(p.StorageSize)
 			pb.Current = int64(p.Size)
+			pb.RightAlignedText = fmt.Sprintf("%s / %s",
+				knoxite.SizeToString(uint64(pb.Current)),
+				knoxite.SizeToString(uint64(pb.Total)))
+
 			if p.Path != lastPath {
 				if len(lastPath) > 0 {
 					fmt.Println()
 				}
 				lastPath = p.Path
 				pb.Text = p.Path
-				pb.RightAlignedText = fmt.Sprintf("%s / %s",
-					knoxite.SizeToString(uint64(pb.Current)),
-					knoxite.SizeToString(uint64(pb.Total)))
 			}
 			pb.Print()
 		}
