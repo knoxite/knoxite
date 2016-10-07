@@ -138,8 +138,10 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 		os.Symlink(arc.PointsTo, path)
 		prog.Statistics.SymLinks++
 	} else if arc.Type == File {
+		prog.Statistics.Files++
 		prog.Statistics.StorageSize = arc.StorageSize
 		prog.StorageSize = arc.StorageSize
+
 		parts := uint(len(arc.Chunks))
 		//fmt.Printf("Creating file %s (%d chunks).\n", path, parts)
 
@@ -176,8 +178,6 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 
 		f.Sync()
 		f.Close()
-		prog.Statistics.Files++
-		// fmt.Printf("Done: %d bytes total\n", totalSize)
 
 		// Restore modification time
 		err = os.Chtimes(path, arc.ModTime, arc.ModTime)

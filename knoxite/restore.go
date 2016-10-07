@@ -58,7 +58,6 @@ func (cmd CmdRestore) Execute(args []string) error {
 		lastPath := ""
 
 		for p := range progress {
-			stats.Add(p.Statistics)
 			pb.Total = int64(p.StorageSize)
 			pb.Current = int64(p.Size)
 			pb.RightAlignedText = fmt.Sprintf("%s / %s",
@@ -66,12 +65,18 @@ func (cmd CmdRestore) Execute(args []string) error {
 				knoxite.SizeToString(uint64(pb.Total)))
 
 			if p.Path != lastPath {
+				// We have just started restoring a new item
 				if len(lastPath) > 0 {
 					fmt.Println()
 				}
 				lastPath = p.Path
 				pb.Text = p.Path
 			}
+			if p.Size == p.StorageSize {
+				// We have just finished restoring an item
+				stats.Add(p.Statistics)
+			}
+
 			pb.Print()
 		}
 		fmt.Println()
