@@ -47,9 +47,9 @@ func (cmd CmdVolume) Execute(args []string) error {
 		return cmd.init(args[1])
 	case "list":
 		return cmd.list()
+	default:
+		return fmt.Errorf(TUnknownCommand, cmd.Usage())
 	}
-
-	return nil
 }
 
 func (cmd CmdVolume) init(name string) error {

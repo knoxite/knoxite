@@ -40,9 +40,9 @@ func (cmd CmdSnapshot) Execute(args []string) error {
 	switch args[0] {
 	case "list":
 		return cmd.list(args[1])
+	default:
+		return fmt.Errorf(TUnknownCommand, cmd.Usage())
 	}
-
-	return nil
 }
 
 func (cmd CmdSnapshot) list(volID string) error {

@@ -11,7 +11,8 @@ import (
 
 // Translations
 const (
-	TWrongNumArgs        = "wrong number of arguments, Usage: %s"
+	TWrongNumArgs        = "Wrong number of arguments, usage: %s"
+	TUnknownCommand      = "Unknown command, usage: %s"
 	TSpecifyRepoLocation = "Please specify repository location (-r)"
 )
 

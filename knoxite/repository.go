@@ -30,7 +30,7 @@ func init() {
 
 // Usage describes this command's usage help-text
 func (cmd CmdRepository) Usage() string {
-	return "[init|add|cat]"
+	return "[init|add|cat|info]"
 }
 
 // Execute this command
@@ -54,9 +54,9 @@ func (cmd CmdRepository) Execute(args []string) error {
 		return cmd.cat()
 	case "info":
 		return cmd.info()
+	default:
+		return fmt.Errorf(TUnknownCommand, cmd.Usage())
 	}
-
-	return nil
 }
 
 func (cmd CmdRepository) init() error {
