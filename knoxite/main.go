@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -14,6 +15,11 @@ const (
 	TWrongNumArgs        = "Wrong number of arguments, usage: %s"
 	TUnknownCommand      = "Unknown command, usage: %s"
 	TSpecifyRepoLocation = "Please specify repository location (-r)"
+)
+
+// Error declarations
+var (
+	ErrMissingRepoLocation = errors.New(TSpecifyRepoLocation)
 )
 
 // GlobalOptions holds all those options that can be set for every command

@@ -39,7 +39,7 @@ func (cmd CmdRepository) Execute(args []string) error {
 		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
 	}
 	if cmd.global.Repo == "" {
-		return errors.New(TSpecifyRepoLocation)
+		return ErrMissingRepoLocation
 	}
 
 	switch args[0] {

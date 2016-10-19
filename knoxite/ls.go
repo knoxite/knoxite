@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os/user"
 	"strconv"
@@ -38,7 +37,7 @@ func (cmd CmdLs) Execute(args []string) error {
 		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
 	}
 	if cmd.global.Repo == "" {
-		return errors.New(TSpecifyRepoLocation)
+		return ErrMissingRepoLocation
 	}
 
 	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)

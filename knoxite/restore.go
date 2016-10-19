@@ -36,7 +36,7 @@ func (cmd CmdRestore) Execute(args []string) error {
 		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
 	}
 	if cmd.global.Repo == "" {
-		return errors.New(TSpecifyRepoLocation)
+		return ErrMissingRepoLocation
 	}
 	if cmd.Target == "" {
 		return errors.New("please specify a directory to restore to (--target)")

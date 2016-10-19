@@ -93,7 +93,7 @@ func (cmd CmdStore) Execute(args []string) error {
 		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
 	}
 	if cmd.global.Repo == "" {
-		return errors.New(TSpecifyRepoLocation)
+		return ErrMissingRepoLocation
 	}
 
 	targets := []string{}
