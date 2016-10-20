@@ -48,16 +48,17 @@ func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snap
 		return ErrRedundancyAmount
 	}
 
-	progress, serr := snapshot.Add(wd, targets, *repository,
+	progress := snapshot.Add(wd, targets, *repository,
 		strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none",
 		uint(len(repository.Backend.Backends))-cmd.FailureTolerance, cmd.FailureTolerance)
-	if serr != nil {
-		return serr
-	}
 
 	fileProgressBar := goprogressbar.NewProgressBar("", 0, 0, 60)
 	lastPath := ""
 	for p := range progress {
+		if p.Error != nil {
+			fmt.Println()
+			return p.Error
+		}
 		if p.Path != lastPath && lastPath != "" {
 			fmt.Println()
 		}
