@@ -48,7 +48,8 @@ func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snap
 		return ErrRedundancyAmount
 	}
 
-	progress, serr := snapshot.Add(wd, targets, *repository, strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none",
+	progress, serr := snapshot.Add(wd, targets, *repository,
+		strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none",
 		uint(len(repository.Backend.Backends))-cmd.FailureTolerance, cmd.FailureTolerance)
 	if serr != nil {
 		return serr
