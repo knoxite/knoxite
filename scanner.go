@@ -8,6 +8,7 @@
 package knoxite
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -41,27 +42,26 @@ type ItemData struct {
 func findFiles(rootPath string) chan ItemData {
 	c := make(chan ItemData)
 	go func() {
-		filepath.Walk(rootPath, func(path string, fi os.FileInfo, _ error) (err error) {
+		err := filepath.Walk(rootPath, func(path string, fi os.FileInfo, err error) error {
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "error for %v: %v\n", path, err)
-				return nil
+				fmt.Fprintf(os.Stderr, "Could not find %s\n", path)
+				return err
 			}
 			if fi == nil {
-				fmt.Fprintf(os.Stderr, "error for %v: FileInfo is nil\n", path)
-				return nil
+				fmt.Fprintf(os.Stderr, "Could not read %s\n", path)
+				return fmt.Errorf("error for %v: FileInfo is nil", path)
 			}
 
-			/*		if !filter(str, fi) {
-					debug.Log("Scan.Walk", "path %v excluded", str)
-					if fi.IsDir() {
-						return filepath.SkipDir
-					}
-					return nil
-				}*/
+			/* if !isExcluded(str, fi) {
+				if fi.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
+			}*/
 
 			statT, ok := toStatT(fi.Sys())
 			if !ok {
-				return fmt.Errorf("error reading metadata for: %s", path)
+				return &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
 			}
 			id := ItemData{
 				Path:     path,
@@ -73,9 +73,10 @@ func findFiles(rootPath string) chan ItemData {
 				FileInfo: fi,
 			}
 			if isSymLink(fi) {
-				symlink, err := os.Readlink(path)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error resolving symlink for: %v - %v\n", path, err)
+				symlink, lerr := os.Readlink(path)
+				if lerr != nil {
+					//FIXME: we should probably even (re)store invalid symlinks
+					fmt.Fprintf(os.Stderr, "error resolving symlink for: %v - %v\n", path, lerr)
 					return nil
 				}
 
@@ -91,12 +92,14 @@ func findFiles(rootPath string) chan ItemData {
 			}
 
 			c <- id
-			return
+			return nil
 		})
-		defer func() {
-			close(c)
-			//			fmt.Println("Scan done.")
-		}()
+
+		//FIXME: handle errors gracefully
+		if err != nil {
+			panic(err)
+		}
+		close(c)
 	}()
 	return c
 }

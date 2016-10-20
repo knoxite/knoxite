@@ -13,24 +13,65 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"sync"
 
 	"github.com/klauspost/reedsolomon"
 )
+
+// ChunkError records an error and the index
+// that caused it.
+type ChunkError struct {
+	ChunkNum uint
+}
+
+func (e *ChunkError) Error() string {
+	return fmt.Sprintf("Could not find chunk #%d", e.ChunkNum)
+}
+
+// SeekError records an error and the offset
+// that caused it.
+type SeekError struct {
+	Offset int
+}
+
+func (e *SeekError) Error() string {
+	return fmt.Sprintf("Could not seek to offset %d", e.Offset)
+}
+
+// CheckSumError records an error and the calculated
+// checksums that did not match.
+type CheckSumError struct {
+	Method           string
+	ExpectedCheckSum string
+	FoundCheckSum    string
+}
+
+func (e *CheckSumError) Error() string {
+	return fmt.Sprintf("%s mismatch, expected %s, got %s", e.Method, e.ExpectedCheckSum, e.FoundCheckSum)
+}
+
+// DataReconstructionError records an error and the associated
+// parity information
+type DataReconstructionError struct {
+	Chunk          Chunk
+	BlocksFound    uint
+	FailedBackends uint
+}
+
+func (e *DataReconstructionError) Error() string {
+	return fmt.Sprintf("Could not reconstruct data, got %d out of %d chunks (%d backends missing data)", e.BlocksFound, e.Chunk.DataParts, e.FailedBackends)
+}
 
 // DecodeSnapshot restores an entire snapshot to dst
 func DecodeSnapshot(repository Repository, snapshot Snapshot, dst string) (prog chan Progress, err error) {
 	prog = make(chan Progress)
 	go func() {
 		for _, arc := range snapshot.Items {
-
 			path := filepath.Join(dst, arc.Path)
 			err := DecodeArchive(prog, repository, arc, path)
 			if err != nil {
@@ -70,7 +111,7 @@ func decodeChunk(repository Repository, chunk Chunk, finalData []byte) ([]byte, 
 	shasum := hex.EncodeToString(shasumdata[:])
 
 	if chunk.DecryptedShaSum != shasum {
-		return []byte{}, fmt.Errorf("sha256 mismatch, expected %s got %s", chunk.DecryptedShaSum, shasum)
+		return []byte{}, &CheckSumError{"sha256", chunk.DecryptedShaSum, shasum}
 	}
 
 	return finalData, nil
@@ -83,7 +124,7 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 			return []byte{}, err
 		}
 		pars := make([][]byte, chunk.DataParts+chunk.ParityParts)
-		parsFound := 0
+		parsFound := uint(0)
 		parsMissing := 0
 		for i := 0; i < int(chunk.DataParts+chunk.ParityParts); i++ {
 			var cerr error
@@ -95,7 +136,7 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 			}
 			parsFound++
 
-			if parsFound >= int(chunk.DataParts) {
+			if parsFound >= chunk.DataParts {
 				var b bytes.Buffer
 				bufWriter := bufio.NewWriter(&b)
 
@@ -114,7 +155,7 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 			}
 		}
 
-		return []byte{}, fmt.Errorf("Could not reconstruct data, got %d out of %d chunks (%d backends missing data)", parsFound, chunk.DataParts, chunk.DataParts-uint(parsFound))
+		return []byte{}, &DataReconstructionError{chunk, parsFound, chunk.DataParts - parsFound}
 	}
 
 	data, err := repository.Backend.LoadChunk(chunk, 0)
@@ -274,7 +315,7 @@ func indexOfChunk(arc ItemData, chunkNum uint) (int, error) {
 		}
 	}
 
-	return 0, errors.New("Could not find chunk #" + strconv.FormatUint(uint64(chunkNum), 10))
+	return 0, &ChunkError{chunkNum}
 }
 
 func chunkForOffset(arc ItemData, offset int) (uint, int, error) {
@@ -282,7 +323,7 @@ func chunkForOffset(arc ItemData, offset int) (uint, int, error) {
 	for i := 0; i < len(arc.Chunks); i++ {
 		idx, err := indexOfChunk(arc, uint(i))
 		if err != nil {
-			return 0, 0, errors.New("Could not find offset #" + strconv.FormatInt(int64(offset), 10))
+			return 0, 0, &SeekError{offset}
 		}
 
 		chunk := arc.Chunks[idx]

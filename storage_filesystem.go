@@ -98,7 +98,7 @@ func (backend StorageFilesystem) InitRepository() error {
 			return ErrRepositoryExists
 			/*
 				if !stat.IsDir() {
-					return errors.New("Repository contains an invalid file named " + path)
+					return &os.PathError{Op: "create", Path: path, Err: errors.New("Repository path contains an invalid file")}
 				}
 			*/
 		}
