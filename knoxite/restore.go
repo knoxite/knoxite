@@ -8,6 +8,11 @@ import (
 	"github.com/muesli/goprogressbar"
 )
 
+// Error declarations
+var (
+	ErrTargetMissing = errors.New("please specify a directory to restore to (--target)")
+)
+
 // CmdRestore describes the command
 type CmdRestore struct {
 	Target string `short:"t" long:"target" description:"Directory to restore to"`
@@ -39,7 +44,7 @@ func (cmd CmdRestore) Execute(args []string) error {
 		return ErrMissingRepoLocation
 	}
 	if cmd.Target == "" {
-		return errors.New("please specify a directory to restore to (--target)")
+		return ErrTargetMissing
 	}
 
 	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)

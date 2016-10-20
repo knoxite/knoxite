@@ -11,6 +11,11 @@ import (
 	"github.com/muesli/goprogressbar"
 )
 
+// Error declarations
+var (
+	ErrRedundancyAmount = errors.New("failure tolerance can't be equal or higher as the number of storage backends")
+)
+
 // CmdStore describes the command
 type CmdStore struct {
 	Description      string `short:"d" long:"desc"        description:"a description or comment for this snapshot"`
@@ -40,7 +45,7 @@ func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snap
 	}
 
 	if uint(len(repository.Backend.Backends))-cmd.FailureTolerance <= 0 {
-		return errors.New("failure tolerance can't be equal or higher as the number of storage backends")
+		return ErrRedundancyAmount
 	}
 
 	progress, serr := snapshot.Add(wd, targets, *repository, strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none",

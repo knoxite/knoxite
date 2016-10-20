@@ -13,6 +13,11 @@ import (
 	"github.com/muesli/gotable"
 )
 
+// Error declarations
+var (
+	ErrPasswordMismatch = errors.New("Passwords did not match")
+)
+
 // CmdRepository describes the command
 type CmdRepository struct {
 	global *GlobalOptions
@@ -179,7 +184,7 @@ func readPasswordTwice(prompt, promptConfirm string) (string, error) {
 		return pw, err
 	}
 	if pw != pwconfirm {
-		return pw, errors.New("Passwords did not match")
+		return pw, ErrPasswordMismatch
 	}
 
 	return pw, nil
