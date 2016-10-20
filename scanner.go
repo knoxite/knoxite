@@ -39,17 +39,24 @@ type ItemData struct {
 	FileInfo    os.FileInfo `json:"-"`
 }
 
-func findFiles(rootPath string) chan ItemData {
-	c := make(chan ItemData)
+// ItemResult wraps ItemData and an error
+// Either Item or Error is nil
+type ItemResult struct {
+	Item  *ItemData
+	Error error
+}
+
+func findFiles(rootPath string) chan ItemResult {
+	c := make(chan ItemResult)
 	go func() {
 		err := filepath.Walk(rootPath, func(path string, fi os.FileInfo, err error) error {
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Could not find %s\n", path)
+				// fmt.Fprintf(os.Stderr, "Could not find %s\n", path)
 				return err
 			}
 			if fi == nil {
-				fmt.Fprintf(os.Stderr, "Could not read %s\n", path)
-				return fmt.Errorf("error for %v: FileInfo is nil", path)
+				// fmt.Fprintf(os.Stderr, "Could not read %s\n", path)
+				return fmt.Errorf("%s: could not read", path)
 			}
 
 			/* if !isExcluded(str, fi) {
@@ -91,13 +98,12 @@ func findFiles(rootPath string) chan ItemData {
 				}
 			}
 
-			c <- id
+			c <- ItemResult{Item: &id, Error: nil}
 			return nil
 		})
 
-		//FIXME: handle errors gracefully
 		if err != nil {
-			panic(err)
+			c <- ItemResult{Item: nil, Error: err}
 		}
 		close(c)
 	}()

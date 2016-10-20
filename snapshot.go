@@ -45,9 +45,9 @@ func NewSnapshot(description string) (Snapshot, error) {
 }
 
 // Add adds a path to a Snapshot
-func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository, compress, encrypt bool, dataParts, parityParts uint) (chan Progress, error) {
+func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository, compress, encrypt bool, dataParts, parityParts uint) chan Progress {
 	progress := make(chan Progress)
-	fwd := make(chan ItemData, 256) // TODO: reconsider buffer size
+	fwd := make(chan ItemResult, 256) // TODO: reconsider buffer size
 	m := new(sync.Mutex)
 	var totalSize uint64
 
@@ -55,18 +55,20 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 		for _, path := range paths {
 			c := findFiles(path)
 
-			for id := range c {
-				rel, err := filepath.Rel(cwd, id.Path)
-				if err == nil && !strings.HasPrefix(rel, "../") {
-					id.Path = rel
+			for result := range c {
+				if result.Error == nil {
+					rel, err := filepath.Rel(cwd, result.Item.Path)
+					if err == nil && !strings.HasPrefix(rel, "../") {
+						result.Item.Path = rel
+					}
+					if isSpecialPath(result.Item.Path) {
+						continue
+					}
+					m.Lock()
+					totalSize += result.Item.Size
+					m.Unlock()
 				}
-				if isSpecialPath(id.Path) {
-					continue
-				}
-				m.Lock()
-				totalSize += id.Size
-				m.Unlock()
-				fwd <- id
+				fwd <- result
 			}
 		}
 		close(fwd)
@@ -74,25 +76,32 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 
 	go func() {
 		var totalTransferredSize uint64
-		for id := range fwd {
-			rel, err := filepath.Rel(cwd, id.Path)
-			if err == nil && !strings.HasPrefix(rel, "../") {
-				id.Path = rel
+		for result := range fwd {
+			if result.Error != nil {
+				p := newProgressError(result.Error)
+				progress <- p
+				break
 			}
-			if isSpecialPath(id.Path) {
+
+			item := result.Item
+			rel, err := filepath.Rel(cwd, item.Path)
+			if err == nil && !strings.HasPrefix(rel, "../") {
+				item.Path = rel
+			}
+			if isSpecialPath(item.Path) {
 				continue
 			}
 
-			p := newProgress(&id)
+			p := newProgress(item)
 			m.Lock()
 			p.Statistics.Size = totalSize
 			p.Statistics.StorageSize = totalTransferredSize
 			m.Unlock()
 			progress <- p
 
-			if isRegularFile(id.FileInfo) {
+			if isRegularFile(item.FileInfo) {
 				dataParts = uint(math.Max(1, float64(dataParts)))
-				chunkchan, err := chunkFile(id.AbsPath, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
+				chunkchan, err := chunkFile(item.AbsPath, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
 				if err != nil {
 					panic(err)
 				}
@@ -108,11 +117,11 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 					// release the memory, we don't need the data anymore
 					cd.Data = &[][]byte{}
 
-					id.Chunks = append(id.Chunks, cd)
-					id.StorageSize += n
+					item.Chunks = append(item.Chunks, cd)
+					item.StorageSize += n
 					totalTransferredSize += n
 
-					p := newProgress(&id)
+					p := newProgress(item)
 					m.Lock()
 					p.Statistics.Size = totalSize
 					p.Statistics.StorageSize = totalTransferredSize
@@ -121,11 +130,12 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 				}
 			}
 
-			snapshot.AddItem(&id)
+			snapshot.AddItem(item)
 		}
 		close(progress)
 	}()
-	return progress, nil
+
+	return progress
 }
 
 // Clone clones a snapshot

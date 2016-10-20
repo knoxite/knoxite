@@ -6,6 +6,7 @@ type Progress struct {
 	Size        uint64
 	StorageSize uint64
 	Statistics  Stats
+	Error       error
 }
 
 func newProgress(item *ItemData) Progress {
@@ -14,5 +15,12 @@ func newProgress(item *ItemData) Progress {
 		Size:        item.Size,
 		StorageSize: item.StorageSize,
 		Statistics:  Stats{},
+		Error:       nil,
+	}
+}
+
+func newProgressError(err error) Progress {
+	return Progress{
+		Error: err,
 	}
 }
