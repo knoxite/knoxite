@@ -34,9 +34,9 @@ type ItemData struct {
 	StorageSize uint64      `json:"storagesize"`        // size in storage
 	UID         uint32      `json:"uid"`                // owner
 	GID         uint32      `json:"gid"`                // group
-	Chunks      []Chunk     `json:"chunks,omitempty"`
-	AbsPath     string      `json:"-"`
-	FileInfo    os.FileInfo `json:"-"`
+	Chunks      []Chunk     `json:"chunks,omitempty"`   // data chunks
+	AbsPath     string      `json:"-"`                  // Absolute path
+	FileInfo    os.FileInfo `json:"-"`                  // FileInfo struct
 }
 
 // ItemResult wraps ItemData and an error
