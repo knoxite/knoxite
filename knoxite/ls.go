@@ -1,3 +1,10 @@
+/*
+ * knoxite
+ *     Copyright (c) 2016, Christian Muehlhaeuser <muesli@gmail.com>
+ *
+ *   For license see LICENSE.txt
+ */
+
 package main
 
 import (
