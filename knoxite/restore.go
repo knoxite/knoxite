@@ -11,8 +11,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/knoxite/knoxite"
 	"github.com/muesli/goprogressbar"
+
+	"github.com/knoxite/knoxite"
 )
 
 // Error declarations

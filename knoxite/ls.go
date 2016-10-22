@@ -12,8 +12,9 @@ import (
 	"os/user"
 	"strconv"
 
-	"github.com/knoxite/knoxite"
 	"github.com/muesli/gotable"
+
+	"github.com/knoxite/knoxite"
 )
 
 const timeFormat = "2006-01-02 15:04:05"

@@ -10,8 +10,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/knoxite/knoxite"
 	"github.com/muesli/gotable"
+
+	"github.com/knoxite/knoxite"
 )
 
 // CmdSnapshot describes the command
