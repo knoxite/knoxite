@@ -10,11 +10,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
-	"os/signal"
 	"syscall"
 
 	"github.com/jessevdk/go-flags"
+	"github.com/klauspost/shutdown2"
 )
 
 // Translations
@@ -40,31 +42,11 @@ var (
 	parser     = flags.NewParser(&globalOpts, flags.HelpFlag|flags.PassDoubleDash)
 )
 
-func handleSignals() {
-	// Wait for signals
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
-
-	for s := range ch {
-		fmt.Println("Got signal:", s)
-
-		switch s {
-		case syscall.SIGHUP:
-			fallthrough
-		case syscall.SIGTERM:
-			fallthrough
-		case syscall.SIGKILL:
-			fallthrough
-		case syscall.SIGINT:
-			return
-		}
-	}
-}
-
 func main() {
-	go func() {
-		handleSignals()
-	}()
+	shutdown.OnSignal(0, os.Interrupt, syscall.SIGTERM)
+	// quiet shutdown logger
+	shutdown.Logger = shutdown.LogPrinter(log.New(ioutil.Discard, "", log.LstdFlags))
+	// shutdown.SetTimeout(0)
 
 	_, err := parser.Parse()
 	if e, ok := err.(*flags.Error); ok && e.Type == flags.ErrHelp {
@@ -77,5 +59,5 @@ func main() {
 		os.Exit(0)
 	}
 
-	//	fmt.Println("Exiting.")
+	// fmt.Println("Exiting.")
 }
