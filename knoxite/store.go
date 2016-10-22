@@ -14,8 +14,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/knoxite/knoxite"
+	"github.com/klauspost/shutdown2"
 	"github.com/muesli/goprogressbar"
+
+	"github.com/knoxite/knoxite"
 )
 
 // Error declarations
@@ -44,6 +46,9 @@ func init() {
 }
 
 func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snapshot, targets []string) error {
+	// we want to be notified during the first phase of a shutdown
+	cancel := shutdown.First()
+
 	fmt.Println()
 	overallProgressBar := goprogressbar.NewProgressBar("Overall Progress", 0, 0, 60)
 	wd, gerr := os.Getwd()
@@ -61,35 +66,44 @@ func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snap
 
 	fileProgressBar := goprogressbar.NewProgressBar("", 0, 0, 60)
 	lastPath := ""
+
 	for p := range progress {
-		if p.Error != nil {
-			fmt.Println()
-			return p.Error
-		}
-		if p.Path != lastPath && lastPath != "" {
-			fmt.Println()
-		}
-		fileProgressBar.Total = int64(p.Size)
-		fileProgressBar.Current = int64(p.StorageSize)
-		fileProgressBar.RightAlignedText = fmt.Sprintf("%s / %s",
-			knoxite.SizeToString(uint64(fileProgressBar.Current)),
-			knoxite.SizeToString(uint64(fileProgressBar.Total)))
+		select {
+		case n := <-cancel:
+			fmt.Println("Aborting...")
+			close(n)
+			return nil
 
-		overallProgressBar.Total = int64(p.Statistics.Size)
-		overallProgressBar.Current = int64(p.Statistics.StorageSize)
-		overallProgressBar.RightAlignedText = fmt.Sprintf("%s / %s",
-			knoxite.SizeToString(uint64(overallProgressBar.Current)),
-			knoxite.SizeToString(uint64(overallProgressBar.Total)))
+		default:
+			if p.Error != nil {
+				fmt.Println()
+				return p.Error
+			}
+			if p.Path != lastPath && lastPath != "" {
+				fmt.Println()
+			}
+			fileProgressBar.Total = int64(p.Size)
+			fileProgressBar.Current = int64(p.StorageSize)
+			fileProgressBar.RightAlignedText = fmt.Sprintf("%s / %s",
+				knoxite.SizeToString(uint64(fileProgressBar.Current)),
+				knoxite.SizeToString(uint64(fileProgressBar.Total)))
 
-		if p.Path != lastPath {
-			lastPath = p.Path
-			fileProgressBar.Text = p.Path
+			overallProgressBar.Total = int64(p.Statistics.Size)
+			overallProgressBar.Current = int64(p.Statistics.StorageSize)
+			overallProgressBar.RightAlignedText = fmt.Sprintf("%s / %s",
+				knoxite.SizeToString(uint64(overallProgressBar.Current)),
+				knoxite.SizeToString(uint64(overallProgressBar.Total)))
+
+			if p.Path != lastPath {
+				lastPath = p.Path
+				fileProgressBar.Text = p.Path
+			}
+
+			goprogressbar.MoveCursorUp(1)
+			fileProgressBar.Print()
+			goprogressbar.MoveCursorDown(1)
+			overallProgressBar.Print()
 		}
-
-		goprogressbar.MoveCursorUp(1)
-		fileProgressBar.Print()
-		goprogressbar.MoveCursorDown(1)
-		overallProgressBar.Print()
 	}
 
 	fmt.Printf("\nSnapshot %s created: %s\n", snapshot.ID, snapshot.Stats.String())
@@ -120,6 +134,11 @@ func (cmd CmdStore) Execute(args []string) error {
 
 	// filter here? exclude/include?
 
+	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	lock := shutdown.Lock()
+	if lock == nil {
+		return nil
+	}
 	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return err
@@ -132,10 +151,21 @@ func (cmd CmdStore) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
+	// release the shutdown lock
+	lock()
+
 	err = cmd.store(&repository, &snapshot, targets)
 	if err != nil {
 		return err
 	}
+
+	// acquire another shutdown lock. we don't want these next calls to be interrupted
+	lock = shutdown.Lock()
+	if lock == nil {
+		return nil
+	}
+	defer lock()
+
 	err = snapshot.Save(&repository)
 	if err != nil {
 		return err

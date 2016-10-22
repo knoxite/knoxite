@@ -16,8 +16,10 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 
-	"github.com/knoxite/knoxite"
+	"github.com/klauspost/shutdown2"
 	"github.com/muesli/gotable"
+
+	"github.com/knoxite/knoxite"
 )
 
 // Error declarations
@@ -82,6 +84,13 @@ func (cmd CmdRepository) init() error {
 			hostname = "unknown"
 		}*/
 
+	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	lock := shutdown.Lock()
+	if lock == nil {
+		return nil
+	}
+	defer lock()
+
 	r, err := newRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return fmt.Errorf("Creating repository at %s failed: %v", cmd.global.Repo, err)
@@ -92,6 +101,13 @@ func (cmd CmdRepository) init() error {
 }
 
 func (cmd CmdRepository) add(url string) error {
+	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	lock := shutdown.Lock()
+	if lock == nil {
+		return nil
+	}
+	defer lock()
+
 	r, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return err
@@ -108,7 +124,6 @@ func (cmd CmdRepository) add(url string) error {
 		return err
 	}
 	fmt.Printf("Added %s to repository\n", backend.Location())
-
 	return nil
 }
 

@@ -10,6 +10,8 @@ package main
 import (
 	"fmt"
 	"path/filepath"
+
+	"github.com/klauspost/shutdown2"
 )
 
 // CmdClone describes the command
@@ -53,6 +55,11 @@ func (cmd CmdClone) Execute(args []string) error {
 
 	// filter here? exclude/include?
 
+	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	lock := shutdown.Lock()
+	if lock == nil {
+		return nil
+	}
 	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err != nil {
 		return err
@@ -65,10 +72,21 @@ func (cmd CmdClone) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
+	// release the shutdown lock
+	lock()
+
 	err = cmd.store.store(&repository, snapshot, targets)
 	if err != nil {
 		return err
 	}
+
+	// acquire another shutdown lock. we don't want these next calls to be interrupted
+	lock = shutdown.Lock()
+	if lock == nil {
+		return nil
+	}
+	defer lock()
+
 	err = snapshot.Save(&repository)
 	if err != nil {
 		return err

@@ -10,8 +10,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/knoxite/knoxite"
+	"github.com/klauspost/shutdown2"
 	"github.com/muesli/gotable"
+
+	"github.com/knoxite/knoxite"
 )
 
 // CmdVolume describes the command
@@ -59,6 +61,13 @@ func (cmd CmdVolume) Execute(args []string) error {
 }
 
 func (cmd CmdVolume) init(name string) error {
+	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	lock := shutdown.Lock()
+	if lock == nil {
+		return nil
+	}
+	defer lock()
+
 	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
 	if err == nil {
 		vol, verr := knoxite.NewVolume(name, cmd.Description)
