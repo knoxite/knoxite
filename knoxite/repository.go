@@ -163,7 +163,7 @@ func openRepository(path, password string) (knoxite.Repository, error) {
 func newRepository(path, password string) (knoxite.Repository, error) {
 	if password == "" {
 		var err error
-		password, err = readPasswordTwice("Enter password:", "Confirm password:")
+		password, err = readPasswordTwice("Enter a password to encrypt this repository with:", "Confirm password:")
 		if err != nil {
 			return knoxite.Repository{}, err
 		}
