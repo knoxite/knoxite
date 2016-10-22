@@ -2,6 +2,7 @@
  * knoxite
  *     Copyright (c) 2016, Christian Muehlhaeuser <muesli@gmail.com>
  *     Copyright (c) 2016, Stefan Luecke <glaxx@glaxx.net>
+ *
  *   For license see LICENSE.txt
  */
 
