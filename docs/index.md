@@ -106,8 +106,8 @@ To restore the latest snapshot to /tmp/myhome, run:
 ```
 $ ./knoxite -r /tmp/knoxite -p "my_password" restore [snapshot ID] -t /tmp/myhome
 Creating directory /tmp/myhome
-Creating file /tmp/myhome/knoxite (10 chunks).
-Creating file /tmp/myhome/main.go (1 chunks).
+document.txt        5.669 MiB / 5.669 MiB [#############################################] 100.00%
+other.txt           4.137 MiB / 4.137 MiB [#############################################] 100.00%
 ...
 Restore done: 1337 files, 69 dirs, 0 symlinks, 0 errors, 9.772 GiB Original Size, 9.772 GiB Storage Size
 ```
@@ -117,8 +117,8 @@ It's easy to clone an existing snapshot, adding files to or updating existing fi
 
 ```
 $ ./knoxite -r /tmp/knoxite -p "my_password" clone [snapshot ID] $HOME
-document.txt        2.779 MiB / 2.779 MiB [#############################################] 100.00%
-other.txt           6.196 MiB / 6.196 MiB [#############################################] 100.00%
+newdocument.txt     2.779 MiB / 2.779 MiB [#############################################] 100.00%
+changedfile.txt     6.196 MiB / 6.196 MiB [#############################################] 100.00%
 ...
 Snapshot aefc4591 created: 1337 files, 69 dirs, 0 symlinks, 0 errors, 9.775 GiB Original Size, 9.775 GiB Storage Size
 ```
@@ -128,6 +128,13 @@ You can even mount a snapshot (currently read-only, read-write is work-in-progre
 
 ```
 $ ./knoxite -r /tmp/knoxite -p "my_password" mount [snapshot ID] /mnt
+```
+
+### Multiple data storage backends
+Adding another data storage backend to the repository:
+
+```
+$ ./knoxite -r /tmp/knoxite -p "my_password" repo add dropbox://...
 ```
 
 ### Backup. No more excuses.
