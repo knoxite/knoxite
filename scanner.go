@@ -70,7 +70,7 @@ func findFiles(rootPath string) chan ItemResult {
 			if !ok {
 				return &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
 			}
-			id := ItemData{
+			item := ItemData{
 				Path:     path,
 				AbsPath:  path,
 				Mode:     fi.Mode(),
@@ -87,18 +87,18 @@ func findFiles(rootPath string) chan ItemResult {
 					return nil
 				}
 
-				id.Type = SymLink
-				id.PointsTo = symlink
+				item.Type = SymLink
+				item.PointsTo = symlink
 			} else if fi.IsDir() {
-				id.Type = Directory
+				item.Type = Directory
 			} else {
-				id.Type = File
+				item.Type = File
 				if isRegularFile(fi) {
-					id.Size = uint64(fi.Size())
+					item.Size = uint64(fi.Size())
 				}
 			}
 
-			c <- ItemResult{Item: &id, Error: nil}
+			c <- ItemResult{Item: &item, Error: nil}
 			return nil
 		})
 
