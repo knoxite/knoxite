@@ -77,7 +77,11 @@ func (cmd CmdVolume) init(name string) error {
 				return fmt.Errorf("Creating volume %s failed: %v", name, verr)
 			}
 
-			fmt.Printf("Volume %s (Name: %s, Description: %s) created\n", vol.ID, name, cmd.Description)
+			annotation := "Name: " + vol.Name
+			if len(vol.Description) > 0 {
+				annotation += ", Description: " + vol.Description
+			}
+			fmt.Printf("Volume %s (%s) created\n", vol.ID, annotation)
 			return repository.Save()
 		}
 	}
