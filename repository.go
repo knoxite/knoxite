@@ -83,6 +83,10 @@ func (r *Repository) AddVolume(volume *Volume) error {
 
 // FindVolume finds a volume within a repository
 func (r *Repository) FindVolume(id string) (*Volume, error) {
+	if id == "latest" && len(r.Volumes) > 0 {
+		return r.Volumes[len(r.Volumes)-1], nil
+	}
+
 	for _, volume := range r.Volumes {
 		if volume.ID == id {
 			return volume, nil
@@ -94,10 +98,32 @@ func (r *Repository) FindVolume(id string) (*Volume, error) {
 
 // FindSnapshot finds a snapshot within a repository
 func (r *Repository) FindSnapshot(id string) (*Volume, *Snapshot, error) {
-	for _, volume := range r.Volumes {
-		snapshot, err := volume.LoadSnapshot(id, r)
-		if err == nil {
-			return volume, &snapshot, err
+	if id == "latest" {
+		latestVolume := &Volume{}
+		latestSnapshot := &Snapshot{}
+		found := false
+		for _, volume := range r.Volumes {
+			for _, snapshotID := range volume.Snapshots {
+				snapshot, err := volume.LoadSnapshot(snapshotID, r)
+				if err == nil {
+					if !found || snapshot.Date.Sub(latestSnapshot.Date) > 0 {
+						latestSnapshot = &snapshot
+						latestVolume = volume
+						found = true
+					}
+				}
+			}
+		}
+
+		if found {
+			return latestVolume, latestSnapshot, nil
+		}
+	} else {
+		for _, volume := range r.Volumes {
+			snapshot, err := volume.LoadSnapshot(id, r)
+			if err == nil {
+				return volume, &snapshot, err
+			}
 		}
 	}
 
