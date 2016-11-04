@@ -83,13 +83,13 @@ func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snap
 				fmt.Println()
 			}
 			fileProgressBar.Total = int64(p.Size)
-			fileProgressBar.Current = int64(p.StorageSize)
+			fileProgressBar.Current = int64(p.Transferred)
 			fileProgressBar.RightAlignedText = fmt.Sprintf("%s / %s",
 				knoxite.SizeToString(uint64(fileProgressBar.Current)),
 				knoxite.SizeToString(uint64(fileProgressBar.Total)))
 
 			overallProgressBar.Total = int64(p.Statistics.Size)
-			overallProgressBar.Current = int64(p.Statistics.StorageSize)
+			overallProgressBar.Current = int64(p.Statistics.Transferred)
 			overallProgressBar.RightAlignedText = fmt.Sprintf("%s / %s",
 				knoxite.SizeToString(uint64(overallProgressBar.Current)),
 				knoxite.SizeToString(uint64(overallProgressBar.Total)))
