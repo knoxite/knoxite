@@ -180,6 +180,8 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 		prog.Statistics.SymLinks++
 	} else if arc.Type == File {
 		prog.Statistics.Files++
+		prog.Statistics.Size = arc.Size
+		prog.Size = arc.Size
 		prog.Statistics.StorageSize = arc.StorageSize
 		prog.StorageSize = arc.StorageSize
 
@@ -211,8 +213,8 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 				return err
 			}
 
-			prog.Statistics.Size += uint64(len(data))
-			prog.Size += uint64(len(data))
+			prog.Statistics.Transferred += uint64(len(data))
+			prog.Transferred += uint64(len(data))
 			progress <- prog
 			// fmt.Printf("Chunk OK: %d bytes, sha256: %s\n", size, chunk.DecryptedShaSum)
 		}
@@ -268,11 +270,11 @@ func DecodeArchiveData(repository Repository, arc ItemData) (dat []byte, stats S
 				cache[chunk.ShaSum] = finalData
 				mutex.Unlock()
 			}
-
-			stats.StorageSize += uint64(len(dat))
-			stats.Size += uint64(len(dat))
 		}
 
+		stats.StorageSize += arc.StorageSize
+		stats.Size += arc.Size
+		stats.Transferred += arc.Size
 		stats.Files++
 	}
 
