@@ -76,6 +76,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 
 	go func() {
 		var totalTransferredSize uint64
+		var totalStorageSize uint64
 		for result := range fwd {
 			if result.Error != nil {
 				p := newProgressError(result.Error)
@@ -95,7 +96,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 			p := newProgress(item)
 			m.Lock()
 			p.Statistics.Size = totalSize
-			p.Statistics.StorageSize = totalTransferredSize
+			p.Statistics.StorageSize = totalStorageSize
 			m.Unlock()
 			progress <- p
 
@@ -119,12 +120,15 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 
 					item.Chunks = append(item.Chunks, cd)
 					item.StorageSize += n
-					totalTransferredSize += n
+					totalStorageSize += n
+					totalTransferredSize += uint64(cd.OriginalSize)
 
 					p := newProgress(item)
 					m.Lock()
+					p.Transferred = uint64(cd.OriginalSize)
 					p.Statistics.Size = totalSize
-					p.Statistics.StorageSize = totalTransferredSize
+					p.Statistics.StorageSize = totalStorageSize
+					p.Statistics.Transferred = totalTransferredSize
 					m.Unlock()
 					progress <- p
 				}

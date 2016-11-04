@@ -18,6 +18,7 @@ type Stats struct {
 	SymLinks    uint64 `json:"symlinks"`
 	Size        uint64 `json:"size"`
 	StorageSize uint64 `json:"stored_size"`
+	Transferred uint64 `json:"transferred"`
 	Errors      uint64 `json:"errors"`
 }
 
@@ -28,6 +29,7 @@ func (s *Stats) Add(other Stats) {
 	s.SymLinks += other.SymLinks
 	s.Size += other.Size
 	s.StorageSize += other.StorageSize
+	s.Transferred += other.Transferred
 	s.Errors += other.Errors
 }
 

@@ -5,6 +5,7 @@ type Progress struct {
 	Path        string
 	Size        uint64
 	StorageSize uint64
+	Transferred uint64
 	Statistics  Stats
 	Error       error
 }
