@@ -80,6 +80,9 @@ func BackendFromURL(path string) (Backend, error) {
 	case "backblaze":
 		return NewStorageBackblaze(*u)
 
+	case "ftp":
+		return NewStorageFTP(*u)
+
 	case "s3":
 		fallthrough
 	case "s3s":
