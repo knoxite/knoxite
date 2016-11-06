@@ -100,7 +100,7 @@ func (backend *StorageFTP) AvailableSpace() (uint64, error) {
 // CreatePath creates a dir including all its parent dirs, when required
 func (backend *StorageFTP) CreatePath(path string) error {
 	slicedPath := strings.Split(path, string(filepath.Separator))
-	for i, _ := range slicedPath {
+	for i := range slicedPath {
 		if i == 0 {
 			// don't try to create root-dir
 			continue
@@ -155,4 +155,3 @@ func (backend *StorageFTP) WriteFile(path string, data *[]byte) (size uint64, er
 	err = backend.ftp.Stor(path, bytes.NewReader(*data))
 	return uint64(len(*data)), err
 }
-
