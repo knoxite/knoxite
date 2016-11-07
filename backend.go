@@ -75,7 +75,7 @@ func BackendFromURL(path string) (Backend, error) {
 		}, nil
 
 	case "dropbox":
-		return NewStorageDropbox(*u), nil
+		return NewStorageDropbox(*u)
 
 	case "backblaze":
 		return NewStorageBackblaze(*u)
