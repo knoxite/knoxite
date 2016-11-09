@@ -22,10 +22,7 @@ import (
 // StorageDropbox stores data on a remote Dropbox
 type StorageDropbox struct {
 	url url.URL
-	// chunkPath      string
-	// snapshotPath   string
-	// repositoryPath string
-	db *dropbox.Dropbox
+	db  *dropbox.Dropbox
 	StorageFilesystem
 }
 
@@ -33,10 +30,7 @@ type StorageDropbox struct {
 func NewStorageDropbox(u url.URL) (*StorageDropbox, error) {
 	storage := StorageDropbox{
 		url: u,
-		// chunkPath:      filepath.Join(u.Path, "chunks"),
-		// snapshotPath:   filepath.Join(u.Path, "snapshots"),
-		// repositoryPath: filepath.Join(u.Path, repoFilename),
-		db: dropbox.NewDropbox(),
+		db:  dropbox.NewDropbox(),
 	}
 
 	storageDB, err := NewStorageFilesystem(u.Path, &storage)
