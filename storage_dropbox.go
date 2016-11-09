@@ -14,29 +14,36 @@ import (
 	"io/ioutil"
 	"net/url"
 	"path/filepath"
-	"strconv"
+	"strings"
 
 	"github.com/stacktic/dropbox"
 )
 
 // StorageDropbox stores data on a remote Dropbox
 type StorageDropbox struct {
-	url            url.URL
-	chunkPath      string
-	snapshotPath   string
-	repositoryPath string
-	db             *dropbox.Dropbox
+	url url.URL
+	// chunkPath      string
+	// snapshotPath   string
+	// repositoryPath string
+	db *dropbox.Dropbox
+	StorageFilesystem
 }
 
 // NewStorageDropbox returns a StorageDropbox object
-func NewStorageDropbox(u url.URL) *StorageDropbox {
+func NewStorageDropbox(u url.URL) (*StorageDropbox, error) {
 	storage := StorageDropbox{
-		url:            u,
-		chunkPath:      filepath.Join(u.Path, "chunks"),
-		snapshotPath:   filepath.Join(u.Path, "snapshots"),
-		repositoryPath: filepath.Join(u.Path, repoFilename),
-		db:             dropbox.NewDropbox(),
+		url: u,
+		// chunkPath:      filepath.Join(u.Path, "chunks"),
+		// snapshotPath:   filepath.Join(u.Path, "snapshots"),
+		// repositoryPath: filepath.Join(u.Path, repoFilename),
+		db: dropbox.NewDropbox(),
 	}
+
+	storageDB, err := NewStorageFilesystem(u.Path, &storage)
+	if err != nil {
+		return &StorageDropbox{}, err
+	}
+	storage.StorageFilesystem = storageDB
 
 	ak, _ := base64.StdEncoding.DecodeString("aXF1bGs0a25vajIydGtt")
 	as, _ := base64.StdEncoding.DecodeString("N3htbmlhcDV0cmE5NTE5")
@@ -51,7 +58,7 @@ func NewStorageDropbox(u url.URL) *StorageDropbox {
 		storage.db.SetAccessToken(storage.url.User.Username())
 	}
 
-	return &storage
+	return &storage, nil
 }
 
 // Location returns the type and location of the repository
@@ -84,80 +91,43 @@ func (backend *StorageDropbox) AvailableSpace() (uint64, error) {
 	return uint64(account.QuotaInfo.Quota - account.QuotaInfo.Shared - account.QuotaInfo.Normal), nil
 }
 
-// LoadChunk loads a Chunk from dropbox
-func (backend *StorageDropbox) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
-	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))
-	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
-	obj, _, err := backend.db.Download(fileName, "", 0)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := ioutil.ReadAll(obj)
-	return &data, err
-}
-
-// StoreChunk stores a single Chunk on dropbox
-func (backend *StorageDropbox) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (uint64, error) {
-	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))
-	backend.db.CreateFolder(path)
-
-	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
-	if entry, err := backend.db.Metadata(fileName, false, false, "", "", 1); err == nil {
-		// Chunk is already stored
-		if int(entry.Bytes) == len(*data) {
-			return 0, nil
+// CreatePath creates a dir including all its parent dirs, when required
+func (backend *StorageDropbox) CreatePath(path string) error {
+	slicedPath := strings.Split(path, string(filepath.Separator))
+	for i := range slicedPath {
+		if i == 0 {
+			// don't try to create root-dir
+			continue
 		}
-	}
-
-	//FIXME: this doesn't really chunk anything - it always picks the full data block's size
-	entry, err := backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(*data)), len(*data), fileName, true, "")
-	return uint64(entry.Bytes), err
-}
-
-// LoadSnapshot loads a snapshot
-func (backend *StorageDropbox) LoadSnapshot(id string) ([]byte, error) {
-	path := filepath.Join(backend.snapshotPath, id)
-	// Getting obj as type io.ReadCloser and reading it out in order to get bytes returned
-	obj, _, err := backend.db.Download(path, "", 0)
-	if err != nil {
-		return nil, err
-	}
-	return ioutil.ReadAll(obj)
-}
-
-// SaveSnapshot stores a snapshot
-func (backend *StorageDropbox) SaveSnapshot(id string, data []byte) error {
-	path := filepath.Join(backend.snapshotPath, id)
-	_, err := backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(data)), len(data), path, true, "")
-	return err
-}
-
-// InitRepository creates a new repository
-func (backend *StorageDropbox) InitRepository() error {
-	if _, err := backend.db.CreateFolder(backend.url.Path); err != nil {
-		return ErrRepositoryExists
-	}
-	if _, err := backend.db.CreateFolder(backend.snapshotPath); err != nil {
-		return ErrRepositoryExists
-	}
-	if _, err := backend.db.CreateFolder(backend.chunkPath); err != nil {
-		return ErrRepositoryExists
+		if _, err := backend.db.CreateFolder(filepath.Join(slicedPath[:i+1]...)); err != nil {
+			// We only want to return an error when creating the last directory
+			// in this path failed. Parent dirs _may_ already exist
+			if i+1 == len(slicedPath) {
+				return err
+			}
+		}
 	}
 	return nil
 }
 
-// LoadRepository reads the metadata for a repository
-func (backend *StorageDropbox) LoadRepository() ([]byte, error) {
-	obj, _, err := backend.db.Download(backend.repositoryPath, "", 0)
+// Stat returns the size of a file
+func (backend *StorageDropbox) Stat(path string) (uint64, error) {
+	entry, err := backend.db.Metadata(path, false, false, "", "", 1)
+	return uint64(entry.Bytes), err
+}
+
+// ReadFile reads a file from dropbox
+func (backend *StorageDropbox) ReadFile(path string) (*[]byte, error) {
+	obj, _, err := backend.db.Download(path, "", 0)
 	if err != nil {
 		return nil, err
 	}
-	return ioutil.ReadAll(obj)
+	data, err := ioutil.ReadAll(obj)
+	return &data, err
 }
 
-// SaveRepository stores the metadata for a repository
-func (backend *StorageDropbox) SaveRepository(data []byte) error {
-	_, err := backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(data)), len(data), backend.repositoryPath, true, "")
-	return err
+// WriteFile write files on dropbox
+func (backend *StorageDropbox) WriteFile(path string, data *[]byte) (size uint64, err error) {
+	_, err = backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(*data)), len(*data), path, true, "")
+	return uint64(len(*data)), err
 }
