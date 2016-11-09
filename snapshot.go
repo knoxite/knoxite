@@ -125,7 +125,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 
 					p := newProgress(item)
 					m.Lock()
-					p.Transferred = uint64(cd.OriginalSize)
+					p.Transferred = item.StorageSize
 					p.Statistics.Size = totalSize
 					p.Statistics.StorageSize = totalStorageSize
 					p.Statistics.Transferred = totalTransferredSize
