@@ -12,7 +12,13 @@ go:
   - 1.7
   - tip
 
-before_install: ./admin/setup_minio_test_environment.sh
+before_install:
+- ./admin/setup_minio_test_environment.sh
+- go get github.com/axw/gocov/gocov
+- go get github.com/mattn/goveralls
+
+script:
+- $GOPATH/bin/goveralls -service=travis-ci
 
 notifications:
   email:
