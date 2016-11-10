@@ -18,7 +18,7 @@ before_install:
 - go get github.com/mattn/goveralls
 
 script:
-- $GOPATH/bin/goveralls -service=travis-ci -tags ci
+- $GOPATH/bin/goveralls -service=travis-ci -v -tags ci
 
 notifications:
   email:
