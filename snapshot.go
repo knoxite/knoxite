@@ -49,7 +49,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 	progress := make(chan Progress)
 	fwd := make(chan ItemResult, 256) // TODO: reconsider buffer size
 	m := new(sync.Mutex)
-	var totalSize uint64
+	var totalSize uint64 // total data size: uncompressed, unencrypted
 
 	go func() {
 		for _, path := range paths {
@@ -75,8 +75,8 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 	}()
 
 	go func() {
-		var totalTransferredSize uint64
-		var totalStorageSize uint64
+		var totalTransferredSize uint64 // total transferred size: uncompressed, unencrypted
+		var totalStorageSize uint64     // total storage size: compressed, encrypted
 		for result := range fwd {
 			if result.Error != nil {
 				p := newProgressError(result.Error)
@@ -101,6 +101,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 			progress <- p
 
 			if isRegularFile(item.FileInfo) {
+				var currentTransferredSize uint64 // current file's transferred size: uncompressed, unencrypted
 				dataParts = uint(math.Max(1, float64(dataParts)))
 				chunkchan, err := chunkFile(item.AbsPath, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
 				if err != nil {
@@ -121,11 +122,12 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 					item.Chunks = append(item.Chunks, cd)
 					item.StorageSize += n
 					totalStorageSize += n
+					currentTransferredSize += uint64(cd.OriginalSize)
 					totalTransferredSize += uint64(cd.OriginalSize)
 
 					p := newProgress(item)
 					m.Lock()
-					p.Transferred = item.StorageSize
+					p.Transferred = currentTransferredSize
 					p.Statistics.Size = totalSize
 					p.Statistics.StorageSize = totalStorageSize
 					p.Statistics.Transferred = totalTransferredSize
