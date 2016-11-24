@@ -19,7 +19,7 @@ type BackendManager struct {
 // Error declarations
 var (
 	ErrLoadChunkFailed      = errors.New("Unable to load chunk from any storage backend")
-	ErrLoadSnapshotFailed   = errors.New("Unable to load repository from any storage backend")
+	ErrLoadSnapshotFailed   = errors.New("Unable to load snapshot from any storage backend")
 	ErrLoadRepositoryFailed = errors.New("Unable to load repository from any storage backend")
 )
 
