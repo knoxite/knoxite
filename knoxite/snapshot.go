@@ -32,7 +32,7 @@ func init() {
 
 // Usage describes this command's usage help-text
 func (cmd CmdSnapshot) Usage() string {
-	return "[list] VOLUME-ID"
+	return "[list|remove] VOLUME-ID"
 }
 
 // Execute this command
@@ -47,9 +47,30 @@ func (cmd CmdSnapshot) Execute(args []string) error {
 	switch args[0] {
 	case "list":
 		return cmd.list(args[1])
+	case "remove":
+		return cmd.remove(args[1])
 	default:
 		return fmt.Errorf(TUnknownCommand, cmd.Usage())
 	}
+}
+
+func (cmd CmdSnapshot) remove(snapshotID string) error {
+	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
+	if err != nil {
+		return err
+	}
+
+	volume, snapshot, err := repository.FindSnapshot(snapshotID)
+	if err != nil {
+		return err
+	}
+
+	err = volume.RemoveSnapshot(snapshot.ID)
+	if err != nil {
+		return err
+	}
+
+	return repository.Save()
 }
 
 func (cmd CmdSnapshot) list(volID string) error {

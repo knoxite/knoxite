@@ -40,6 +40,27 @@ func (v *Volume) AddSnapshot(id string) error {
 	return nil
 }
 
+// RemoveSnapshot removes a snapshot from a volume
+func (v *Volume) RemoveSnapshot(id string) error {
+	snapshots := []string{}
+	found := false
+
+	for _, snapshot := range v.Snapshots {
+		if snapshot == id {
+			found = true
+		} else {
+			snapshots = append(snapshots, snapshot)
+		}
+	}
+
+	if !found {
+		return ErrSnapshotNotFound
+	}
+
+	v.Snapshots = snapshots
+	return nil
+}
+
 // LoadSnapshot loads a snapshot within a volume from a repository
 func (v *Volume) LoadSnapshot(id string, repository *Repository) (Snapshot, error) {
 	for _, snapshot := range v.Snapshots {
