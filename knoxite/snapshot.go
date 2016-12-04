@@ -22,8 +22,8 @@ type CmdSnapshot struct {
 
 func init() {
 	_, err := parser.AddCommand("snapshot",
-		"show snapshots",
-		"The snapshots command lists all snapshots stored in a repository",
+		"manage snapshots",
+		"The snapshot command manages snapshots",
 		&CmdSnapshot{global: &globalOpts})
 	if err != nil {
 		panic(err)
