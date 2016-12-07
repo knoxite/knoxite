@@ -59,13 +59,18 @@ func TestCreateSnapshot(t *testing.T) {
 			t.Errorf("Failed creating snapshot: %s", err)
 			return
 		}
+		index, err := OpenChunkIndex(&r)
+		if err != nil {
+			t.Errorf("Failed opening chunk-index: %s", err)
+			return
+		}
 
 		wd, err := os.Getwd()
 		if err != nil {
 			t.Errorf("Failed getting working dir: %s", err)
 			return
 		}
-		progress := snapshot.Add(wd, []string{"snapshot_test.go"}, r, false, true, 1, 0)
+		progress := snapshot.Add(wd, []string{"snapshot_test.go"}, r, &index, false, true, 1, 0)
 		for p := range progress {
 			if p.Error != nil {
 				t.Errorf("Failed adding to snapshot: %s", p.Error)
@@ -83,6 +88,11 @@ func TestCreateSnapshot(t *testing.T) {
 		err = r.Save()
 		if err != nil {
 			t.Errorf("Failed saving volume: %s", err)
+			return
+		}
+		err = index.Save(&r)
+		if err != nil {
+			t.Errorf("Failed saving chunk-index: %s", err)
 			return
 		}
 

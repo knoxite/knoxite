@@ -59,6 +59,10 @@ func (cmd CmdSnapshot) remove(snapshotID string) error {
 	if err != nil {
 		return err
 	}
+	chunkIndex, err := knoxite.OpenChunkIndex(&repository)
+	if err != nil {
+		return err
+	}
 
 	volume, snapshot, err := repository.FindSnapshot(snapshotID)
 	if err != nil {
@@ -70,7 +74,20 @@ func (cmd CmdSnapshot) remove(snapshotID string) error {
 		return err
 	}
 
-	return repository.Save()
+	chunkIndex.RemoveSnapshot(snapshot.ID)
+	err = chunkIndex.Save(&repository)
+	if err != nil {
+		return err
+	}
+
+	err = repository.Save()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Snapshot %s removed: %s\n", snapshot.ID, snapshot.Stats.String())
+	fmt.Println("Do not forget to run 'repo pack' to delete un-referenced chunks and free up storage space!")
+	return nil
 }
 
 func (cmd CmdSnapshot) list(volID string) error {

@@ -45,7 +45,7 @@ func NewSnapshot(description string) (Snapshot, error) {
 }
 
 // Add adds a path to a Snapshot
-func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository, compress, encrypt bool, dataParts, parityParts uint) chan Progress {
+func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt bool, dataParts, parityParts uint) chan Progress {
 	progress := make(chan Progress)
 	fwd := make(chan ItemResult, 256) // TODO: reconsider buffer size
 	m := new(sync.Mutex)
@@ -138,6 +138,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 			}
 
 			snapshot.AddItem(item)
+			chunkIndex.AddItem(item, snapshot.ID)
 		}
 		close(progress)
 	}()

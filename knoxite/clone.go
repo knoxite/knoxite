@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 
 	"github.com/klauspost/shutdown2"
+
+	"github.com/knoxite/knoxite"
 )
 
 // CmdClone describes the command
@@ -72,10 +74,14 @@ func (cmd CmdClone) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
+	chunkIndex, err := knoxite.OpenChunkIndex(&repository)
+	if err != nil {
+		return err
+	}
 	// release the shutdown lock
 	lock()
 
-	err = cmd.store.store(&repository, snapshot, targets)
+	err = cmd.store.store(&repository, &chunkIndex, snapshot, targets)
 	if err != nil {
 		return err
 	}
@@ -92,6 +98,10 @@ func (cmd CmdClone) Execute(args []string) error {
 		return err
 	}
 	err = volume.AddSnapshot(snapshot.ID)
+	if err != nil {
+		return err
+	}
+	err = chunkIndex.Save(&repository)
 	if err != nil {
 		return err
 	}

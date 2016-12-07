@@ -45,7 +45,7 @@ func init() {
 	}
 }
 
-func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snapshot, targets []string) error {
+func (cmd CmdStore) store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snapshot *knoxite.Snapshot, targets []string) error {
 	// we want to be notified during the first phase of a shutdown
 	cancel := shutdown.First()
 
@@ -60,7 +60,7 @@ func (cmd CmdStore) store(repository *knoxite.Repository, snapshot *knoxite.Snap
 		return ErrRedundancyAmount
 	}
 
-	progress := snapshot.Add(wd, targets, *repository,
+	progress := snapshot.Add(wd, targets, *repository, chunkIndex,
 		strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none",
 		uint(len(repository.Backend.Backends))-cmd.FailureTolerance, cmd.FailureTolerance)
 
@@ -151,10 +151,14 @@ func (cmd CmdStore) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
+	chunkIndex, err := knoxite.OpenChunkIndex(&repository)
+	if err != nil {
+		return err
+	}
 	// release the shutdown lock
 	lock()
 
-	err = cmd.store(&repository, &snapshot, targets)
+	err = cmd.store(&repository, &chunkIndex, &snapshot, targets)
 	if err != nil {
 		return err
 	}
@@ -171,6 +175,10 @@ func (cmd CmdStore) Execute(args []string) error {
 		return err
 	}
 	err = volume.AddSnapshot(snapshot.ID)
+	if err != nil {
+		return err
+	}
+	err = chunkIndex.Save(&repository)
 	if err != nil {
 		return err
 	}
