@@ -140,6 +140,22 @@ func (backend *StorageAmazonS3) SaveSnapshot(id string, data []byte) error {
 	return err
 }
 
+// LoadChunkIndex reads the chunk-index
+func (backend *StorageAmazonS3) LoadChunkIndex() ([]byte, error) {
+	obj, err := backend.client.GetObject(backend.chunkBucket, chunkIndexFilename)
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(obj)
+}
+
+// SaveChunkIndex stores the chunk-index
+func (backend *StorageAmazonS3) SaveChunkIndex(data []byte) error {
+	buf := bytes.NewBuffer(data)
+	_, err := backend.client.PutObject(backend.chunkBucket, chunkIndexFilename, buf, "application/octet-stream")
+	return err
+}
+
 // InitRepository creates a new repository
 func (backend *StorageAmazonS3) InitRepository() error {
 	chunkBucketExist, err := backend.client.BucketExists(backend.chunkBucket)

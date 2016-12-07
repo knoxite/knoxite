@@ -70,3 +70,9 @@ func (backend StorageLocal) WriteFile(path string, data *[]byte) (size uint64, e
 	err = ioutil.WriteFile(path, *data, 0600)
 	return uint64(len(*data)), err
 }
+
+// DeleteFile deletes a file from disk
+func (backend StorageLocal) DeleteFile(path string) error {
+	// fmt.Println("Deleting:", path)
+	return os.Remove(path)
+}

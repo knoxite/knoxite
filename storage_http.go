@@ -23,6 +23,7 @@ var (
 	ErrChunkNotFound         = errors.New("Loading chunk failed")
 	ErrStoreChunkFailed      = errors.New("Storing chunk failed")
 	ErrStoreSnapshotFailed   = errors.New("Storing snapshot failed")
+	ErrStoreChunkIndexFailed = errors.New("Storing chunk-index failed")
 	ErrStoreRepositoryFailed = errors.New("Storing repository failed")
 )
 
@@ -159,6 +160,58 @@ func (backend *StorageHTTP) SaveSnapshot(id string, data []byte) error {
 		return ErrStoreSnapshotFailed
 	}
 	//	fmt.Printf("Uploaded snapshot: %d bytes\n", len(data))
+	return err
+}
+
+// LoadChunkIndex reads the chunk-index
+func (backend *StorageHTTP) LoadChunkIndex() ([]byte, error) {
+	//	fmt.Printf("Fetching chunk-index from: %s.\n", backend.URL+"/chunkindex")
+	res, err := http.Get(backend.URL + "/chunkindex")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+	b, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+	//	fmt.Printf("Downloading rchunk-index finished: %d bytes\n", len(b))
+	return b, err
+}
+
+// SaveChunkIndex stores the chunk-index
+func (backend *StorageHTTP) SaveChunkIndex(data []byte) error {
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+
+	// this step is very important
+	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", "chunkindex")
+	if err != nil {
+		fmt.Println("error writing to buffer")
+		return err
+	}
+
+	_, err = fileWriter.Write(data)
+	if err != nil {
+		return err
+	}
+
+	contentType := bodyWriter.FormDataContentType()
+	bodyWriter.Close()
+
+	resp, err := http.Post(backend.URL+"/chunkindex", contentType, bodyBuf)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return ErrStoreChunkIndexFailed
+	}
+	//	fmt.Printf("Uploaded chunk-index: %d bytes\n", len(data))
 	return err
 }
 

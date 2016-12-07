@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	repoFilename     = "repository.knox"
-	chunksDirname    = "chunks"
-	snapshotsDirname = "snapshots"
+	repoFilename       = "repository.knox"
+	chunkIndexFilename = "index"
+	chunksDirname      = "chunks"
+	snapshotsDirname   = "snapshots"
 )
 
 // BackendFilesystem is used to store and access data on a filesytem based backend
@@ -29,6 +30,8 @@ type BackendFilesystem interface {
 	ReadFile(path string) (*[]byte, error)
 	// WriteFile writes a file to disk
 	WriteFile(path string, data *[]byte) (uint64, error)
+	// DeleteFile deletes a file from disk
+	DeleteFile(path string) error
 }
 
 // StorageFilesystem is bridging a BackendFilesystem to a Backend interface
@@ -36,6 +39,7 @@ type StorageFilesystem struct {
 	path           string
 	chunkPath      string
 	snapshotPath   string
+	chunkIndexPath string
 	repositoryPath string
 
 	storage *BackendFilesystem
@@ -47,6 +51,7 @@ func NewStorageFilesystem(path string, storage BackendFilesystem) (StorageFilesy
 		path:           path,
 		chunkPath:      filepath.Join(path, chunksDirname),
 		snapshotPath:   filepath.Join(path, snapshotsDirname),
+		chunkIndexPath: filepath.Join(path, chunksDirname, chunkIndexFilename),
 		repositoryPath: filepath.Join(path, repoFilename),
 		storage:        &storage,
 	}
@@ -70,6 +75,14 @@ func (backend StorageFilesystem) StoreChunk(shasum string, part, totalParts uint
 	return (*backend.storage).WriteFile(fileName, data)
 }
 
+// DeleteChunk deletes a single Chunk
+func (backend StorageFilesystem) DeleteChunk(shasum string, part, totalParts uint) error {
+	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))
+	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
+
+	return (*backend.storage).DeleteFile(fileName)
+}
+
 // LoadSnapshot loads a snapshot
 func (backend StorageFilesystem) LoadSnapshot(id string) ([]byte, error) {
 	b, err := (*backend.storage).ReadFile(filepath.Join(backend.snapshotPath, id))
@@ -83,6 +96,18 @@ func (backend StorageFilesystem) LoadSnapshot(id string) ([]byte, error) {
 // SaveSnapshot stores a snapshot
 func (backend StorageFilesystem) SaveSnapshot(id string, b []byte) error {
 	_, err := (*backend.storage).WriteFile(filepath.Join(backend.snapshotPath, id), &b)
+	return err
+}
+
+// LoadChunkIndex reads the chunk-index
+func (backend StorageFilesystem) LoadChunkIndex() ([]byte, error) {
+	b, err := (*backend.storage).ReadFile(backend.chunkIndexPath)
+	return *b, err
+}
+
+// SaveChunkIndex stores the chunk-index
+func (backend StorageFilesystem) SaveChunkIndex(b []byte) error {
+	_, err := (*backend.storage).WriteFile(backend.chunkIndexPath, &b)
 	return err
 }
 

@@ -22,6 +22,7 @@ import (
 type StorageBackblaze struct {
 	url            url.URL
 	repositoryFile string
+	chunkIndexFile string
 	bucket         *backblaze.Bucket
 	backblaze      *backblaze.B2
 }
@@ -66,6 +67,7 @@ func NewStorageBackblaze(URL url.URL) (*StorageBackblaze, error) {
 	return &StorageBackblaze{
 		url:            URL,
 		repositoryFile: bucketPrefix[1] + "-repository",
+		chunkIndexFile: bucketPrefix[1] + "-chunkindex",
 		bucket:         bucket,
 		backblaze:      cl,
 	}, nil
@@ -137,6 +139,23 @@ func (backend *StorageBackblaze) SaveSnapshot(id string, data []byte) error {
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
 	_, err := backend.bucket.UploadFile("snapshot-"+id, metadata, buf)
+	return err
+}
+
+// LoadChunkIndex reads the chunk-index
+func (backend *StorageBackblaze) LoadChunkIndex() ([]byte, error) {
+	_, obj, err := backend.bucket.DownloadFileByName(backend.chunkIndexFile)
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(obj)
+}
+
+// SaveChunkIndex stores the chunk-index
+func (backend *StorageBackblaze) SaveChunkIndex(data []byte) error {
+	buf := bytes.NewBuffer(data)
+	metadata := make(map[string]string)
+	_, err := backend.bucket.UploadFile(backend.chunkIndexFile, metadata, buf)
 	return err
 }
 
