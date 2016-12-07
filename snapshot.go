@@ -18,7 +18,7 @@ import (
 	uuid "github.com/nu7hatch/gouuid"
 )
 
-// A Snapshot is compiled by one or many archives
+// A Snapshot is a compilation of one or many archives
 // MUST BE encrypted
 type Snapshot struct {
 	ID          string     `json:"id"`
@@ -159,7 +159,7 @@ func (snapshot *Snapshot) Clone() (*Snapshot, error) {
 	return &s, nil
 }
 
-// OpenSnapshot opens an existing snapshot
+// openSnapshot opens an existing snapshot
 func openSnapshot(id string, repository *Repository) (Snapshot, error) {
 	snapshot := Snapshot{}
 	b, err := repository.Backend.LoadSnapshot(id)
