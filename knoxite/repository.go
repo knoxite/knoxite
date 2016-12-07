@@ -66,6 +66,8 @@ func (cmd CmdRepository) Execute(args []string) error {
 		return cmd.add(args[1])
 	case "cat":
 		return cmd.cat()
+	case "pack":
+		return cmd.pack()
 	case "info":
 		return cmd.info()
 	default:
@@ -140,6 +142,24 @@ func (cmd CmdRepository) cat() error {
 	}
 	fmt.Printf("%s\n", string(out.Bytes()))
 	return nil
+}
+
+func (cmd CmdRepository) pack() error {
+	r, err := openRepository(cmd.global.Repo, cmd.global.Password)
+	if err != nil {
+		return err
+	}
+	index, err := knoxite.OpenChunkIndex(&r)
+	if err != nil {
+		return err
+	}
+
+	err = index.Pack(&r)
+	if err != nil {
+		return err
+	}
+
+	return index.Save(&r)
 }
 
 func (cmd CmdRepository) info() error {
