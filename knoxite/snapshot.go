@@ -32,7 +32,7 @@ func init() {
 
 // Usage describes this command's usage help-text
 func (cmd CmdSnapshot) Usage() string {
-	return "[list|remove] VOLUME-ID"
+	return "[list|remove] VOLUME-ID|SNAPSHOT-ID"
 }
 
 // Execute this command
