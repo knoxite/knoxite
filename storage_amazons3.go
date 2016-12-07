@@ -124,6 +124,12 @@ func (backend *StorageAmazonS3) StoreChunk(shasum string, part, totalParts uint,
 	return uint64(i), err
 }
 
+// DeleteChunk deletes a single Chunk
+func (backend *StorageAmazonS3) DeleteChunk(shasum string, part, totalParts uint) error {
+	// FIXME: implement this
+	return ErrDeleteChunkFailed
+}
+
 // LoadSnapshot loads a snapshot
 func (backend *StorageAmazonS3) LoadSnapshot(id string) ([]byte, error) {
 	obj, err := backend.client.GetObject(backend.snapshotBucket, id)

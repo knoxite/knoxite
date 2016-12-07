@@ -111,6 +111,12 @@ func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, dat
 	return uint64(len(*data)), err
 }
 
+// DeleteChunk deletes a single Chunk
+func (backend *StorageHTTP) DeleteChunk(shasum string, parts, totalParts uint) error {
+	// FIXME: implement this
+	return ErrDeleteChunkFailed
+}
+
 // LoadSnapshot loads a snapshot
 func (backend *StorageHTTP) LoadSnapshot(id string) ([]byte, error) {
 	//	fmt.Printf("Fetching snapshot from: %s.\n", backend.URL+"/snapshot/"+id)

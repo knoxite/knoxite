@@ -125,3 +125,9 @@ func (backend *StorageDropbox) WriteFile(path string, data *[]byte) (size uint64
 	_, err = backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(*data)), len(*data), path, true, "")
 	return uint64(len(*data)), err
 }
+
+// DeleteFile deletes a file from dropbox
+func (backend *StorageDropbox) DeleteFile(path string) error {
+	// FIXME: implement this
+	return ErrDeleteChunkFailed
+}

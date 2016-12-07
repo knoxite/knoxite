@@ -125,6 +125,12 @@ func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint
 	return uint64(file.ContentLength), err
 }
 
+// DeleteChunk deletes a single Chunk
+func (backend *StorageBackblaze) DeleteChunk(shasum string, parts, totalParts uint) error {
+	// FIXME: implement this
+	return ErrDeleteChunkFailed
+}
+
 // LoadSnapshot loads a snapshot
 func (backend *StorageBackblaze) LoadSnapshot(id string) ([]byte, error) {
 	_, obj, err := backend.bucket.DownloadFileByName("snapshot-" + id)

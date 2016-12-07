@@ -155,3 +155,9 @@ func (backend *StorageFTP) WriteFile(path string, data *[]byte) (size uint64, er
 	err = backend.ftp.Stor(path, bytes.NewReader(*data))
 	return uint64(len(*data)), err
 }
+
+// DeleteFile deletes a file from ftp
+func (backend *StorageFTP) DeleteFile(path string) error {
+	// FIXME: implement this
+	return ErrDeleteChunkFailed
+}
