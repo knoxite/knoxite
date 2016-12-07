@@ -34,11 +34,18 @@ type Backend interface {
 	LoadChunk(shasum string, part, totalParts uint) (*[]byte, error)
 	// StoreChunk stores a single Chunk
 	StoreChunk(shasum string, part, totalParts uint, data *[]byte) (uint64, error)
+	// DeleteChunk deletes a single Chunk
+	DeleteChunk(shasum string, part, totalParts uint) error
 
 	// LoadSnapshot loads a snapshot
 	LoadSnapshot(id string) ([]byte, error)
 	// SaveSnapshot stores a snapshot
 	SaveSnapshot(id string, data []byte) error
+
+	// LoadChunkIndex loads the chunk-index
+	LoadChunkIndex() ([]byte, error)
+	// SaveChunkIndex stores the chunk-index
+	SaveChunkIndex(data []byte) error
 
 	// InitRepository creates a new repository
 	InitRepository() error

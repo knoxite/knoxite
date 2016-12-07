@@ -20,7 +20,9 @@ type BackendManager struct {
 var (
 	ErrLoadChunkFailed      = errors.New("Unable to load chunk from any storage backend")
 	ErrLoadSnapshotFailed   = errors.New("Unable to load snapshot from any storage backend")
+	ErrLoadChunkIndexFailed = errors.New("Unable to load chunk-index from any storage backend")
 	ErrLoadRepositoryFailed = errors.New("Unable to load repository from any storage backend")
+	ErrDeleteChunkFailed    = errors.New("Unable to delete chunk from any storage backend")
 )
 
 // AddBackend adds a backend
@@ -71,6 +73,18 @@ func (backend *BackendManager) StoreChunk(chunk Chunk) (size uint64, err error) 
 	return uint64(chunk.Size), nil
 }
 
+// DeleteChunk deletes a single Chunk
+func (backend *BackendManager) DeleteChunk(shasum string, part, totalParts uint) error {
+	for _, be := range backend.Backends {
+		err := (*be).DeleteChunk(shasum, part, totalParts)
+		if err == nil {
+			return nil
+		}
+	}
+
+	return ErrDeleteChunkFailed
+}
+
 // LoadSnapshot loads a snapshot
 func (backend *BackendManager) LoadSnapshot(id string) ([]byte, error) {
 	for _, be := range backend.Backends {
@@ -87,6 +101,30 @@ func (backend *BackendManager) LoadSnapshot(id string) ([]byte, error) {
 func (backend *BackendManager) SaveSnapshot(id string, b []byte) error {
 	for _, be := range backend.Backends {
 		err := (*be).SaveSnapshot(id, b)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadChunkIndex loads the chunk-index
+func (backend *BackendManager) LoadChunkIndex() ([]byte, error) {
+	for _, be := range backend.Backends {
+		b, err := (*be).LoadChunkIndex()
+		if err == nil {
+			return b, err
+		}
+	}
+
+	return []byte{}, ErrLoadChunkIndexFailed
+}
+
+// SaveChunkIndex stores the chunk-index on all storage backends
+func (backend *BackendManager) SaveChunkIndex(b []byte) error {
+	for _, be := range backend.Backends {
+		err := (*be).SaveChunkIndex(b)
 		if err != nil {
 			return err
 		}
