@@ -102,6 +102,9 @@ func (backend StorageFilesystem) SaveSnapshot(id string, b []byte) error {
 // LoadChunkIndex reads the chunk-index
 func (backend StorageFilesystem) LoadChunkIndex() ([]byte, error) {
 	b, err := (*backend.storage).ReadFile(backend.chunkIndexPath)
+	if err != nil {
+		return []byte{}, err
+	}
 	return *b, err
 }
 
