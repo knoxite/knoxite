@@ -173,14 +173,17 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 		//fmt.Printf("Creating directory %s\n", path)
 		os.MkdirAll(path, arc.Mode)
 		prog.Statistics.Dirs++
+		progress <- prog
 	} else if arc.Type == SymLink {
 		//fmt.Printf("Creating symlink %s -> %s\n", path, arc.PointsTo)
 		os.Symlink(arc.PointsTo, path)
 		prog.Statistics.SymLinks++
+		progress <- prog
 	} else if arc.Type == File {
 		prog.Statistics.Files++
 		prog.Statistics.Size = arc.Size
 		prog.Statistics.StorageSize = arc.StorageSize
+		progress <- prog
 
 		parts := uint(len(arc.Chunks))
 		//fmt.Printf("Creating file %s (%d chunks).\n", path, parts)
