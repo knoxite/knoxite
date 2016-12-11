@@ -84,9 +84,10 @@ func (cmd CmdStore) store(repository *knoxite.Repository, chunkIndex *knoxite.Ch
 			}
 			fileProgressBar.Total = int64(p.Size)
 			fileProgressBar.Current = int64(p.Transferred)
-			fileProgressBar.RightAlignedText = fmt.Sprintf("%s / %s",
+			fileProgressBar.RightAlignedText = fmt.Sprintf("%s / %s  %s/s",
 				knoxite.SizeToString(uint64(fileProgressBar.Current)),
-				knoxite.SizeToString(uint64(fileProgressBar.Total)))
+				knoxite.SizeToString(uint64(fileProgressBar.Total)),
+				knoxite.SizeToString(p.TransferSpeed()))
 
 			overallProgressBar.Total = int64(p.Statistics.Size)
 			overallProgressBar.Current = int64(p.Statistics.Transferred)
