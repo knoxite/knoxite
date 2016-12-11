@@ -73,9 +73,10 @@ func (cmd CmdRestore) Execute(args []string) error {
 		for p := range progress {
 			pb.Total = int64(p.Size)
 			pb.Current = int64(p.Transferred)
-			pb.RightAlignedText = fmt.Sprintf("%s / %s",
+			pb.RightAlignedText = fmt.Sprintf("%s / %s  %s/s",
 				knoxite.SizeToString(uint64(pb.Current)),
-				knoxite.SizeToString(uint64(pb.Total)))
+				knoxite.SizeToString(uint64(pb.Total)),
+				knoxite.SizeToString(p.TransferSpeed()))
 
 			if p.Path != lastPath {
 				// We have just started restoring a new item
