@@ -167,8 +167,7 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 
 // DecodeArchive restores a single archive to path
 func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, path string) error {
-	prog := Progress{}
-	prog.Path = arc.Path
+	prog := newProgress(&arc)
 
 	if arc.Type == Directory {
 		//fmt.Printf("Creating directory %s\n", path)
@@ -181,9 +180,7 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 	} else if arc.Type == File {
 		prog.Statistics.Files++
 		prog.Statistics.Size = arc.Size
-		prog.Size = arc.Size
 		prog.Statistics.StorageSize = arc.StorageSize
-		prog.StorageSize = arc.StorageSize
 
 		parts := uint(len(arc.Chunks))
 		//fmt.Printf("Creating file %s (%d chunks).\n", path, parts)
