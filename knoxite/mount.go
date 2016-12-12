@@ -68,6 +68,10 @@ func (cmd CmdMount) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
+	_, snapshot, err := repository.FindSnapshot(args[0])
+	if err != nil {
+		return err
+	}
 
 	mountpoint := args[1]
 	if _, serr := os.Stat(mountpoint); os.IsNotExist(serr) {
@@ -88,10 +92,6 @@ func (cmd CmdMount) Execute(args []string) error {
 
 	roottree := fs.Tree{}
 
-	_, snapshot, err := repository.FindSnapshot(args[0])
-	if err != nil {
-		return err
-	}
 	fmt.Println("Updating index")
 	updateIndex(&repository, snapshot)
 	fmt.Println("Updating index done")
