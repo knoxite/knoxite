@@ -174,10 +174,13 @@ func updateIndex(repository *knoxite.Repository, snapshot *knoxite.Snapshot) {
 func (node *Node) Attr(ctx context.Context, a *fuse.Attr) error {
 	a.Inode = 1
 	a.Mode = node.Item.Mode
+	a.Size = node.Item.Size
 
-	if node.Item.Type == knoxite.File {
-		a.Size = node.Item.Size
+	switch node.Item.Type {
+	case knoxite.SymLink:
+		a.Mode |= os.ModeSymlink
 	}
+
 	return nil
 }
 
@@ -225,6 +228,11 @@ func (node *Node) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.Re
 	}
 
 	return nil
+}
+
+// Readlink returns the target a symlink is pointing to
+func (node *Node) Readlink(ctx context.Context, req *fuse.ReadlinkRequest) (string, error) {
+	return node.Item.PointsTo, nil
 }
 
 // ReadAll reads an entire archive's content
