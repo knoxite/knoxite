@@ -27,8 +27,9 @@ type Repository struct {
 
 // Error declarations
 var (
-	ErrVolumeNotFound   = errors.New("Volume not found")
-	ErrSnapshotNotFound = errors.New("Snapshot not found")
+	ErrOpenRepositoryFailed = errors.New("Wrong password or corrupted repository")
+	ErrVolumeNotFound       = errors.New("Volume not found")
+	ErrSnapshotNotFound     = errors.New("Snapshot not found")
 )
 
 // NewRepository returns a new repository
@@ -61,6 +62,10 @@ func OpenRepository(path, password string) (Repository, error) {
 	decb, err := Decrypt(b, password)
 	if err == nil {
 		err = json.Unmarshal(decb, &repository)
+	}
+	// If decrypt _or_ unmarshal failed, abort
+	if err != nil {
+		return repository, ErrOpenRepositoryFailed
 	}
 	repository.RawJSON = decb
 
