@@ -143,7 +143,7 @@ func (backend StorageFilesystem) InitRepository() error {
 func (backend StorageFilesystem) LoadRepository() ([]byte, error) {
 	b, err := (*backend.storage).ReadFile(backend.repositoryPath)
 	if err != nil {
-		fmt.Println(err)
+		return []byte{}, err
 	}
 
 	return *b, err
