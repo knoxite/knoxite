@@ -172,12 +172,10 @@ func openSnapshot(id string, repository *Repository) (Snapshot, error) {
 
 // Save writes a snapshot's metadata
 func (snapshot *Snapshot) Save(repository *Repository) error {
-	//	b, err := json.MarshalIndent(*r, "", "    ")
 	b, err := json.Marshal(*snapshot)
 	if err != nil {
 		return err
 	}
-	//	fmt.Printf("Repository created: %s\n", string(b))
 
 	encb, err := Encrypt(b, repository.Password)
 	if err == nil {
