@@ -216,17 +216,26 @@ func (node *Node) Lookup(ctx context.Context, name string) (fs.Node, error) {
 	return nil, fuse.ENOENT
 }
 
-// ReadDirAll returns all directories directly below this node
+// ReadDirAll returns all items directly below this node
 func (node *Node) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
 	// fmt.Println("ReadDirAll:", node.Item.Path)
-	dirDirs := []fuse.Dirent{}
+	entries := []fuse.Dirent{}
 
-	for k := range node.Items {
+	for k, v := range node.Items {
 		ent := fuse.Dirent{Name: k}
-		dirDirs = append(dirDirs, ent)
+		switch v.Item.Type {
+		case knoxite.File:
+			ent.Type = fuse.DT_File
+		case knoxite.Directory:
+			ent.Type = fuse.DT_Dir
+		case knoxite.SymLink:
+			ent.Type = fuse.DT_Link
+		}
+
+		entries = append(entries, ent)
 	}
 
-	return dirDirs, nil
+	return entries, nil
 }
 
 // Open opens a file
