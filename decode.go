@@ -343,7 +343,7 @@ func chunkForOffset(arc ItemData, offset int) (uint, int, error) {
 // ReadArchive reads from an archive
 func ReadArchive(repository Repository, arc ItemData, offset int, size int) (dat *[]byte, err error) {
 	dat = &[]byte{}
-	//	fmt.Println("Read req:", offset, size)
+	// fmt.Println("Read req:", offset, size)
 	if arc.Type == File {
 		neededPart, internalOffset, err := chunkForOffset(arc, offset)
 		if err != nil {
@@ -351,6 +351,9 @@ func ReadArchive(repository Repository, arc ItemData, offset int, size int) (dat
 		}
 
 		for len(*dat) < size {
+			if neededPart >= uint(len(arc.Chunks)) {
+				return dat, nil
+			}
 			b, err := readArchiveChunk(repository, arc, neededPart)
 			if err != nil || len(*b) == 0 {
 				//return dat, err
