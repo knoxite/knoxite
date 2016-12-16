@@ -8,7 +8,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -135,12 +134,11 @@ func (cmd CmdRepository) cat() error {
 		return err
 	}
 
-	var out bytes.Buffer
-	err = json.Indent(&out, r.RawJSON, "", "    ")
+	json, err := json.MarshalIndent(r, "", "    ")
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s\n", string(out.Bytes()))
+	fmt.Printf("%s\n", json)
 	return nil
 }
 

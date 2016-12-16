@@ -21,8 +21,6 @@ type Repository struct {
 
 	Backend  BackendManager `json:"-"`
 	Password string         `json:"-"`
-
-	RawJSON []byte `json:"-"`
 }
 
 // Error declarations
@@ -58,7 +56,6 @@ func OpenRepository(path, password string) (Repository, error) {
 	}
 
 	b, err := backend.LoadRepository()
-
 	decb, err := Decrypt(b, password)
 	if err == nil {
 		err = json.Unmarshal(decb, &repository)
@@ -67,7 +64,6 @@ func OpenRepository(path, password string) (Repository, error) {
 	if err != nil {
 		return repository, ErrOpenRepositoryFailed
 	}
-	repository.RawJSON = decb
 
 	for _, url := range repository.Paths {
 		backend, berr := BackendFromURL(url)
