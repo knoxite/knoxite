@@ -200,6 +200,8 @@ func (node *Node) Attr(ctx context.Context, a *fuse.Attr) error {
 	switch node.Item.Type {
 	case knoxite.SymLink:
 		a.Mode |= os.ModeSymlink
+	case knoxite.Directory:
+		a.Mode |= os.ModeDir
 	}
 
 	return nil
