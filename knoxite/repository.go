@@ -154,12 +154,18 @@ func (cmd CmdRepository) pack() error {
 		return err
 	}
 
-	err = index.Pack(&r)
+	freedSize, err := index.Pack(&r)
 	if err != nil {
 		return err
 	}
 
-	return index.Save(&r)
+	err = index.Save(&r)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Freed storage space: %s\n", knoxite.SizeToString(freedSize))
+	return nil
 }
 
 func (cmd CmdRepository) info() error {

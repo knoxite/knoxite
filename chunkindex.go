@@ -17,6 +17,7 @@ type ChunkIndexItem struct {
 	ShaSum      string   `json:"sha256"`
 	DataParts   uint     `json:"data_parts"`
 	ParityParts uint     `json:"parity_parts"`
+	Size        int      `json:"size"`
 	Snapshots   []string `json:"snapshots"`
 }
 
@@ -61,7 +62,7 @@ func (index *ChunkIndex) Save(repository *Repository) error {
 }
 
 // Pack deletes unreferenced chunks and removes them from the index
-func (index *ChunkIndex) Pack(repository *Repository) error {
+func (index *ChunkIndex) Pack(repository *Repository) (freedSize uint64, err error) {
 	chunks := []*ChunkIndexItem{}
 
 	for _, chunk := range index.Chunks {
@@ -70,10 +71,11 @@ func (index *ChunkIndex) Pack(repository *Repository) error {
 			fmt.Printf("Chunk %s is no longer referenced by any snapshot. Deleting!\n", chunk.ShaSum)
 
 			for i := uint(0); i < chunk.DataParts+chunk.ParityParts; i++ {
-				err := repository.Backend.DeleteChunk(chunk.ShaSum, i, chunk.DataParts)
+				err = repository.Backend.DeleteChunk(chunk.ShaSum, i, chunk.DataParts)
 				if err != nil {
-					return err
+					return
 				}
+				freedSize += uint64(chunk.Size)
 			}
 		} else {
 			chunks = append(chunks, chunk)
@@ -81,7 +83,7 @@ func (index *ChunkIndex) Pack(repository *Repository) error {
 	}
 
 	index.Chunks = chunks
-	return nil
+	return
 }
 
 func (index *ChunkIndex) reindex(repository *Repository) error {
@@ -113,7 +115,14 @@ func (index *ChunkIndex) AddItem(id *ItemData, snapshot string) {
 		}
 
 		if !found {
-			index.Chunks = append(index.Chunks, &ChunkIndexItem{chunk.ShaSum, chunk.DataParts, chunk.ParityParts, []string{snapshot}})
+			chunkItem := ChunkIndexItem{
+				ShaSum:      chunk.ShaSum,
+				DataParts:   chunk.DataParts,
+				ParityParts: chunk.ParityParts,
+				Size:        chunk.Size,
+				Snapshots:   []string{snapshot},
+			}
+			index.Chunks = append(index.Chunks, &chunkItem)
 		}
 	}
 }
