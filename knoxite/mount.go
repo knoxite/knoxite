@@ -136,20 +136,36 @@ var (
 	root *Node
 )
 
-func node(name string) *Node {
+func node(name string, arc knoxite.ItemData, repository *knoxite.Repository) *Node {
 	l := strings.Split(name, string(filepath.Separator))
 
 	item := root
-	for _, s := range l {
+	for k, s := range l {
 		if len(s) == 0 {
 			continue
 		}
-		fmt.Println("Finding:", s)
+		// fmt.Println("Finding:", s)
 		v, ok := item.Items[s]
 		if !ok {
-			fmt.Println("Adding to tree:", s)
+			path := filepath.Join(l[:k+1]...)
+			idata := arc
+			fmt.Println("Adding to tree:", path)
+			if name != path {
+				// We stored an absolute path and need to fake the parent
+				// dirs for the first item in the archive
+				idata = knoxite.ItemData{
+					Type:    knoxite.Directory,
+					GID:     arc.GID,
+					ModTime: arc.ModTime,
+					Mode:    arc.Mode,
+					Path:    path,
+				}
+			}
+
 			v = &Node{}
 			v.Items = make(map[string]*Node)
+			v.Item = idata
+			v.Repository = repository
 			item.Items[s] = v
 		}
 
@@ -163,16 +179,21 @@ func updateIndex(repository *knoxite.Repository, snapshot *knoxite.Snapshot) {
 	root = &Node{}
 	root.Items = make(map[string]*Node)
 	for _, arc := range snapshot.Items {
-		fmt.Println("Adding to index:", arc.Path)
-		i := node(arc.Path)
-		i.Item = arc
-		i.Repository = repository
+		path := arc.Path
+		if path[0] == '/' {
+			// This archive contains an absolute path
+			// Strip the leading slash for mounting
+			path = path[1:]
+		}
+		fmt.Println("Adding to index:", path)
+		node(path, arc, repository)
 	}
 }
 
 // Attr returns this node's filesystem attr's
 func (node *Node) Attr(ctx context.Context, a *fuse.Attr) error {
-	a.Inode = 1
+	// fmt.Println("Attr:", node.Item.Path)
+	// a.Inode = node.Inode
 	a.Mode = node.Item.Mode
 	a.Size = node.Item.Size
 
@@ -186,6 +207,7 @@ func (node *Node) Attr(ctx context.Context, a *fuse.Attr) error {
 
 // Lookup is used to stat items
 func (node *Node) Lookup(ctx context.Context, name string) (fs.Node, error) {
+	// fmt.Println("Lookup:", name)
 	item, ok := node.Items[name]
 	if ok {
 		return item, nil
@@ -196,10 +218,11 @@ func (node *Node) Lookup(ctx context.Context, name string) (fs.Node, error) {
 
 // ReadDirAll returns all directories directly below this node
 func (node *Node) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
+	// fmt.Println("ReadDirAll:", node.Item.Path)
 	dirDirs := []fuse.Dirent{}
 
 	for k := range node.Items {
-		ent := fuse.Dirent{Inode: 2, Name: k, Type: fuse.DT_File}
+		ent := fuse.Dirent{Name: k}
 		dirDirs = append(dirDirs, ent)
 	}
 
