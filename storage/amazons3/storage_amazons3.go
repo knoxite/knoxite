@@ -6,17 +6,18 @@
  *   For license see LICENSE.txt
  */
 
-package knoxite
+package amazons3
 
 import (
 	"bytes"
-	"errors"
 	"io/ioutil"
 	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/minio/minio-go"
+
+	"github.com/knoxite/knoxite"
 )
 
 // StorageAmazonS3 stores data on a remote AmazonS3
@@ -29,13 +30,12 @@ type StorageAmazonS3 struct {
 	client           *minio.Client
 }
 
-// Error declarations
-var (
-	ErrInvalidUsername = errors.New("Username wrong or missing")
-)
+func init() {
+	knoxite.RegisterBackendFactory(&StorageAmazonS3{})
+}
 
-// NewStorageAmazonS3 returns a StorageAmazonS3 object
-func NewStorageAmazonS3(URL url.URL) (*StorageAmazonS3, error) {
+// NewBackend returns a StorageAmazonS3 backend
+func (*StorageAmazonS3) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	ssl := true
 	switch URL.Scheme {
 	case "s3":
@@ -47,17 +47,17 @@ func NewStorageAmazonS3(URL url.URL) (*StorageAmazonS3, error) {
 	}
 
 	if URL.User.Username() == "" {
-		return &StorageAmazonS3{}, ErrInvalidUsername
+		return &StorageAmazonS3{}, knoxite.ErrInvalidUsername
 	}
 
 	pw, pwexist := URL.User.Password()
 	if !pwexist {
-		return &StorageAmazonS3{}, ErrInvalidPassword
+		return &StorageAmazonS3{}, knoxite.ErrInvalidPassword
 	}
 
 	regionAndBucketPrefix := strings.Split(URL.Path, "/")
 	if len(regionAndBucketPrefix) != 3 {
-		return &StorageAmazonS3{}, ErrInvalidRepositoryURL
+		return &StorageAmazonS3{}, knoxite.ErrInvalidRepositoryURL
 	}
 
 	cl, err := minio.New(URL.Host, URL.User.Username(), pw, ssl)
@@ -96,7 +96,7 @@ func (backend *StorageAmazonS3) Description() string {
 
 // AvailableSpace returns the free space on this backend
 func (backend *StorageAmazonS3) AvailableSpace() (uint64, error) {
-	return uint64(0), ErrAvailableSpaceUnknown
+	return uint64(0), knoxite.ErrAvailableSpaceUnknown
 }
 
 // LoadChunk loads a Chunk from network
@@ -127,7 +127,7 @@ func (backend *StorageAmazonS3) StoreChunk(shasum string, part, totalParts uint,
 // DeleteChunk deletes a single Chunk
 func (backend *StorageAmazonS3) DeleteChunk(shasum string, part, totalParts uint) error {
 	// FIXME: implement this
-	return ErrDeleteChunkFailed
+	return knoxite.ErrDeleteChunkFailed
 }
 
 // LoadSnapshot loads a snapshot
@@ -148,7 +148,7 @@ func (backend *StorageAmazonS3) SaveSnapshot(id string, data []byte) error {
 
 // LoadChunkIndex reads the chunk-index
 func (backend *StorageAmazonS3) LoadChunkIndex() ([]byte, error) {
-	obj, err := backend.client.GetObject(backend.chunkBucket, chunkIndexFilename)
+	obj, err := backend.client.GetObject(backend.chunkBucket, knoxite.ChunkIndexFilename)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func (backend *StorageAmazonS3) LoadChunkIndex() ([]byte, error) {
 // SaveChunkIndex stores the chunk-index
 func (backend *StorageAmazonS3) SaveChunkIndex(data []byte) error {
 	buf := bytes.NewBuffer(data)
-	_, err := backend.client.PutObject(backend.chunkBucket, chunkIndexFilename, buf, "application/octet-stream")
+	_, err := backend.client.PutObject(backend.chunkBucket, knoxite.ChunkIndexFilename, buf, "application/octet-stream")
 	return err
 }
 
@@ -174,7 +174,7 @@ func (backend *StorageAmazonS3) InitRepository() error {
 			return err
 		}
 	} else {
-		return ErrRepositoryExists
+		return knoxite.ErrRepositoryExists
 	}
 
 	snapshotBucketExist, err := backend.client.BucketExists(backend.snapshotBucket)
@@ -187,7 +187,7 @@ func (backend *StorageAmazonS3) InitRepository() error {
 			return err
 		}
 	} else {
-		return ErrRepositoryExists
+		return knoxite.ErrRepositoryExists
 	}
 
 	repositoryBucketExist, err := backend.client.BucketExists(backend.repositoryBucket)
@@ -200,7 +200,7 @@ func (backend *StorageAmazonS3) InitRepository() error {
 			return err
 		}
 	} else {
-		return ErrRepositoryExists
+		return knoxite.ErrRepositoryExists
 	}
 
 	return nil
@@ -208,7 +208,7 @@ func (backend *StorageAmazonS3) InitRepository() error {
 
 // LoadRepository reads the metadata for a repository
 func (backend *StorageAmazonS3) LoadRepository() ([]byte, error) {
-	obj, err := backend.client.GetObject(backend.repositoryBucket, repoFilename)
+	obj, err := backend.client.GetObject(backend.repositoryBucket, knoxite.RepoFilename)
 	if err != nil {
 		return nil, err
 	}
@@ -218,6 +218,6 @@ func (backend *StorageAmazonS3) LoadRepository() ([]byte, error) {
 // SaveRepository stores the metadata for a repository
 func (backend *StorageAmazonS3) SaveRepository(data []byte) error {
 	buf := bytes.NewBuffer(data)
-	_, err := backend.client.PutObject(backend.repositoryBucket, repoFilename, buf, "application/octet-stream")
+	_, err := backend.client.PutObject(backend.repositoryBucket, knoxite.RepoFilename, buf, "application/octet-stream")
 	return err
 }

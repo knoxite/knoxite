@@ -7,7 +7,7 @@
  *   For license see LICENSE.txt
  */
 
-package knoxite
+package amazons3
 
 import (
 	"crypto/rand"
@@ -16,6 +16,8 @@ import (
 	mrand "math/rand"
 	"net/url"
 	"testing"
+
+	"github.com/knoxite/knoxite"
 )
 
 func TestNewStorageAmazonS3(t *testing.T) {
@@ -27,7 +29,7 @@ func TestNewStorageAmazonS3(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = NewStorageAmazonS3(*validURL)
+	_, err = (&StorageAmazonS3{}).NewBackend(*validURL)
 	if err != nil {
 		t.Error(err)
 	}
@@ -36,34 +38,34 @@ func TestNewStorageAmazonS3(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = NewStorageAmazonS3(*missingUsername)
+	_, err = (&StorageAmazonS3{}).NewBackend(*missingUsername)
 	if err == nil {
-		t.Error(ErrInvalidRepositoryURL)
+		t.Error(knoxite.ErrInvalidRepositoryURL)
 	}
 
 	missingPassword, err := url.Parse("s3://" + accesskey + "@127.0.0.1:9000/us-east-1/test")
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = NewStorageAmazonS3(*missingPassword)
+	_, err = (&StorageAmazonS3{}).NewBackend(*missingPassword)
 	if err == nil {
-		t.Error(ErrInvalidRepositoryURL)
+		t.Error(knoxite.ErrInvalidRepositoryURL)
 	}
 
 	missingRegion, err := url.Parse("s3://" + accesskey + ":" + secretkey + "@127.0.0.1:9000/test")
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = NewStorageAmazonS3(*missingRegion)
+	_, err = (&StorageAmazonS3{}).NewBackend(*missingRegion)
 	if err == nil {
-		t.Error(ErrInvalidRepositoryURL)
+		t.Error(knoxite.ErrInvalidRepositoryURL)
 	}
 }
 
 func TestStorageAmazonS3Location(t *testing.T) {
 	s3url := createValidStorageURL()
 
-	s3, _ := NewStorageAmazonS3(*s3url)
+	s3, _ := (&StorageAmazonS3{}).NewBackend(*s3url)
 	if s3.Location() != s3url.String() {
 		t.Errorf("Expected %v, got %v", s3.Location(), s3url.String())
 	}
@@ -314,8 +316,8 @@ func TestStorageAmazonS3LoadChunk(t *testing.T) {
 	}
 }
 
-func createValidStorageAmazonS3Object() *StorageAmazonS3 {
-	s3, _ := NewStorageAmazonS3(*createValidStorageURL())
+func createValidStorageAmazonS3Object() knoxite.Backend {
+	s3, _ := (&StorageAmazonS3{}).NewBackend(*createValidStorageURL())
 	return s3
 }
 
