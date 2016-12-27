@@ -13,6 +13,12 @@ import (
 	"strings"
 )
 
+// BackendFactory is used to initialize a new backend
+type BackendFactory interface {
+	NewBackend(url url.URL) (Backend, error)
+	Protocols() []string
+}
+
 // Backend is used to store and access data
 type Backend interface {
 	// Location returns the type and location of the repository
@@ -60,12 +66,37 @@ var (
 	ErrRepositoryExists      = errors.New("Repository seems to already exist")
 	ErrInvalidRepositoryURL  = errors.New("Invalid repository url specified")
 	ErrAvailableSpaceUnknown = errors.New("Available space is unknown or undefined")
+	ErrInvalidUsername       = errors.New("Username wrong or missing")
+	ErrChunkNotFound         = errors.New("Loading chunk failed")
+	ErrStoreChunkFailed      = errors.New("Storing chunk failed")
+	ErrStoreSnapshotFailed   = errors.New("Storing snapshot failed")
+	ErrStoreChunkIndexFailed = errors.New("Storing chunk-index failed")
+	ErrStoreRepositoryFailed = errors.New("Storing repository failed")
+
+	backends = []BackendFactory{}
 )
+
+// RegisterBackendFactory needs to be called by storage backends to register themselves
+func RegisterBackendFactory(factory BackendFactory) {
+	backends = append(backends, factory)
+}
+
+func newBackendFromProtocol(url url.URL) (Backend, error) {
+	for _, backend := range backends {
+		for _, p := range backend.Protocols() {
+			if p == url.Scheme {
+				return backend.NewBackend(url)
+			}
+		}
+	}
+
+	return nil, ErrInvalidRepositoryURL
+}
 
 // BackendFromURL returns the matching backend for path
 func BackendFromURL(path string) (Backend, error) {
 	if strings.Index(path, "://") < 0 {
-		path = "file:///" + path
+		path = "file://" + path
 	}
 
 	u, err := url.Parse(path)
@@ -73,32 +104,5 @@ func BackendFromURL(path string) (Backend, error) {
 		return nil, err
 	}
 
-	switch u.Scheme {
-	case "http":
-		fallthrough
-	case "https":
-		return &StorageHTTP{
-			URL: path,
-		}, nil
-
-	case "dropbox":
-		return NewStorageDropbox(*u)
-
-	case "backblaze":
-		return NewStorageBackblaze(*u)
-
-	case "ftp":
-		return NewStorageFTP(*u)
-
-	case "s3":
-		fallthrough
-	case "s3s":
-		return NewStorageAmazonS3(*u)
-
-	case "file":
-		return NewStorageLocal(path[8:])
-
-	default:
-		return nil, ErrInvalidRepositoryURL
-	}
+	return newBackendFromProtocol(*u)
 }
