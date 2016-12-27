@@ -6,7 +6,7 @@
  *   For license see LICENSE.txt
  */
 
-package knoxite
+package ftp
 
 import (
 	"bytes"
@@ -18,6 +18,8 @@ import (
 	"time"
 
 	"github.com/jlaffaye/ftp"
+
+	"github.com/knoxite/knoxite"
 )
 
 // StorageFTP stores data on a remote FTP
@@ -25,7 +27,7 @@ type StorageFTP struct {
 	url   url.URL
 	ftp   *ftp.ServerConn
 	login bool
-	StorageFilesystem
+	knoxite.StorageFilesystem
 }
 
 // Error declaration
@@ -33,8 +35,12 @@ var (
 	ErrInvalidAuthentication = errors.New("Wrong Username or Password")
 )
 
-// NewStorageFTP establishs a FTP connection and returns a StorageFTP object.
-func NewStorageFTP(u url.URL) (*StorageFTP, error) {
+func init() {
+	knoxite.RegisterBackendFactory(&StorageFTP{})
+}
+
+// NewBackend establishs a FTP connection and returns a StorageFTP backend
+func (*StorageFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 	// Starting a connection
 	con, err := ftp.DialTimeout(u.Host, 30*time.Second)
 	if err != nil {
@@ -58,7 +64,7 @@ func NewStorageFTP(u url.URL) (*StorageFTP, error) {
 		ftp:   con,
 		login: loggedIn,
 	}
-	storageftp, err := NewStorageFilesystem(u.Path, &storage)
+	storageftp, err := knoxite.NewStorageFilesystem(u.Path, &storage)
 	storage.StorageFilesystem = storageftp
 	if err != nil {
 		return &StorageFTP{}, err
@@ -94,7 +100,7 @@ func (backend *StorageFTP) Description() string {
 
 // AvailableSpace returns the free space on this backen
 func (backend *StorageFTP) AvailableSpace() (uint64, error) {
-	return 0, ErrAvailableSpaceUnknown
+	return 0, knoxite.ErrAvailableSpaceUnknown
 }
 
 // CreatePath creates a dir including all its parent dirs, when required
@@ -159,5 +165,5 @@ func (backend *StorageFTP) WriteFile(path string, data *[]byte) (size uint64, er
 // DeleteFile deletes a file from ftp
 func (backend *StorageFTP) DeleteFile(path string) error {
 	// FIXME: implement this
-	return ErrDeleteChunkFailed
+	return knoxite.ErrDeleteChunkFailed
 }
