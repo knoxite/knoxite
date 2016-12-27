@@ -6,7 +6,7 @@
  *   For license see LICENSE.txt
  */
 
-package knoxite
+package backblaze
 
 import (
 	"bytes"
@@ -16,6 +16,8 @@ import (
 	"strings"
 
 	"gopkg.in/kothar/go-backblaze.v0"
+
+	"github.com/knoxite/knoxite"
 )
 
 // StorageBackblaze stores data on a remote Backblaze
@@ -27,15 +29,19 @@ type StorageBackblaze struct {
 	backblaze      *backblaze.B2
 }
 
-// NewStorageBackblaze returns a
-func NewStorageBackblaze(URL url.URL) (*StorageBackblaze, error) {
+func init() {
+	knoxite.RegisterBackendFactory(&StorageBackblaze{})
+}
+
+// NewBackend returns a StorageBackblaze backend
+func (*StorageBackblaze) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	// Checking username and password
 	if URL.User.Username() == "" {
-		return &StorageBackblaze{}, ErrInvalidUsername
+		return &StorageBackblaze{}, knoxite.ErrInvalidUsername
 	}
 	pw, pwexist := URL.User.Password()
 	if !pwexist {
-		return &StorageBackblaze{}, ErrInvalidPassword
+		return &StorageBackblaze{}, knoxite.ErrInvalidPassword
 	}
 
 	// Creating a new Client for accessing the B2 API
@@ -50,7 +56,7 @@ func NewStorageBackblaze(URL url.URL) (*StorageBackblaze, error) {
 	// Creating the bucket prefixes
 	bucketPrefix := strings.Split(URL.Path, "/")
 	if len(bucketPrefix) != 2 {
-		return &StorageBackblaze{}, ErrInvalidRepositoryURL
+		return &StorageBackblaze{}, knoxite.ErrInvalidRepositoryURL
 	}
 
 	// Getting/Creating a bucket for backblaze
@@ -97,7 +103,7 @@ func (backend *StorageBackblaze) Description() string {
 // AvailableSpace returns the free space on this backend
 func (backend *StorageBackblaze) AvailableSpace() (uint64, error) {
 	// Currently not supported
-	return 0, ErrAvailableSpaceUnknown
+	return 0, knoxite.ErrAvailableSpaceUnknown
 }
 
 // LoadChunk loads a Chunk from backblaze
@@ -119,7 +125,7 @@ func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint
 	metadata := make(map[string]string)
 	i, err := backend.bucket.UploadFile(fileName, metadata, buf)
 	if err != nil {
-		return 0, ErrStoreChunkFailed
+		return 0, knoxite.ErrStoreChunkFailed
 	}
 	file := backblaze.File(*i)
 	return uint64(file.ContentLength), err
@@ -128,14 +134,14 @@ func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint
 // DeleteChunk deletes a single Chunk
 func (backend *StorageBackblaze) DeleteChunk(shasum string, parts, totalParts uint) error {
 	// FIXME: implement this
-	return ErrDeleteChunkFailed
+	return knoxite.ErrDeleteChunkFailed
 }
 
 // LoadSnapshot loads a snapshot
 func (backend *StorageBackblaze) LoadSnapshot(id string) ([]byte, error) {
 	_, obj, err := backend.bucket.DownloadFileByName("snapshot-" + id)
 	if err != nil {
-		return nil, ErrSnapshotNotFound
+		return nil, knoxite.ErrSnapshotNotFound
 	}
 	return ioutil.ReadAll(obj)
 }
