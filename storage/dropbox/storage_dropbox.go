@@ -6,7 +6,7 @@
  *   For license see LICENSE.txt
  */
 
-package knoxite
+package dropbox
 
 import (
 	"bytes"
@@ -17,42 +17,48 @@ import (
 	"strings"
 
 	"github.com/stacktic/dropbox"
+
+	"github.com/knoxite/knoxite"
 )
 
 // StorageDropbox stores data on a remote Dropbox
 type StorageDropbox struct {
 	url url.URL
 	db  *dropbox.Dropbox
-	StorageFilesystem
+	knoxite.StorageFilesystem
 }
 
-// NewStorageDropbox returns a StorageDropbox object
-func NewStorageDropbox(u url.URL) (*StorageDropbox, error) {
-	storage := StorageDropbox{
+func init() {
+	knoxite.RegisterBackendFactory(&StorageDropbox{})
+}
+
+// NewBackend returns a StorageDropbox backend
+func (*StorageDropbox) NewBackend(u url.URL) (knoxite.Backend, error) {
+	backend := StorageDropbox{
 		url: u,
 		db:  dropbox.NewDropbox(),
 	}
 
-	storageDB, err := NewStorageFilesystem(u.Path, &storage)
+	storageDB, err := knoxite.NewStorageFilesystem(u.Path, &backend)
 	if err != nil {
 		return &StorageDropbox{}, err
 	}
-	storage.StorageFilesystem = storageDB
+	backend.StorageFilesystem = storageDB
 
 	ak, _ := base64.StdEncoding.DecodeString("aXF1bGs0a25vajIydGtt")
 	as, _ := base64.StdEncoding.DecodeString("N3htbmlhcDV0cmE5NTE5")
-	storage.db.SetAppInfo(string(ak), string(as))
+	backend.db.SetAppInfo(string(ak), string(as))
 
-	if storage.url.User == nil || len(storage.url.User.Username()) == 0 {
-		if err := storage.db.Auth(); err != nil {
+	if backend.url.User == nil || len(backend.url.User.Username()) == 0 {
+		if err := backend.db.Auth(); err != nil {
 			panic(err)
 		}
-		storage.url.User = url.User(storage.db.AccessToken())
+		backend.url.User = url.User(backend.db.AccessToken())
 	} else {
-		storage.db.SetAccessToken(storage.url.User.Username())
+		backend.db.SetAccessToken(backend.url.User.Username())
 	}
 
-	return &storage, nil
+	return &backend, nil
 }
 
 // Location returns the type and location of the repository
@@ -129,5 +135,5 @@ func (backend *StorageDropbox) WriteFile(path string, data *[]byte) (size uint64
 // DeleteFile deletes a file from dropbox
 func (backend *StorageDropbox) DeleteFile(path string) error {
 	// FIXME: implement this
-	return ErrDeleteChunkFailed
+	return knoxite.ErrDeleteChunkFailed
 }
