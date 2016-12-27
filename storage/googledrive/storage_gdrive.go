@@ -6,76 +6,100 @@
  *   For license see LICENSE.txt
  */
 
-package knoxite
+package googledrive
 
-import "net/url"
+import (
+	"net/url"
 
-// StorageDrive stores data on a remote Google Drive
-type StorageDrive struct {
+	"github.com/knoxite/knoxite"
+)
+
+// StorageGoogleDrive stores data on a remote Google Drive
+type StorageGoogleDrive struct {
 	url url.URL
 }
 
-// NewStorageDrive returns a StorageDrive object
-func NewStorageDrive(u url.URL) *StorageDrive {
-	return &StorageDrive{}
+func init() {
+	knoxite.RegisterBackendFactory(&StorageGoogleDrive{})
+}
+
+// NewBackend returns a StorageGoogleDrive backend
+func (*StorageGoogleDrive) NewBackend(u url.URL) (knoxite.Backend, error) {
+	return &StorageGoogleDrive{}, knoxite.ErrInvalidRepositoryURL
 }
 
 // Location returns the type and location of the repository
-func (backend *StorageDrive) Location() string {
+func (backend *StorageGoogleDrive) Location() string {
 	return backend.url.String()
 }
 
 // Close the backend
-func (backend *StorageDrive) Close() error {
+func (backend *StorageGoogleDrive) Close() error {
 	return nil
 }
 
 // Protocols returns the Protocol Schemes supported by this backend
-func (backend *StorageDrive) Protocols() []string {
-	return []string{"Google Drive"}
+func (backend *StorageGoogleDrive) Protocols() []string {
+	return []string{"gdrive"}
 }
 
 // Description returns a user-friendly description for this backend
-func (backend *StorageDrive) Description() string {
+func (backend *StorageGoogleDrive) Description() string {
 	return "Google Drive Storage"
 }
 
 // AvailableSpace returns the free space on this backend
-func (backend *StorageDrive) AvailableSpace() (uint64, error) {
-	return 0, ErrAvailableSpaceUnknown
+func (backend *StorageGoogleDrive) AvailableSpace() (uint64, error) {
+	return 0, knoxite.ErrAvailableSpaceUnknown
 }
 
 // LoadChunk loads a Chunk from Google Drive
-func (backend *StorageDrive) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
-	return &[]byte{}, ErrChunkNotFound
+func (backend *StorageGoogleDrive) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
+	return &[]byte{}, knoxite.ErrChunkNotFound
 }
 
 // StoreChunk stores a single Chunk on Google Drive
-func (backend *StorageDrive) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
-	return 0, ErrStoreChunkFailed
+func (backend *StorageGoogleDrive) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
+	return 0, knoxite.ErrStoreChunkFailed
+}
+
+// DeleteChunk deletes a single Chunk
+func (backend *StorageGoogleDrive) DeleteChunk(shasum string, parts, totalParts uint) error {
+	// FIXME: implement this
+	return knoxite.ErrDeleteChunkFailed
 }
 
 // LoadSnapshot loads a snapshot
-func (backend *StorageDrive) LoadSnapshot(id string) ([]byte, error) {
-	return []byte{}, ErrSnapshotNotFound
+func (backend *StorageGoogleDrive) LoadSnapshot(id string) ([]byte, error) {
+	return []byte{}, knoxite.ErrSnapshotNotFound
 }
 
 // SaveSnapshot stores a snapshot
-func (backend *StorageDrive) SaveSnapshot(id string, data []byte) error {
-	return ErrStoreSnapshotFailed
+func (backend *StorageGoogleDrive) SaveSnapshot(id string, data []byte) error {
+	return knoxite.ErrStoreSnapshotFailed
+}
+
+// LoadChunkIndex reads the chunk-index
+func (backend *StorageGoogleDrive) LoadChunkIndex() ([]byte, error) {
+	return []byte{}, knoxite.ErrLoadChunkIndexFailed
+}
+
+// SaveChunkIndex stores the chunk-index
+func (backend *StorageGoogleDrive) SaveChunkIndex(data []byte) error {
+	return knoxite.ErrStoreChunkIndexFailed
 }
 
 // InitRepository creates a new repository
-func (backend *StorageDrive) InitRepository() error {
-	return nil
+func (backend *StorageGoogleDrive) InitRepository() error {
+	return knoxite.ErrInvalidRepositoryURL
 }
 
 // LoadRepository reads the metadata for a repository
-func (backend *StorageDrive) LoadRepository() ([]byte, error) {
-	return []byte{}, ErrLoadRepositoryFailed
+func (backend *StorageGoogleDrive) LoadRepository() ([]byte, error) {
+	return []byte{}, knoxite.ErrLoadRepositoryFailed
 }
 
 // SaveRepository stores the metadata for a repository
-func (backend *StorageDrive) SaveRepository(data []byte) error {
-	return ErrStoreRepositoryFailed
+func (backend *StorageGoogleDrive) SaveRepository(data []byte) error {
+	return knoxite.ErrStoreRepositoryFailed
 }
