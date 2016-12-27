@@ -5,36 +5,40 @@
  *   For license see LICENSE.txt
  */
 
-package knoxite
+package http
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"strconv"
-)
 
-// Error declarations
-var (
-	ErrChunkNotFound         = errors.New("Loading chunk failed")
-	ErrStoreChunkFailed      = errors.New("Storing chunk failed")
-	ErrStoreSnapshotFailed   = errors.New("Storing snapshot failed")
-	ErrStoreChunkIndexFailed = errors.New("Storing chunk-index failed")
-	ErrStoreRepositoryFailed = errors.New("Storing repository failed")
+	"github.com/knoxite/knoxite"
 )
 
 // StorageHTTP stores data on a remote HTTP server
 type StorageHTTP struct {
-	URL string
+	URL url.URL
+}
+
+func init() {
+	knoxite.RegisterBackendFactory(&StorageHTTP{})
+}
+
+// NewBackend returns a StorageHTTP backend
+func (*StorageHTTP) NewBackend(u url.URL) (knoxite.Backend, error) {
+	return &StorageHTTP{
+		URL: u,
+	}, nil
 }
 
 // Location returns the type and location of the repository
 func (backend *StorageHTTP) Location() string {
-	return backend.URL
+	return backend.URL.String()
 }
 
 // Close the backend
@@ -54,20 +58,20 @@ func (backend *StorageHTTP) Description() string {
 
 // AvailableSpace returns the free space on this backend
 func (backend *StorageHTTP) AvailableSpace() (uint64, error) {
-	return uint64(0), ErrAvailableSpaceUnknown
+	return uint64(0), knoxite.ErrAvailableSpaceUnknown
 }
 
 // LoadChunk loads a Chunk from network
 func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
 	//	fmt.Printf("Fetching from: %s.\n", backend.URL+"/download/"+chunk.ShaSum)
-	res, err := http.Get(backend.URL + "/download/" + shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10))
+	res, err := http.Get(backend.URL.String() + "/download/" + shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10))
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return &[]byte{}, ErrChunkNotFound
+		return &[]byte{}, knoxite.ErrChunkNotFound
 	}
 
 	b, err := ioutil.ReadAll(res.Body)
@@ -94,7 +98,7 @@ func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, dat
 	contentType := bodyWriter.FormDataContentType()
 	bodyWriter.Close()
 
-	resp, err := http.Post(backend.URL+"/upload", contentType, bodyBuf)
+	resp, err := http.Post(backend.URL.String()+"/upload", contentType, bodyBuf)
 	if err != nil {
 		return 0, err
 	}
@@ -104,7 +108,7 @@ func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, dat
 		return 0, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return 0, ErrStoreChunkFailed
+		return 0, knoxite.ErrStoreChunkFailed
 	}
 
 	//	fmt.Printf("\tUploaded chunk: %d bytes\n", len(*data))
@@ -114,13 +118,13 @@ func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, dat
 // DeleteChunk deletes a single Chunk
 func (backend *StorageHTTP) DeleteChunk(shasum string, parts, totalParts uint) error {
 	// FIXME: implement this
-	return ErrDeleteChunkFailed
+	return knoxite.ErrDeleteChunkFailed
 }
 
 // LoadSnapshot loads a snapshot
 func (backend *StorageHTTP) LoadSnapshot(id string) ([]byte, error) {
 	//	fmt.Printf("Fetching snapshot from: %s.\n", backend.URL+"/snapshot/"+id)
-	res, err := http.Get(backend.URL + "/snapshot/" + id)
+	res, err := http.Get(backend.URL.String() + "/snapshot/" + id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -153,7 +157,7 @@ func (backend *StorageHTTP) SaveSnapshot(id string, data []byte) error {
 	contentType := bodyWriter.FormDataContentType()
 	bodyWriter.Close()
 
-	resp, err := http.Post(backend.URL+"/snapshot", contentType, bodyBuf)
+	resp, err := http.Post(backend.URL.String()+"/snapshot", contentType, bodyBuf)
 	if err != nil {
 		return err
 	}
@@ -163,7 +167,7 @@ func (backend *StorageHTTP) SaveSnapshot(id string, data []byte) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return ErrStoreSnapshotFailed
+		return knoxite.ErrStoreSnapshotFailed
 	}
 	//	fmt.Printf("Uploaded snapshot: %d bytes\n", len(data))
 	return err
@@ -172,7 +176,7 @@ func (backend *StorageHTTP) SaveSnapshot(id string, data []byte) error {
 // LoadChunkIndex reads the chunk-index
 func (backend *StorageHTTP) LoadChunkIndex() ([]byte, error) {
 	//	fmt.Printf("Fetching chunk-index from: %s.\n", backend.URL+"/chunkindex")
-	res, err := http.Get(backend.URL + "/chunkindex")
+	res, err := http.Get(backend.URL.String() + "/chunkindex")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -205,7 +209,7 @@ func (backend *StorageHTTP) SaveChunkIndex(data []byte) error {
 	contentType := bodyWriter.FormDataContentType()
 	bodyWriter.Close()
 
-	resp, err := http.Post(backend.URL+"/chunkindex", contentType, bodyBuf)
+	resp, err := http.Post(backend.URL.String()+"/chunkindex", contentType, bodyBuf)
 	if err != nil {
 		return err
 	}
@@ -215,7 +219,7 @@ func (backend *StorageHTTP) SaveChunkIndex(data []byte) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return ErrStoreChunkIndexFailed
+		return knoxite.ErrStoreChunkIndexFailed
 	}
 	//	fmt.Printf("Uploaded chunk-index: %d bytes\n", len(data))
 	return err
@@ -229,7 +233,7 @@ func (backend *StorageHTTP) InitRepository() error {
 // LoadRepository reads the metadata for a repository
 func (backend *StorageHTTP) LoadRepository() ([]byte, error) {
 	//	fmt.Printf("Fetching repository from: %s.\n", backend.URL+"/repository")
-	res, err := http.Get(backend.URL + "/repository")
+	res, err := http.Get(backend.URL.String() + "/repository")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -262,7 +266,7 @@ func (backend *StorageHTTP) SaveRepository(data []byte) error {
 	contentType := bodyWriter.FormDataContentType()
 	bodyWriter.Close()
 
-	resp, err := http.Post(backend.URL+"/repository", contentType, bodyBuf)
+	resp, err := http.Post(backend.URL.String()+"/repository", contentType, bodyBuf)
 	if err != nil {
 		return err
 	}
@@ -272,7 +276,7 @@ func (backend *StorageHTTP) SaveRepository(data []byte) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return ErrStoreRepositoryFailed
+		return knoxite.ErrStoreRepositoryFailed
 	}
 	//	fmt.Printf("Uploaded repository: %d bytes\n", len(data))
 	return err
