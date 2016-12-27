@@ -104,7 +104,7 @@ Perms       User   Group          Size  ModTime              Name
 To restore the latest snapshot to /tmp/myhome, run:
 
 ```
-$ ./knoxite -r /tmp/knoxite -p "my_password" restore [snapshot ID] -t /tmp/myhome
+$ ./knoxite -r /tmp/knoxite -p "my_password" restore [snapshot ID] /tmp/myhome
 Creating directory /tmp/myhome
 Creating file /tmp/myhome/knoxite (10 chunks).
 Creating file /tmp/myhome/main.go (1 chunks).

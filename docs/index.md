@@ -104,7 +104,7 @@ Perms       User   Group          Size  ModTime              Name
 To restore the latest snapshot to /tmp/myhome, run:
 
 ```
-$ ./knoxite -r /tmp/knoxite -p "my_password" restore [snapshot ID] -t /tmp/myhome
+$ ./knoxite -r /tmp/knoxite -p "my_password" restore [snapshot ID] /tmp/myhome
 Creating directory /tmp/myhome
 document.txt        5.669 MiB / 5.669 MiB [#############################################] 100.00%
 other.txt           4.137 MiB / 4.137 MiB [#############################################] 100.00%
@@ -134,7 +134,7 @@ $ ./knoxite -r /tmp/knoxite -p "my_password" mount [snapshot ID] /mnt
 Adding another data storage backend to the repository:
 
 ```
-$ ./knoxite -r /tmp/knoxite -p "my_password" repo add dropbox://...
+$ ./knoxite -r /tmp/knoxite -p "my_password" repo add dropbox://dropbox.com/knoxite
 ```
 
 ### Backup. No more excuses.
