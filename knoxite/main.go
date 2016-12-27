@@ -15,8 +15,8 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/jessevdk/go-flags"
 	"github.com/klauspost/shutdown2"
+	"github.com/spf13/cobra"
 )
 
 // Translations
@@ -33,13 +33,22 @@ var (
 
 // GlobalOptions holds all those options that can be set for every command
 type GlobalOptions struct {
-	Repo     string `short:"r" long:"repo"     description:"Repository directory to backup to/restore from"`
-	Password string `short:"p" long:"password" description:"Password to use for data encryption"`
+	Repo     string
+	Password string
 }
 
 var (
 	globalOpts = GlobalOptions{}
-	parser     = flags.NewParser(&globalOpts, flags.HelpFlag|flags.PassDoubleDash)
+
+	// RootCmd is the core command used for cli-arg parsing
+	RootCmd = &cobra.Command{
+		Use:   "knoxite",
+		Short: "Knoxite is a data storage & backup tool",
+		Long: "Knoxite is a secure and flexible data storage and backup tool\n" +
+			"Complete documentation is available at https://github.com/knoxite/knoxite",
+		SilenceErrors: true,
+		SilenceUsage:  true,
+	}
 )
 
 func main() {
@@ -48,16 +57,11 @@ func main() {
 	shutdown.Logger = shutdown.LogPrinter(log.New(ioutil.Discard, "", log.LstdFlags))
 	// shutdown.SetTimeout(0)
 
-	_, err := parser.Parse()
-	if e, ok := err.(*flags.Error); ok && e.Type == flags.ErrHelp {
-		parser.WriteHelp(os.Stdout)
-		os.Exit(0)
-	}
+	RootCmd.PersistentFlags().StringVarP(&globalOpts.Repo, "repo", "r", "", "Repository directory to backup to/restore from (default: current working dir)")
+	RootCmd.PersistentFlags().StringVarP(&globalOpts.Password, "password", "p", "", "Password to use for data encryption")
 
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(0)
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
 	}
-
-	// fmt.Println("Exiting.")
 }

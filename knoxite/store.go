@@ -16,6 +16,7 @@ import (
 
 	"github.com/klauspost/shutdown2"
 	"github.com/muesli/goprogressbar"
+	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
 )
@@ -25,27 +26,43 @@ var (
 	ErrRedundancyAmount = errors.New("failure tolerance can't be equal or higher as the number of storage backends")
 )
 
-// CmdStore describes the command
-type CmdStore struct {
-	Description      string `short:"d" long:"desc"        description:"a description or comment for this snapshot"`
-	Compression      string `short:"c" long:"compression" description:"compression algo to use: none (default), gzip"`
-	Encryption       string `short:"e" long:"encryption"  description:"encryption algo to use: aes (default), none"`
-	FailureTolerance uint   `short:"t" long:"tolerance"   description:"failure tolerance against n backend failures"`
-
-	global *GlobalOptions
+// StoreOptions holds all the options that can be set for the 'store' command
+type StoreOptions struct {
+	Description      string
+	Compression      string
+	Encryption       string
+	FailureTolerance uint
 }
+
+var (
+	storeOpts = StoreOptions{}
+
+	storeCmd = &cobra.Command{
+		Use:   "store <volume> <dir/file> [...]",
+		Short: "store files/directories",
+		Long:  `The store command creates a snapshot of a file or directory`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				return fmt.Errorf("store needs to know which volume to create a snapshot in")
+			}
+			if len(args) < 2 {
+				return fmt.Errorf("store needs to know which files and/or directories to work on")
+			}
+			return executeStore(args[0], args[1:], storeOpts)
+		},
+	}
+)
 
 func init() {
-	_, err := parser.AddCommand("store",
-		"store file/directory",
-		"The store command creates a snapshot of a file or directory",
-		&CmdStore{global: &globalOpts})
-	if err != nil {
-		panic(err)
-	}
+	storeCmd.Flags().StringVarP(&storeOpts.Description, "desc", "d", "", "a description or comment for this volume")
+	storeCmd.Flags().StringVarP(&storeOpts.Compression, "compression", "c", "", "compression algo to use: none (default), gzip")
+	storeCmd.Flags().StringVarP(&storeOpts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
+	storeCmd.Flags().UintVarP(&storeOpts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
+
+	RootCmd.AddCommand(storeCmd)
 }
 
-func (cmd CmdStore) store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snapshot *knoxite.Snapshot, targets []string) error {
+func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snapshot *knoxite.Snapshot, targets []string, opts StoreOptions) error {
 	// we want to be notified during the first phase of a shutdown
 	cancel := shutdown.First()
 
@@ -56,13 +73,13 @@ func (cmd CmdStore) store(repository *knoxite.Repository, chunkIndex *knoxite.Ch
 		return gerr
 	}
 
-	if uint(len(repository.Backend.Backends))-cmd.FailureTolerance <= 0 {
+	if uint(len(repository.Backend.Backends))-opts.FailureTolerance <= 0 {
 		return ErrRedundancyAmount
 	}
 
 	progress := snapshot.Add(wd, targets, *repository, chunkIndex,
-		strings.ToLower(cmd.Compression) == "gzip", strings.ToLower(cmd.Encryption) != "none",
-		uint(len(repository.Backend.Backends))-cmd.FailureTolerance, cmd.FailureTolerance)
+		strings.ToLower(opts.Compression) == "gzip", strings.ToLower(opts.Encryption) != "none",
+		uint(len(repository.Backend.Backends))-opts.FailureTolerance, opts.FailureTolerance)
 
 	fileProgressBar := goprogressbar.NewProgressBar("", 0, 0, 60)
 	lastPath := ""
@@ -111,22 +128,9 @@ func (cmd CmdStore) store(repository *knoxite.Repository, chunkIndex *knoxite.Ch
 	return nil
 }
 
-// Usage describes this command's usage help-text
-func (cmd CmdStore) Usage() string {
-	return "VOLUME-ID DIR/FILE [DIR/FILE] [...]"
-}
-
-// Execute this command
-func (cmd CmdStore) Execute(args []string) error {
-	if len(args) < 2 {
-		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
-	}
-	if cmd.global.Repo == "" {
-		return ErrMissingRepoLocation
-	}
-
+func executeStore(volumeID string, args []string, opts StoreOptions) error {
 	targets := []string{}
-	for _, target := range args[1:] {
+	for _, target := range args {
 		if absTarget, err := filepath.Abs(target); err == nil {
 			target = absTarget
 		}
@@ -140,15 +144,15 @@ func (cmd CmdStore) Execute(args []string) error {
 	if lock == nil {
 		return nil
 	}
-	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
-	volume, err := repository.FindVolume(args[0])
+	volume, err := repository.FindVolume(volumeID)
 	if err != nil {
 		return err
 	}
-	snapshot, err := knoxite.NewSnapshot(cmd.Description)
+	snapshot, err := knoxite.NewSnapshot(opts.Description)
 	if err != nil {
 		return err
 	}
@@ -159,7 +163,7 @@ func (cmd CmdStore) Execute(args []string) error {
 	// release the shutdown lock
 	lock()
 
-	err = cmd.store(&repository, &chunkIndex, &snapshot, targets)
+	err = store(&repository, &chunkIndex, &snapshot, targets, opts)
 	if err != nil {
 		return err
 	}

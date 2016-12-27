@@ -11,51 +11,50 @@ import (
 	"fmt"
 
 	"github.com/muesli/gotable"
+	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
 )
 
-// CmdSnapshot describes the command
-type CmdSnapshot struct {
-	global *GlobalOptions
-}
+var (
+	snapshotCmd = &cobra.Command{
+		Use:   "snapshot",
+		Short: "manage snapshots",
+		Long:  `The snapshot command manages snapshots`,
+		RunE:  nil,
+	}
+	snapshotListCmd = &cobra.Command{
+		Use:   "list <volume>",
+		Short: "list all snapshots inside a volume",
+		Long:  `The list command lists all snapshots stored in a volume`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("list needs a volume ID to work on")
+			}
+			return executeSnapshotList(args[0])
+		},
+	}
+	snapshotRemoveCmd = &cobra.Command{
+		Use:   "remove <snapshot>",
+		Short: "remove a snapshot",
+		Long:  `The remove command deletes a snapshot from a volume`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("remove needs a snapshot ID to work on")
+			}
+			return executeSnapshotRemove(args[0])
+		},
+	}
+)
 
 func init() {
-	_, err := parser.AddCommand("snapshot",
-		"manage snapshots",
-		"The snapshot command manages snapshots",
-		&CmdSnapshot{global: &globalOpts})
-	if err != nil {
-		panic(err)
-	}
+	snapshotCmd.AddCommand(snapshotListCmd)
+	snapshotCmd.AddCommand(snapshotRemoveCmd)
+	RootCmd.AddCommand(snapshotCmd)
 }
 
-// Usage describes this command's usage help-text
-func (cmd CmdSnapshot) Usage() string {
-	return "[list|remove] VOLUME-ID|SNAPSHOT-ID"
-}
-
-// Execute this command
-func (cmd CmdSnapshot) Execute(args []string) error {
-	if len(args) < 2 {
-		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
-	}
-	if cmd.global.Repo == "" {
-		return ErrMissingRepoLocation
-	}
-
-	switch args[0] {
-	case "list":
-		return cmd.list(args[1])
-	case "remove":
-		return cmd.remove(args[1])
-	default:
-		return fmt.Errorf(TUnknownCommand, cmd.Usage())
-	}
-}
-
-func (cmd CmdSnapshot) remove(snapshotID string) error {
-	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
+func executeSnapshotRemove(snapshotID string) error {
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
@@ -90,8 +89,8 @@ func (cmd CmdSnapshot) remove(snapshotID string) error {
 	return nil
 }
 
-func (cmd CmdSnapshot) list(volID string) error {
-	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
+func executeSnapshotList(volID string) error {
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}

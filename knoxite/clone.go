@@ -12,43 +12,42 @@ import (
 	"path/filepath"
 
 	"github.com/klauspost/shutdown2"
+	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
 )
 
-// CmdClone describes the command
-type CmdClone struct {
-	store *CmdStore
+var (
+	cloneOpts = StoreOptions{}
 
-	global *GlobalOptions
-}
+	cloneCmd = &cobra.Command{
+		Use:   "clone <snapshot> <dir/file> [...]",
+		Short: "clone a snapshot",
+		Long:  `The clone command clones an existing snapshot and adds a file or directory`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				return fmt.Errorf("store needs to know which snapshot to clone")
+			}
+			if len(args) < 2 {
+				return fmt.Errorf("store needs to know which files and/or directoreies to work on")
+			}
+			return executeClone(args[0], args[1:], cloneOpts)
+		},
+	}
+)
 
 func init() {
-	_, err := parser.AddCommand("clone",
-		"clone a snapshot",
-		"The clone command clones an existing snapshot and adds a file or directory",
-		&CmdClone{store: &CmdStore{}, global: &globalOpts})
-	if err != nil {
-		panic(err)
-	}
+	cloneCmd.Flags().StringVarP(&storeOpts.Description, "desc", "d", "", "a description or comment for this volume")
+	cloneCmd.Flags().StringVarP(&storeOpts.Compression, "compression", "c", "", "compression algo to use: none (default), gzip")
+	cloneCmd.Flags().StringVarP(&storeOpts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
+	cloneCmd.Flags().UintVarP(&storeOpts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
+
+	RootCmd.AddCommand(cloneCmd)
 }
 
-// Usage describes this command's usage help-text
-func (cmd CmdClone) Usage() string {
-	return "SNAPSHOT-ID DIR/FILE [DIR/FILE] [...]"
-}
-
-// Execute this command
-func (cmd CmdClone) Execute(args []string) error {
-	if len(args) < 2 {
-		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
-	}
-	if cmd.global.Repo == "" {
-		return ErrMissingRepoLocation
-	}
-
+func executeClone(snapshotID string, args []string, opts StoreOptions) error {
 	targets := []string{}
-	for _, target := range args[1:] {
+	for _, target := range args {
 		if absTarget, err := filepath.Abs(target); err == nil {
 			target = absTarget
 		}
@@ -62,11 +61,11 @@ func (cmd CmdClone) Execute(args []string) error {
 	if lock == nil {
 		return nil
 	}
-	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
-	volume, s, err := repository.FindSnapshot(args[0])
+	volume, s, err := repository.FindSnapshot(snapshotID)
 	if err != nil {
 		return err
 	}
@@ -81,7 +80,7 @@ func (cmd CmdClone) Execute(args []string) error {
 	// release the shutdown lock
 	lock()
 
-	err = cmd.store.store(&repository, &chunkIndex, snapshot, targets)
+	err = store(&repository, &chunkIndex, snapshot, targets, opts)
 	if err != nil {
 		return err
 	}

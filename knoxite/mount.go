@@ -24,56 +24,40 @@ import (
 	"bazil.org/fuse/fs"
 
 	"github.com/knoxite/knoxite"
+	"github.com/spf13/cobra"
 )
 
-// CmdMount describes the command
-type CmdMount struct {
-	global *GlobalOptions
-
-	ready chan struct{}
-	done  chan struct{}
-
-	repository knoxite.Repository
-}
+var (
+	mountCmd = &cobra.Command{
+		Use:   "mount <snapshot> <target>",
+		Short: "mount a snapshot",
+		Long:  `The mount command mounts a repository read-only to a given directory`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				return fmt.Errorf("mount needs to know which snapshot to work on")
+			}
+			if len(args) < 2 {
+				return fmt.Errorf("mount needs to know where to mount the snapshot to")
+			}
+			return executeMount(args[0], args[1])
+		},
+	}
+)
 
 func init() {
-	_, err := parser.AddCommand("mount",
-		"mount a snapshot",
-		"The mount command mounts a repository read-only to a given directory",
-		&CmdMount{
-			global: &globalOpts,
-			ready:  make(chan struct{}, 1),
-			done:   make(chan struct{}),
-		})
-	if err != nil {
-		panic(err)
-	}
+	RootCmd.AddCommand(mountCmd)
 }
 
-// Usage describes this command's usage help-text
-func (cmd CmdMount) Usage() string {
-	return "SNAPSHOT-ID MOUNTPOINT"
-}
-
-// Execute this command
-func (cmd CmdMount) Execute(args []string) error {
-	if len(args) < 2 {
-		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
-	}
-	if cmd.global.Repo == "" {
-		return ErrMissingRepoLocation
-	}
-
-	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
+func executeMount(snapshotID, mountpoint string) error {
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
-	_, snapshot, err := repository.FindSnapshot(args[0])
+	_, snapshot, err := repository.FindSnapshot(snapshotID)
 	if err != nil {
 		return err
 	}
 
-	mountpoint := args[1]
 	if _, serr := os.Stat(mountpoint); os.IsNotExist(serr) {
 		fmt.Printf("Mountpoint %s doesn't exist, creating it\n", mountpoint)
 		err = os.Mkdir(mountpoint, os.ModeDir|0700)
@@ -99,7 +83,9 @@ func (cmd CmdMount) Execute(args []string) error {
 		roottree.Add(arc.Item.Path, arc)
 	}
 
-	cmd.ready <- struct{}{}
+	ready := make(chan struct{}, 1)
+	done := make(chan struct{})
+	ready <- struct{}{}
 
 	errServe := make(chan error)
 	go func() {
@@ -115,7 +101,7 @@ func (cmd CmdMount) Execute(args []string) error {
 	select {
 	case err := <-errServe:
 		return err
-	case <-cmd.done:
+	case <-done:
 		err := fuse.Unmount(mountpoint)
 		if err != nil {
 			fmt.Printf("Error umounting: %s\n", err)

@@ -13,48 +13,39 @@ import (
 	"strconv"
 
 	"github.com/muesli/gotable"
+	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
 )
 
 const timeFormat = "2006-01-02 15:04:05"
 
-// CmdLs describes the command
-type CmdLs struct {
-	global *GlobalOptions
-}
+var (
+	lsCmd = &cobra.Command{
+		Use:   "ls <snapshot>",
+		Short: "list files",
+		Long:  `The ls command lists all files stored in a snapshot`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("ls needs a snapshot ID")
+			}
+			return executeLs(args[0])
+		},
+	}
+)
 
 func init() {
-	_, err := parser.AddCommand("ls",
-		"list files",
-		"The ls command lists all files stored in a snapshot",
-		&CmdLs{global: &globalOpts})
-	if err != nil {
-		panic(err)
-	}
+	RootCmd.AddCommand(lsCmd)
 }
 
-// Usage describes this command's usage help-text
-func (cmd CmdLs) Usage() string {
-	return "SNAPSHOT-ID" // "[DIR/FILE] [...]"
-}
-
-// Execute this command
-func (cmd CmdLs) Execute(args []string) error {
-	if len(args) != 1 {
-		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
-	}
-	if cmd.global.Repo == "" {
-		return ErrMissingRepoLocation
-	}
-
-	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
+func executeLs(snapshotID string) error {
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err == nil {
 		tab := gotable.NewTable([]string{"Perms", "User", "Group", "Size", "ModTime", "Name"},
 			[]int64{-10, -8, -5, 12, -19, -48},
 			"No files found.")
 
-		_, snapshot, ferr := repository.FindSnapshot(args[0])
+		_, snapshot, ferr := repository.FindSnapshot(snapshotID)
 		if ferr != nil {
 			return ferr
 		}

@@ -13,10 +13,10 @@ import (
 	"fmt"
 	"syscall"
 
-	"golang.org/x/crypto/ssh/terminal"
-
 	"github.com/klauspost/shutdown2"
 	"github.com/muesli/gotable"
+	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/knoxite/knoxite"
 )
@@ -24,67 +24,68 @@ import (
 // Error declarations
 var (
 	ErrPasswordMismatch = errors.New("Passwords did not match")
+
+	repoCmd = &cobra.Command{
+		Use:   "repo",
+		Short: "manage repository",
+		Long:  `The repo command manages repositories`,
+		RunE:  nil,
+	}
+	repoInitCmd = &cobra.Command{
+		Use:   "init",
+		Short: "initialize a new repository",
+		Long:  `The init command initializes a new repository`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeRepoInit()
+		},
+	}
+	repoCatCmd = &cobra.Command{
+		Use:   "cat",
+		Short: "display repository information as JSON",
+		Long:  `The cat command displays the internal repository information as JSON`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeRepoCat()
+		},
+	}
+	repoInfoCmd = &cobra.Command{
+		Use:   "info",
+		Short: "display repository information",
+		Long:  `The info command displays the repository status & information`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeRepoInfo()
+		},
+	}
+	repoAddCmd = &cobra.Command{
+		Use:   "add <url>",
+		Short: "add another storage backend to a repository",
+		Long:  `The add command adds another storage backend to a repository`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("add needs a URL to be added")
+			}
+			return executeRepoAdd(args[0])
+		},
+	}
+	repoPackCmd = &cobra.Command{
+		Use:   "pack",
+		Short: "pack repository and release redundant data",
+		Long:  `The pack command deletes all unused data chunks from storage`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeRepoPack()
+		},
+	}
 )
 
-// CmdRepository describes the command
-type CmdRepository struct {
-	global *GlobalOptions
-}
-
 func init() {
-	_, err := parser.AddCommand("repo",
-		"manage repository",
-		"The repo command manages repositories",
-		&CmdRepository{global: &globalOpts})
-	if err != nil {
-		panic(err)
-	}
+	repoCmd.AddCommand(repoInitCmd)
+	repoCmd.AddCommand(repoCatCmd)
+	repoCmd.AddCommand(repoInfoCmd)
+	repoCmd.AddCommand(repoAddCmd)
+	repoCmd.AddCommand(repoPackCmd)
+	RootCmd.AddCommand(repoCmd)
 }
 
-// Usage describes this command's usage help-text
-func (cmd CmdRepository) Usage() string {
-	return "[init|add|cat|info]"
-}
-
-// Execute this command
-func (cmd CmdRepository) Execute(args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
-	}
-	if cmd.global.Repo == "" {
-		return ErrMissingRepoLocation
-	}
-
-	switch args[0] {
-	case "init":
-		return cmd.init()
-	case "add":
-		if len(args) < 2 {
-			return fmt.Errorf(TWrongNumArgs, cmd.Usage())
-		}
-		return cmd.add(args[1])
-	case "cat":
-		return cmd.cat()
-	case "pack":
-		return cmd.pack()
-	case "info":
-		return cmd.info()
-	default:
-		return fmt.Errorf(TUnknownCommand, cmd.Usage())
-	}
-}
-
-func (cmd CmdRepository) init() error {
-	/*	username := ""
-		user, err := user.Current()
-		if err == nil {
-			username = user.Username
-		}
-		hostname, err := os.Hostname()
-		if err != nil {
-			hostname = "unknown"
-		}*/
-
+func executeRepoInit() error {
 	// acquire a shutdown lock. we don't want these next calls to be interrupted
 	lock := shutdown.Lock()
 	if lock == nil {
@@ -92,16 +93,16 @@ func (cmd CmdRepository) init() error {
 	}
 	defer lock()
 
-	r, err := newRepository(cmd.global.Repo, cmd.global.Password)
+	r, err := newRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
-		return fmt.Errorf("Creating repository at %s failed: %v", cmd.global.Repo, err)
+		return fmt.Errorf("Creating repository at %s failed: %v", globalOpts.Repo, err)
 	}
 
 	fmt.Printf("Created new repository at %s\n", (*r.Backend.Backends[0]).Location())
 	return nil
 }
 
-func (cmd CmdRepository) add(url string) error {
+func executeRepoAdd(url string) error {
 	// acquire a shutdown lock. we don't want these next calls to be interrupted
 	lock := shutdown.Lock()
 	if lock == nil {
@@ -109,7 +110,7 @@ func (cmd CmdRepository) add(url string) error {
 	}
 	defer lock()
 
-	r, err := openRepository(cmd.global.Repo, cmd.global.Password)
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
@@ -128,8 +129,8 @@ func (cmd CmdRepository) add(url string) error {
 	return nil
 }
 
-func (cmd CmdRepository) cat() error {
-	r, err := openRepository(cmd.global.Repo, cmd.global.Password)
+func executeRepoCat() error {
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
@@ -142,8 +143,8 @@ func (cmd CmdRepository) cat() error {
 	return nil
 }
 
-func (cmd CmdRepository) pack() error {
-	r, err := openRepository(cmd.global.Repo, cmd.global.Password)
+func executeRepoPack() error {
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
@@ -166,8 +167,8 @@ func (cmd CmdRepository) pack() error {
 	return nil
 }
 
-func (cmd CmdRepository) info() error {
-	r, err := openRepository(cmd.global.Repo, cmd.global.Password)
+func executeRepoInfo() error {
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}

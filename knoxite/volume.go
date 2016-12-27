@@ -12,55 +12,55 @@ import (
 
 	"github.com/klauspost/shutdown2"
 	"github.com/muesli/gotable"
+	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
 )
 
-// CmdVolume describes the command
-type CmdVolume struct {
-	Description string `short:"d" long:"desc" description:"a description or comment for this volume"`
-
-	global *GlobalOptions
+// VolumeInitOptions holds all the options that can be set for the 'volume init' command
+type VolumeInitOptions struct {
+	Description string
 }
+
+var (
+	volumeInitOpts = VolumeInitOptions{}
+
+	volumeCmd = &cobra.Command{
+		Use:   "volume",
+		Short: "manage volumes",
+		Long:  `The volume command manages volumes`,
+		RunE:  nil,
+	}
+	volumeInitCmd = &cobra.Command{
+		Use:   "init <name>",
+		Short: "initialize a new volume",
+		Long:  `The init command initializes a new volume`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("init needs a name for the new volume")
+			}
+			return executeVolumeInit(args[0], volumeInitOpts.Description)
+		},
+	}
+	volumeListCmd = &cobra.Command{
+		Use:   "list",
+		Short: "list all volumes inside a repository",
+		Long:  `The list command lists all volumes stored in a repository`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeVolumeList()
+		},
+	}
+)
 
 func init() {
-	_, err := parser.AddCommand("volume",
-		"manage volumes",
-		"The volume command manages volumes",
-		&CmdVolume{global: &globalOpts})
-	if err != nil {
-		panic(err)
-	}
+	volumeInitCmd.Flags().StringVarP(&volumeInitOpts.Description, "desc", "d", "", "a description or comment for this volume")
+
+	volumeCmd.AddCommand(volumeInitCmd)
+	volumeCmd.AddCommand(volumeListCmd)
+	RootCmd.AddCommand(volumeCmd)
 }
 
-// Usage describes this command's usage help-text
-func (cmd CmdVolume) Usage() string {
-	return "[list|init]"
-}
-
-// Execute this command
-func (cmd CmdVolume) Execute(args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
-	}
-	if cmd.global.Repo == "" {
-		return ErrMissingRepoLocation
-	}
-
-	switch args[0] {
-	case "init":
-		if len(args) < 2 {
-			return fmt.Errorf(TWrongNumArgs, cmd.Usage())
-		}
-		return cmd.init(args[1])
-	case "list":
-		return cmd.list()
-	default:
-		return fmt.Errorf(TUnknownCommand, cmd.Usage())
-	}
-}
-
-func (cmd CmdVolume) init(name string) error {
+func executeVolumeInit(name, description string) error {
 	// acquire a shutdown lock. we don't want these next calls to be interrupted
 	lock := shutdown.Lock()
 	if lock == nil {
@@ -68,9 +68,9 @@ func (cmd CmdVolume) init(name string) error {
 	}
 	defer lock()
 
-	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err == nil {
-		vol, verr := knoxite.NewVolume(name, cmd.Description)
+		vol, verr := knoxite.NewVolume(name, description)
 		if verr == nil {
 			verr = repository.AddVolume(vol)
 			if verr != nil {
@@ -88,8 +88,8 @@ func (cmd CmdVolume) init(name string) error {
 	return err
 }
 
-func (cmd CmdVolume) list() error {
-	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
+func executeVolumeList() error {
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}

@@ -12,57 +12,46 @@ import (
 	"fmt"
 
 	"github.com/muesli/goprogressbar"
+	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
 )
 
 // Error declarations
 var (
-	ErrTargetMissing = errors.New("please specify a directory to restore to (--target)")
+	ErrTargetMissing = errors.New("please specify a directory to restore to")
 )
 
-// CmdRestore describes the command
-type CmdRestore struct {
-	Target string `short:"t" long:"target" description:"Directory to restore to"`
-
-	global *GlobalOptions
-}
+var (
+	restoreCmd = &cobra.Command{
+		Use:   "restore <snapshot> <destination>",
+		Short: "restore a snapshot",
+		Long:  `The restore command restores a snapshot to a directory`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				return fmt.Errorf("restore needs to know which snapshot to work on")
+			}
+			if len(args) < 2 {
+				return ErrTargetMissing
+			}
+			return executeRestore(args[0], args[1])
+		},
+	}
+)
 
 func init() {
-	_, err := parser.AddCommand("restore",
-		"restore a snapshot",
-		"The restore command restores a snapshot to a directory",
-		&CmdRestore{global: &globalOpts})
-	if err != nil {
-		panic(err)
-	}
+	RootCmd.AddCommand(restoreCmd)
 }
 
-// Usage describes this command's usage help-text
-func (cmd CmdRestore) Usage() string {
-	return "SNAPSHOT-ID"
-}
-
-// Execute this command
-func (cmd CmdRestore) Execute(args []string) error {
-	if len(args) != 1 {
-		return fmt.Errorf(TWrongNumArgs, cmd.Usage())
-	}
-	if cmd.global.Repo == "" {
-		return ErrMissingRepoLocation
-	}
-	if cmd.Target == "" {
-		return ErrTargetMissing
-	}
-
-	repository, err := openRepository(cmd.global.Repo, cmd.global.Password)
+func executeRestore(snapshotID, target string) error {
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err == nil {
-		_, snapshot, ferr := repository.FindSnapshot(args[0])
+		_, snapshot, ferr := repository.FindSnapshot(snapshotID)
 		if ferr != nil {
 			return ferr
 		}
 
-		progress, derr := knoxite.DecodeSnapshot(repository, *snapshot, cmd.Target)
+		progress, derr := knoxite.DecodeSnapshot(repository, *snapshot, target)
 		if derr != nil {
 			return derr
 		}
