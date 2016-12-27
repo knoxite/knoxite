@@ -14,8 +14,10 @@ import (
 )
 
 const (
-	repoFilename       = "repository.knox"
-	chunkIndexFilename = "index"
+	// RepoFilename is the default filename for the repository data
+	RepoFilename = "repository.knox"
+	// ChunkIndexFilename is the default filename for the chunk-index
+	ChunkIndexFilename = "index"
 	chunksDirname      = "chunks"
 	snapshotsDirname   = "snapshots"
 )
@@ -36,7 +38,7 @@ type BackendFilesystem interface {
 
 // StorageFilesystem is bridging a BackendFilesystem to a Backend interface
 type StorageFilesystem struct {
-	path           string
+	Path           string
 	chunkPath      string
 	snapshotPath   string
 	chunkIndexPath string
@@ -48,11 +50,11 @@ type StorageFilesystem struct {
 // NewStorageFilesystem returns a StorageFilesystem object
 func NewStorageFilesystem(path string, storage BackendFilesystem) (StorageFilesystem, error) {
 	s := StorageFilesystem{
-		path:           path,
+		Path:           path,
 		chunkPath:      filepath.Join(path, chunksDirname),
 		snapshotPath:   filepath.Join(path, snapshotsDirname),
-		chunkIndexPath: filepath.Join(path, chunksDirname, chunkIndexFilename),
-		repositoryPath: filepath.Join(path, repoFilename),
+		chunkIndexPath: filepath.Join(path, chunksDirname, ChunkIndexFilename),
+		repositoryPath: filepath.Join(path, RepoFilename),
 		storage:        &storage,
 	}
 	return s, nil
