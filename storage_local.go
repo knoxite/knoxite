@@ -9,6 +9,7 @@ package knoxite
 
 import (
 	"io/ioutil"
+	"net/url"
 	"os"
 )
 
@@ -17,17 +18,21 @@ type StorageLocal struct {
 	StorageFilesystem
 }
 
-// NewStorageLocal returns a StorageLocal object
-func NewStorageLocal(path string) (*StorageLocal, error) {
-	storage := StorageLocal{}
-	storagefs, _ := NewStorageFilesystem(path, &storage)
-	storage.StorageFilesystem = storagefs
-	return &storage, nil
+func init() {
+	RegisterBackendFactory(&StorageLocal{})
+}
+
+// NewBackend returns a StorageLocal backend
+func (*StorageLocal) NewBackend(u url.URL) (Backend, error) {
+	backend := StorageLocal{}
+	storagefs, _ := NewStorageFilesystem(u.Path, &backend)
+	backend.StorageFilesystem = storagefs
+	return &backend, nil
 }
 
 // Location returns the type and location of the repository
 func (backend *StorageLocal) Location() string {
-	return backend.path
+	return backend.Path
 }
 
 // Close the backend
@@ -37,7 +42,7 @@ func (backend *StorageLocal) Close() error {
 
 // Protocols returns the Protocol Schemes supported by this backend
 func (backend *StorageLocal) Protocols() []string {
-	return []string{""}
+	return []string{"file"}
 }
 
 // Description returns a user-friendly description for this backend
