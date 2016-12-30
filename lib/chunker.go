@@ -67,61 +67,60 @@ type inputChunk struct {
 	Num  uint
 }
 
-func processChunk(id int, compress, encrypt bool, password string, dataParts, parityParts int, jobs <-chan inputChunk, results chan<- Chunk, wg *sync.WaitGroup) {
+func processChunk(id int, compress, encrypt bool, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- Chunk, wg *sync.WaitGroup) {
 	for j := range jobs {
-		//		fmt.Println("\tWorker", id, "processing job", j.Num, len(j.Data))
+		// fmt.Println("\tWorker", id, "processing job", j.Num, len(j.Data))
 
-		finalData := j.Data
+		var err error
+		b := j.Data
 		if compress {
-			var compdata bytes.Buffer
-			zipwriter := gzip.NewWriter(&compdata)
-			zipwriter.Write(j.Data)
+			var cb bytes.Buffer
+			zipwriter := gzip.NewWriter(&cb)
+			zipwriter.Write(b)
 			zipwriter.Close()
-			finalData = compdata.Bytes()
+			b = cb.Bytes()
 		}
-
 		if encrypt {
-			encryptedData, err := Encrypt(finalData, password)
+			b, err = Encrypt(b, password)
 			if err != nil {
 				panic(err)
 			}
-
-			finalData = encryptedData
 		}
-		shasumdata := sha256.Sum256(finalData)
-		shasum := hex.EncodeToString(shasumdata[:])
-		decshasumdata := sha256.Sum256(j.Data)
-		decshasum := hex.EncodeToString(decshasumdata[:])
 
-		cd := Chunk{
+		shadata := sha256.Sum256(b)
+		shasum := hex.EncodeToString(shadata[:])
+		shadata = sha256.Sum256(j.Data)
+		origshasum := hex.EncodeToString(shadata[:])
+
+		c := Chunk{
 			DataParts:       uint(dataParts),
 			ParityParts:     uint(parityParts),
 			OriginalSize:    len(j.Data),
-			Size:            len(finalData),
-			DecryptedShaSum: decshasum,
+			Size:            len(b),
+			DecryptedShaSum: origshasum,
 			ShaSum:          shasum,
 			Encrypted:       EncryptionAES,
 			Compressed:      CompressionNone,
 			Num:             j.Num,
 		}
 		if compress {
-			cd.Compressed = CompressionGZip
+			c.Compressed = CompressionGZip
 		}
 		if !encrypt {
-			cd.Encrypted = EncryptionNone
+			c.Encrypted = EncryptionNone
 		}
 		if parityParts > 0 {
-			pars, err := redundantData(finalData, dataParts, parityParts)
+			pars, err := redundantData(b, dataParts, parityParts)
 			if err != nil {
 				panic(err)
 			}
-			cd.Data = &pars
+			c.Data = &pars
 		} else {
-			cd.DataParts = 1
-			cd.Data = &[][]byte{finalData}
+			c.DataParts = 1
+			c.Data = &[][]byte{b}
 		}
 
-		results <- cd
+		chunks <- c
 		wg.Done()
 	}
 }
