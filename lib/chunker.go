@@ -17,7 +17,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/muesli/chunker"
+	"github.com/restic/chunker"
 )
 
 // Which compression algo
