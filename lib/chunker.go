@@ -27,25 +27,9 @@ const (
 	CompressionLZW
 	CompressionFlate
 	CompressionZlib
+
+	preferredChunkSize = 1 * (1 << 20) // 1 MB, change this to your requirement
 )
-
-// CompressionText returns a user-friendly string indicating the compression algo that was used
-func CompressionText(enum int) string {
-	switch enum {
-	case CompressionNone:
-		return "none"
-	case CompressionGZip:
-		return "GZip"
-	case CompressionLZW:
-		return "LZW"
-	case CompressionFlate:
-		return "Flate"
-	case CompressionZlib:
-		return "zlib"
-	}
-
-	return "unknown"
-}
 
 // Chunk stores an encrypted chunk alongside with its metadata
 // MUST BE encrypted
@@ -135,8 +119,6 @@ func chunkFile(filename string, compress, encrypt bool, password string, dataPar
 		return c, err
 	}
 
-	const fileChunk = 1 * (1 << 20) // 1 MB, change this to your requirement
-
 	wg := &sync.WaitGroup{}
 	jobs := make(chan inputChunk)
 	for w := 1; w <= 4; w++ {
@@ -149,7 +131,7 @@ func chunkFile(filename string, compress, encrypt bool, password string, dataPar
 
 		i := uint(0)
 		for {
-			partBuffer := make([]byte, fileChunk)
+			partBuffer := make([]byte, preferredChunkSize)
 			chunk, err := chunker.Next(partBuffer)
 			if err == io.EOF {
 				wg.Done()
@@ -178,4 +160,22 @@ func chunkFile(filename string, compress, encrypt bool, password string, dataPar
 	}()
 
 	return c, nil
+}
+
+// CompressionText returns a user-friendly string indicating the compression algo that was used
+func CompressionText(enum int) string {
+	switch enum {
+	case CompressionNone:
+		return "none"
+	case CompressionGZip:
+		return "GZip"
+	case CompressionLZW:
+		return "LZW"
+	case CompressionFlate:
+		return "Flate"
+	case CompressionZlib:
+		return "zlib"
+	}
+
+	return "unknown"
 }
