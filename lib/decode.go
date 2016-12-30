@@ -84,37 +84,36 @@ func DecodeSnapshot(repository Repository, snapshot Snapshot, dst string) (prog 
 	return prog, nil
 }
 
-func decodeChunk(repository Repository, chunk Chunk, finalData []byte) ([]byte, error) {
+func decodeChunk(repository Repository, chunk Chunk, b []byte) ([]byte, error) {
+	var err error
 	if chunk.Encrypted == EncryptionAES {
-		data, err := Decrypt(finalData, repository.Password)
+		b, err = Decrypt(b, repository.Password)
 		if err != nil {
 			return []byte{}, err
 		}
-
-		finalData = data
 	}
 
 	if chunk.Compressed == CompressionGZip {
-		reader := bytes.NewReader(finalData)
-		zipreader, err := gzip.NewReader(reader)
+		r := bytes.NewReader(b)
+		zr, err := gzip.NewReader(r)
 		if err != nil {
 			return []byte{}, err
 		}
-		defer zipreader.Close()
-		finalData, err = ioutil.ReadAll(zipreader)
+		defer zr.Close()
+		b, err = ioutil.ReadAll(zr)
 		if err != nil {
 			return []byte{}, err
 		}
 	}
 
-	shasumdata := sha256.Sum256(finalData)
-	shasum := hex.EncodeToString(shasumdata[:])
+	shadata := sha256.Sum256(b)
+	shasum := hex.EncodeToString(shadata[:])
 
 	if chunk.DecryptedShaSum != shasum {
 		return []byte{}, &CheckSumError{"sha256", chunk.DecryptedShaSum, shasum}
 	}
 
-	return finalData, nil
+	return b, nil
 }
 
 func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
@@ -126,6 +125,8 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 		pars := make([][]byte, chunk.DataParts+chunk.ParityParts)
 		parsFound := uint(0)
 		parsMissing := 0
+
+		// try to load all parts until we can successfully combine/reconstruct the chunk
 		for i := 0; i < int(chunk.DataParts+chunk.ParityParts); i++ {
 			var cerr error
 			pars[i], cerr = repository.Backend.LoadChunk(chunk, uint(i))
@@ -136,21 +137,24 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 			}
 			parsFound++
 
+			// check if we already have a sufficient amount of parts
 			if parsFound >= chunk.DataParts {
 				var b bytes.Buffer
-				bufWriter := bufio.NewWriter(&b)
+				w := bufio.NewWriter(&b)
 
+				// if more than one data-part was missing, we need to reconstruct the chunk
 				if parsMissing > 0 {
 					err = enc.Reconstruct(pars)
 					if err != nil {
 						continue
 					}
 				}
-				err = enc.Join(bufWriter, pars, chunk.Size)
+				err = enc.Join(w, pars, chunk.Size)
 				if err != nil {
+					// reconstruction failed, let's try it with another parity part
 					continue
 				}
-				bufWriter.Flush()
+				w.Flush()
 				return decodeChunk(repository, chunk, b.Bytes())
 			}
 		}
@@ -244,32 +248,35 @@ func init() {
 }
 
 // DecodeArchiveData returns the content of a single archive
-func DecodeArchiveData(repository Repository, arc ItemData) (dat []byte, stats Stats, err error) {
+func DecodeArchiveData(repository Repository, arc ItemData) ([]byte, Stats, error) {
+	var b []byte
+	var stats Stats
+	var err error
+
 	if arc.Type == File {
 		parts := uint(len(arc.Chunks))
 
 		for i := uint(0); i < parts; i++ {
 			idx, err := indexOfChunk(arc, i)
 			if err != nil {
-				return dat, stats, err
+				return b, stats, err
 			}
 
 			chunk := arc.Chunks[idx]
 			mutex.Lock()
-			cacheData, ok := cache[chunk.ShaSum]
+			cd, ok := cache[chunk.ShaSum]
 			if ok {
 				fmt.Println("Using cached chunk", chunk.ShaSum)
-				dat = append(dat, cacheData...)
-				mutex.Unlock()
 			} else {
-				finalData, err := loadChunk(repository, chunk)
+				cd, err = loadChunk(repository, chunk)
 				if err != nil {
-					return dat, stats, err
+					return b, stats, err
 				}
-				dat = append(dat, finalData...)
-				cache[chunk.ShaSum] = finalData
-				mutex.Unlock()
+				cache[chunk.ShaSum] = cd
 			}
+
+			mutex.Unlock()
+			b = append(b, cd...)
 		}
 
 		stats.StorageSize += arc.StorageSize
@@ -278,36 +285,33 @@ func DecodeArchiveData(repository Repository, arc ItemData) (dat []byte, stats S
 		stats.Files++
 	}
 
-	return dat, stats, nil
+	return b, stats, err
 }
 
-func readArchiveChunk(repository Repository, arc ItemData, chunkNum uint) (dat *[]byte, err error) {
-	dat = &[]byte{}
+func readArchiveChunk(repository Repository, arc ItemData, chunkNum uint) (*[]byte, error) {
+	var b []byte
+	var err error
+
 	idx, err := indexOfChunk(arc, chunkNum)
 	if err != nil {
-		return dat, err
+		return &b, err
 	}
 
 	chunk := arc.Chunks[idx]
 	mutex.Lock()
-	cacheData, ok := cache[chunk.ShaSum]
-	if ok {
-		// fmt.Println("Using cached chunk", chunk.ShaSum)
-		*dat = append(*dat, cacheData...)
-		mutex.Unlock()
-		return dat, nil
+	cd, ok := cache[chunk.ShaSum]
+	if !ok {
+		cd, err = loadChunk(repository, chunk)
+		if err != nil {
+			return &b, err
+		}
+		cache[chunk.ShaSum] = cd
 	}
 
-	finalData, err := loadChunk(repository, chunk)
-	if err != nil {
-		return dat, err
-	}
-
-	*dat = append(*dat, finalData...)
-	cache[chunk.ShaSum] = finalData
 	mutex.Unlock()
+	b = append(b, cd...)
 
-	return dat, nil
+	return &b, nil
 }
 
 func indexOfChunk(arc ItemData, chunkNum uint) (int, error) {
@@ -341,35 +345,35 @@ func chunkForOffset(arc ItemData, offset int) (uint, int, error) {
 }
 
 // ReadArchive reads from an archive
-func ReadArchive(repository Repository, arc ItemData, offset int, size int) (dat *[]byte, err error) {
-	dat = &[]byte{}
+func ReadArchive(repository Repository, arc ItemData, offset int, size int) (*[]byte, error) {
+	var b []byte
+
 	// fmt.Println("Read req:", offset, size)
 	if arc.Type == File {
 		neededPart, internalOffset, err := chunkForOffset(arc, offset)
 		if err != nil {
-			return dat, err
+			return &b, err
 		}
 
-		for len(*dat) < size {
+		for len(b) < size {
 			if neededPart >= uint(len(arc.Chunks)) {
-				return dat, nil
+				return &b, nil
 			}
-			b, err := readArchiveChunk(repository, arc, neededPart)
-			if err != nil || len(*b) == 0 {
+			cd, err := readArchiveChunk(repository, arc, neededPart)
+			if err != nil || len(*cd) == 0 {
 				//return dat, err
 				panic(err)
 			}
 
-			d := *b
-			d = d[internalOffset:]
+			d := (*cd)[internalOffset:]
 			if err != nil || len(d) == 0 {
 				//return dat, err
 				panic(err)
 			}
-			if len(d)+len(*dat) > size {
-				*dat = append(*dat, d[:size-len(*dat)]...)
+			if len(d)+len(b) > size {
+				b = append(b, d[:size-len(b)]...)
 			} else {
-				*dat = append(*dat, d...)
+				b = append(b, d...)
 			}
 
 			internalOffset = 0
@@ -382,5 +386,5 @@ func ReadArchive(repository Repository, arc ItemData, offset int, size int) (dat
 		}()
 	}
 
-	return dat, nil
+	return &b, nil
 }
