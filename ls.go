@@ -15,7 +15,7 @@ import (
 	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
 
-	"github.com/knoxite/knoxite/lib"
+	knoxite "github.com/knoxite/knoxite/lib"
 )
 
 const timeFormat = "2006-01-02 15:04:05"

@@ -18,7 +18,7 @@ import (
 	"github.com/muesli/goprogressbar"
 	"github.com/spf13/cobra"
 
-	"github.com/knoxite/knoxite/lib"
+	knoxite "github.com/knoxite/knoxite/lib"
 )
 
 // Error declarations

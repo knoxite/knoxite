@@ -17,7 +17,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/knoxite/knoxite/lib"
+	knoxite "github.com/knoxite/knoxite/lib"
 )
 
 func TestNewStorageAmazonS3(t *testing.T) {

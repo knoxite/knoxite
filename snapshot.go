@@ -13,7 +13,7 @@ import (
 	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
 
-	"github.com/knoxite/knoxite/lib"
+	knoxite "github.com/knoxite/knoxite/lib"
 )
 
 var (

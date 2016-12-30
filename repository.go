@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 
-	"github.com/knoxite/knoxite/lib"
+	knoxite "github.com/knoxite/knoxite/lib"
 )
 
 // Error declarations

@@ -17,7 +17,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/knoxite/knoxite/lib"
+	knoxite "github.com/knoxite/knoxite/lib"
 )
 
 // StorageHTTP stores data on a remote HTTP server

@@ -14,7 +14,7 @@ import (
 	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
 
-	"github.com/knoxite/knoxite/lib"
+	knoxite "github.com/knoxite/knoxite/lib"
 )
 
 // VolumeInitOptions holds all the options that can be set for the 'volume init' command

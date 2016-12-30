@@ -17,7 +17,7 @@ import (
 
 	"gopkg.in/kothar/go-backblaze.v0"
 
-	"github.com/knoxite/knoxite/lib"
+	knoxite "github.com/knoxite/knoxite/lib"
 )
 
 // StorageBackblaze stores data on a remote Backblaze

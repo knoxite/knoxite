@@ -19,7 +19,7 @@ import (
 
 	"github.com/jlaffaye/ftp"
 
-	"github.com/knoxite/knoxite/lib"
+	knoxite "github.com/knoxite/knoxite/lib"
 )
 
 // StorageFTP stores data on a remote FTP
