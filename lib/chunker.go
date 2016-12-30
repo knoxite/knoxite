@@ -75,9 +75,9 @@ func processChunk(id int, compress, encrypt bool, password string, dataParts, pa
 		b := j.Data
 		if compress {
 			var cb bytes.Buffer
-			zipwriter := gzip.NewWriter(&cb)
-			zipwriter.Write(b)
-			zipwriter.Close()
+			w := gzip.NewWriter(&cb)
+			w.Write(b)
+			w.Close()
 			b = cb.Bytes()
 		}
 		if encrypt {
