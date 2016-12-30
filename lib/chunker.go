@@ -28,7 +28,7 @@ const (
 	CompressionFlate
 	CompressionZlib
 
-	preferredChunkSize = 1 * (1 << 20) // 1 MB, change this to your requirement
+	preferredChunkSize = 1 * (1 << 20) // 1 MiB
 )
 
 // Chunk stores an encrypted chunk alongside with its metadata
