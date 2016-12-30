@@ -251,7 +251,6 @@ func init() {
 func DecodeArchiveData(repository Repository, arc ItemData) ([]byte, Stats, error) {
 	var b []byte
 	var stats Stats
-	var err error
 
 	if arc.Type == File {
 		parts := uint(len(arc.Chunks))
@@ -285,7 +284,7 @@ func DecodeArchiveData(repository Repository, arc ItemData) ([]byte, Stats, erro
 		stats.Files++
 	}
 
-	return b, stats, err
+	return b, stats, nil
 }
 
 func readArchiveChunk(repository Repository, arc ItemData, chunkNum uint) (*[]byte, error) {
@@ -361,13 +360,13 @@ func ReadArchive(repository Repository, arc ItemData, offset int, size int) (*[]
 			}
 			cd, err := readArchiveChunk(repository, arc, neededPart)
 			if err != nil || len(*cd) == 0 {
-				//return dat, err
+				//return b, err
 				panic(err)
 			}
 
 			d := (*cd)[internalOffset:]
 			if err != nil || len(d) == 0 {
-				//return dat, err
+				//return b, err
 				panic(err)
 			}
 			if len(d)+len(b) > size {
