@@ -8,15 +8,15 @@ func redundantData(b []byte, chunks, redundancyChunks int) ([][]byte, error) {
 		return [][]byte{}, err
 	}
 
-	pardata, err := enc.Split(b)
+	pars, err := enc.Split(b)
 	if err != nil {
 		panic(err)
 	}
 
-	err = enc.Encode(pardata)
+	err = enc.Encode(pars)
 	if err != nil {
 		return [][]byte{}, err
 	}
 
-	return pardata, nil
+	return pars, nil
 }
