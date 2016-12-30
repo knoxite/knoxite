@@ -127,7 +127,7 @@ func chunkFile(filename string, compress, encrypt bool, password string, dataPar
 
 	wg.Add(1)
 	go func() {
-		chunker := chunker.New(file, chunker.Pol(0x3DA3358B4DC173))
+		chunker := chunker.NewWithBoundaries(file, chunker.Pol(0x3DA3358B4DC173), chunker.MinSize, preferredChunkSize)
 
 		i := uint(0)
 		for {
