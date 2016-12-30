@@ -14,7 +14,7 @@ import (
 	"github.com/klauspost/shutdown2"
 	"github.com/spf13/cobra"
 
-	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/lib"
 )
 
 var (

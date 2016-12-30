@@ -18,13 +18,12 @@ import (
 	"strings"
 	"syscall"
 
-	"golang.org/x/net/context"
-
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-
-	"github.com/knoxite/knoxite"
 	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
+
+	"github.com/knoxite/knoxite/lib"
 )
 
 var (

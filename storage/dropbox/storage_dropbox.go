@@ -18,7 +18,7 @@ import (
 
 	"github.com/stacktic/dropbox"
 
-	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/lib"
 )
 
 // StorageDropbox stores data on a remote Dropbox

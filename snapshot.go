@@ -5,208 +5,122 @@
  *   For license see LICENSE.txt
  */
 
-package knoxite
+package main
 
 import (
-	"encoding/json"
-	"math"
-	"path/filepath"
-	"strings"
-	"sync"
-	"time"
+	"fmt"
 
-	uuid "github.com/nu7hatch/gouuid"
+	"github.com/muesli/gotable"
+	"github.com/spf13/cobra"
+
+	"github.com/knoxite/knoxite/lib"
 )
 
-// A Snapshot is a compilation of one or many archives
-// MUST BE encrypted
-type Snapshot struct {
-	ID          string     `json:"id"`
-	Date        time.Time  `json:"date"`
-	Description string     `json:"description"`
-	Stats       Stats      `json:"stats"`
-	Items       []ItemData `json:"items"`
+var (
+	snapshotCmd = &cobra.Command{
+		Use:   "snapshot",
+		Short: "manage snapshots",
+		Long:  `The snapshot command manages snapshots`,
+		RunE:  nil,
+	}
+	snapshotListCmd = &cobra.Command{
+		Use:   "list <volume>",
+		Short: "list all snapshots inside a volume",
+		Long:  `The list command lists all snapshots stored in a volume`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("list needs a volume ID to work on")
+			}
+			return executeSnapshotList(args[0])
+		},
+	}
+	snapshotRemoveCmd = &cobra.Command{
+		Use:   "remove <snapshot>",
+		Short: "remove a snapshot",
+		Long:  `The remove command deletes a snapshot from a volume`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("remove needs a snapshot ID to work on")
+			}
+			return executeSnapshotRemove(args[0])
+		},
+	}
+)
+
+func init() {
+	snapshotCmd.AddCommand(snapshotListCmd)
+	snapshotCmd.AddCommand(snapshotRemoveCmd)
+	RootCmd.AddCommand(snapshotCmd)
 }
 
-// NewSnapshot creates a new snapshot
-func NewSnapshot(description string) (Snapshot, error) {
-	snapshot := Snapshot{
-		Date:        time.Now(),
-		Description: description,
-	}
-
-	u, err := uuid.NewV4()
+func executeSnapshotRemove(snapshotID string) error {
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
-		return snapshot, err
+		return err
 	}
-	snapshot.ID = u.String()[:8]
-
-	return snapshot, nil
-}
-
-// Add adds a path to a Snapshot
-func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt bool, dataParts, parityParts uint) chan Progress {
-	progress := make(chan Progress)
-	fwd := make(chan ItemResult, 256) // TODO: reconsider buffer size
-	m := new(sync.Mutex)
-	var totalSize uint64 // total data size: uncompressed, unencrypted
-
-	go func() {
-		for _, path := range paths {
-			c := findFiles(path)
-
-			for result := range c {
-				if result.Error == nil {
-					rel, err := filepath.Rel(cwd, result.Item.Path)
-					if err == nil && !strings.HasPrefix(rel, "../") {
-						result.Item.Path = rel
-					}
-					if isSpecialPath(result.Item.Path) {
-						continue
-					}
-					m.Lock()
-					totalSize += result.Item.Size
-					m.Unlock()
-				}
-				fwd <- result
-			}
-		}
-		close(fwd)
-	}()
-
-	go func() {
-		var totalTransferredSize uint64 // total transferred size: uncompressed, unencrypted
-		var totalStorageSize uint64     // total storage size: compressed, encrypted
-		for result := range fwd {
-			if result.Error != nil {
-				p := newProgressError(result.Error)
-				progress <- p
-				break
-			}
-
-			item := result.Item
-			rel, err := filepath.Rel(cwd, item.Path)
-			if err == nil && !strings.HasPrefix(rel, "../") {
-				item.Path = rel
-			}
-			if isSpecialPath(item.Path) {
-				continue
-			}
-
-			p := newProgress(item)
-			m.Lock()
-			p.Statistics.Size = totalSize
-			p.Statistics.StorageSize = totalStorageSize
-			p.Statistics.Transferred = totalTransferredSize
-			m.Unlock()
-			progress <- p
-
-			if isRegularFile(item.FileInfo) {
-				var currentTransferredSize uint64 // current file's transferred size: uncompressed, unencrypted
-				dataParts = uint(math.Max(1, float64(dataParts)))
-				chunkchan, err := chunkFile(item.AbsPath, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
-				if err != nil {
-					panic(err)
-				}
-				for cd := range chunkchan {
-					// fmt.Printf("\tSplit %s (#%d, %d bytes), compression: %s, encryption: %s, sha256: %s\n", id.Path, cd.Num, cd.Size, CompressionText(cd.Compressed), EncryptionText(cd.Encrypted), cd.ShaSum)
-
-					// store this chunk
-					n, err := repository.Backend.StoreChunk(cd)
-					if err != nil {
-						panic(err)
-					}
-
-					// release the memory, we don't need the data anymore
-					cd.Data = &[][]byte{}
-
-					item.Chunks = append(item.Chunks, cd)
-					item.StorageSize += n
-					totalStorageSize += n
-					currentTransferredSize += uint64(cd.OriginalSize)
-					totalTransferredSize += uint64(cd.OriginalSize)
-
-					m.Lock()
-					p.Transferred = currentTransferredSize
-					p.Statistics.Size = totalSize
-					p.Statistics.StorageSize = totalStorageSize
-					p.Statistics.Transferred = totalTransferredSize
-					m.Unlock()
-					progress <- p
-				}
-			}
-
-			snapshot.AddItem(item)
-			chunkIndex.AddItem(item, snapshot.ID)
-		}
-		close(progress)
-	}()
-
-	return progress
-}
-
-// Clone clones a snapshot
-func (snapshot *Snapshot) Clone() (*Snapshot, error) {
-	s, err := NewSnapshot(snapshot.Description)
-	if err != nil {
-		return &s, err
-	}
-
-	s.Stats = snapshot.Stats
-	s.Items = snapshot.Items
-
-	return &s, nil
-}
-
-// openSnapshot opens an existing snapshot
-func openSnapshot(id string, repository *Repository) (Snapshot, error) {
-	snapshot := Snapshot{}
-	b, err := repository.Backend.LoadSnapshot(id)
-
-	decb, err := Decrypt(b, repository.Password)
-	if err == nil {
-		err = json.Unmarshal(decb, &snapshot)
-	}
-	return snapshot, err
-}
-
-// Save writes a snapshot's metadata
-func (snapshot *Snapshot) Save(repository *Repository) error {
-	b, err := json.Marshal(*snapshot)
+	chunkIndex, err := knoxite.OpenChunkIndex(&repository)
 	if err != nil {
 		return err
 	}
 
-	encb, err := Encrypt(b, repository.Password)
-	if err == nil {
-		err = repository.Backend.SaveSnapshot(snapshot.ID, encb)
+	volume, snapshot, err := repository.FindSnapshot(snapshotID)
+	if err != nil {
+		return err
 	}
-	return err
+
+	err = volume.RemoveSnapshot(snapshot.ID)
+	if err != nil {
+		return err
+	}
+
+	chunkIndex.RemoveSnapshot(snapshot.ID)
+	err = chunkIndex.Save(&repository)
+	if err != nil {
+		return err
+	}
+
+	err = repository.Save()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Snapshot %s removed: %s\n", snapshot.ID, snapshot.Stats.String())
+	fmt.Println("Do not forget to run 'repo pack' to delete un-referenced chunks and free up storage space!")
+	return nil
 }
 
-// AddItem adds an item to a snapshot
-func (snapshot *Snapshot) AddItem(id *ItemData) {
-	items := []ItemData{}
-	stats := Stats{}
+func executeSnapshotList(volID string) error {
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	if err != nil {
+		return err
+	}
 
-	found := false
-	for _, i := range snapshot.Items {
-		if i.Path == id.Path {
-			found = true
+	volume, err := repository.FindVolume(volID)
+	if err != nil {
+		return err
+	}
 
-			items = append(items, *id)
-			stats.AddItem(id)
-		} else {
-			items = append(items, i)
-			stats.AddItem(&i)
+	tab := gotable.NewTable([]string{"ID", "Date", "Original Size", "Storage Size", "Description"},
+		[]int64{-8, -19, 13, 12, -48}, "No snapshots found. This volume is empty.")
+	totalSize := uint64(0)
+	totalStorageSize := uint64(0)
+
+	for _, snapshotID := range volume.Snapshots {
+		snapshot, err := volume.LoadSnapshot(snapshotID, &repository)
+		if err != nil {
+			return err
 		}
+		tab.AppendRow([]interface{}{
+			snapshot.ID,
+			snapshot.Date.Format(timeFormat),
+			knoxite.SizeToString(snapshot.Stats.Size),
+			knoxite.SizeToString(snapshot.Stats.StorageSize),
+			snapshot.Description})
+		totalSize += snapshot.Stats.Size
+		totalStorageSize += snapshot.Stats.StorageSize
 	}
 
-	if !found {
-		items = append(items, *id)
-		stats.AddItem(id)
-	}
-
-	snapshot.Items = items
-	snapshot.Stats = stats
+	tab.SetSummary([]interface{}{"", "", knoxite.SizeToString(totalSize), knoxite.SizeToString(totalStorageSize), ""})
+	tab.Print()
+	return nil
 }

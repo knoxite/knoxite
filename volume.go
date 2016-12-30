@@ -5,70 +5,101 @@
  *   For license see LICENSE.txt
  */
 
-package knoxite
+package main
 
-import uuid "github.com/nu7hatch/gouuid"
+import (
+	"fmt"
 
-// A Volume contains various snapshots
-// MUST BE encrypted
-type Volume struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Snapshots   []string `json:"snapshots"`
+	"github.com/klauspost/shutdown2"
+	"github.com/muesli/gotable"
+	"github.com/spf13/cobra"
+
+	"github.com/knoxite/knoxite/lib"
+)
+
+// VolumeInitOptions holds all the options that can be set for the 'volume init' command
+type VolumeInitOptions struct {
+	Description string
 }
 
-// NewVolume creates a new volume
-func NewVolume(name, description string) (*Volume, error) {
-	vol := Volume{
-		Name:        name,
-		Description: description,
-	}
+var (
+	volumeInitOpts = VolumeInitOptions{}
 
-	u, err := uuid.NewV4()
+	volumeCmd = &cobra.Command{
+		Use:   "volume",
+		Short: "manage volumes",
+		Long:  `The volume command manages volumes`,
+		RunE:  nil,
+	}
+	volumeInitCmd = &cobra.Command{
+		Use:   "init <name>",
+		Short: "initialize a new volume",
+		Long:  `The init command initializes a new volume`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("init needs a name for the new volume")
+			}
+			return executeVolumeInit(args[0], volumeInitOpts.Description)
+		},
+	}
+	volumeListCmd = &cobra.Command{
+		Use:   "list",
+		Short: "list all volumes inside a repository",
+		Long:  `The list command lists all volumes stored in a repository`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeVolumeList()
+		},
+	}
+)
+
+func init() {
+	volumeInitCmd.Flags().StringVarP(&volumeInitOpts.Description, "desc", "d", "", "a description or comment for this volume")
+
+	volumeCmd.AddCommand(volumeInitCmd)
+	volumeCmd.AddCommand(volumeListCmd)
+	RootCmd.AddCommand(volumeCmd)
+}
+
+func executeVolumeInit(name, description string) error {
+	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	lock := shutdown.Lock()
+	if lock == nil {
+		return nil
+	}
+	defer lock()
+
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	if err == nil {
+		vol, verr := knoxite.NewVolume(name, description)
+		if verr == nil {
+			verr = repository.AddVolume(vol)
+			if verr != nil {
+				return fmt.Errorf("Creating volume %s failed: %v", name, verr)
+			}
+
+			annotation := "Name: " + vol.Name
+			if len(vol.Description) > 0 {
+				annotation += ", Description: " + vol.Description
+			}
+			fmt.Printf("Volume %s (%s) created\n", vol.ID, annotation)
+			return repository.Save()
+		}
+	}
+	return err
+}
+
+func executeVolumeList() error {
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
-		return &vol, err
+		return err
 	}
-	vol.ID = u.String()[:8]
 
-	return &vol, nil
-}
+	tab := gotable.NewTable([]string{"ID", "Name", "Description"},
+		[]int64{-8, -32, -48}, "No volumes found. This repository is empty.")
+	for _, volume := range repository.Volumes {
+		tab.AppendRow([]interface{}{volume.ID, volume.Name, volume.Description})
+	}
 
-// AddSnapshot adds a snapshot to a volume
-func (v *Volume) AddSnapshot(id string) error {
-	v.Snapshots = append(v.Snapshots, id)
+	tab.Print()
 	return nil
-}
-
-// RemoveSnapshot removes a snapshot from a volume
-func (v *Volume) RemoveSnapshot(id string) error {
-	snapshots := []string{}
-	found := false
-
-	for _, snapshot := range v.Snapshots {
-		if snapshot == id {
-			found = true
-		} else {
-			snapshots = append(snapshots, snapshot)
-		}
-	}
-
-	if !found {
-		return ErrSnapshotNotFound
-	}
-
-	v.Snapshots = snapshots
-	return nil
-}
-
-// LoadSnapshot loads a snapshot within a volume from a repository
-func (v *Volume) LoadSnapshot(id string, repository *Repository) (Snapshot, error) {
-	for _, snapshot := range v.Snapshots {
-		if snapshot == id {
-			snapshot, err := openSnapshot(id, repository)
-			return snapshot, err
-		}
-	}
-
-	return Snapshot{}, ErrSnapshotNotFound
 }

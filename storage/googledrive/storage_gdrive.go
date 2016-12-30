@@ -11,7 +11,7 @@ package googledrive
 import (
 	"net/url"
 
-	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/lib"
 )
 
 // StorageGoogleDrive stores data on a remote Google Drive

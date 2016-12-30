@@ -5,155 +5,234 @@
  *   For license see LICENSE.txt
  */
 
-package knoxite
+package main
 
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"syscall"
+
+	"github.com/klauspost/shutdown2"
+	"github.com/muesli/gotable"
+	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
+
+	"github.com/knoxite/knoxite/lib"
 )
-
-// A Repository is a collection of backup snapshots
-// MUST BE encrypted
-type Repository struct {
-	//	Owner   string    `json:"owner"`
-	Volumes []*Volume `json:"volumes"`
-	Paths   []string  `json:"storage"`
-
-	Backend  BackendManager `json:"-"`
-	Password string         `json:"-"`
-}
 
 // Error declarations
 var (
-	ErrOpenRepositoryFailed = errors.New("Wrong password or corrupted repository")
-	ErrVolumeNotFound       = errors.New("Volume not found")
-	ErrSnapshotNotFound     = errors.New("Snapshot not found")
+	ErrPasswordMismatch = errors.New("Passwords did not match")
+
+	repoCmd = &cobra.Command{
+		Use:   "repo",
+		Short: "manage repository",
+		Long:  `The repo command manages repositories`,
+		RunE:  nil,
+	}
+	repoInitCmd = &cobra.Command{
+		Use:   "init",
+		Short: "initialize a new repository",
+		Long:  `The init command initializes a new repository`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeRepoInit()
+		},
+	}
+	repoCatCmd = &cobra.Command{
+		Use:   "cat",
+		Short: "display repository information as JSON",
+		Long:  `The cat command displays the internal repository information as JSON`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeRepoCat()
+		},
+	}
+	repoInfoCmd = &cobra.Command{
+		Use:   "info",
+		Short: "display repository information",
+		Long:  `The info command displays the repository status & information`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeRepoInfo()
+		},
+	}
+	repoAddCmd = &cobra.Command{
+		Use:   "add <url>",
+		Short: "add another storage backend to a repository",
+		Long:  `The add command adds another storage backend to a repository`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("add needs a URL to be added")
+			}
+			return executeRepoAdd(args[0])
+		},
+	}
+	repoPackCmd = &cobra.Command{
+		Use:   "pack",
+		Short: "pack repository and release redundant data",
+		Long:  `The pack command deletes all unused data chunks from storage`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeRepoPack()
+		},
+	}
 )
 
-// NewRepository returns a new repository
-func NewRepository(path, password string) (Repository, error) {
-	repository := Repository{
-		Password: password,
-	}
-	backend, err := BackendFromURL(path)
-	if err != nil {
-		return repository, err
-	}
-	repository.Backend.AddBackend(&backend)
-
-	err = repository.init()
-	return repository, err
+func init() {
+	repoCmd.AddCommand(repoInitCmd)
+	repoCmd.AddCommand(repoCatCmd)
+	repoCmd.AddCommand(repoInfoCmd)
+	repoCmd.AddCommand(repoAddCmd)
+	repoCmd.AddCommand(repoPackCmd)
+	RootCmd.AddCommand(repoCmd)
 }
 
-// OpenRepository opens an existing repository
-func OpenRepository(path, password string) (Repository, error) {
-	repository := Repository{
-		Password: password,
+func executeRepoInit() error {
+	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	lock := shutdown.Lock()
+	if lock == nil {
+		return nil
 	}
-	backend, err := BackendFromURL(path)
+	defer lock()
+
+	r, err := newRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
-		return repository, err
+		return fmt.Errorf("Creating repository at %s failed: %v", globalOpts.Repo, err)
 	}
 
-	b, err := backend.LoadRepository()
-	decb, err := Decrypt(b, password)
-	if err == nil {
-		err = json.Unmarshal(decb, &repository)
-	}
-	// If decrypt _or_ unmarshal failed, abort
-	if err != nil {
-		return repository, ErrOpenRepositoryFailed
-	}
-
-	for _, url := range repository.Paths {
-		backend, berr := BackendFromURL(url)
-		if berr != nil {
-			return repository, berr
-		}
-		repository.Backend.AddBackend(&backend)
-	}
-
-	return repository, err
-}
-
-// AddVolume adds a volume to a repository
-func (r *Repository) AddVolume(volume *Volume) error {
-	r.Volumes = append(r.Volumes, volume)
+	fmt.Printf("Created new repository at %s\n", (*r.Backend.Backends[0]).Location())
 	return nil
 }
 
-// FindVolume finds a volume within a repository
-func (r *Repository) FindVolume(id string) (*Volume, error) {
-	if id == "latest" && len(r.Volumes) > 0 {
-		return r.Volumes[len(r.Volumes)-1], nil
+func executeRepoAdd(url string) error {
+	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	lock := shutdown.Lock()
+	if lock == nil {
+		return nil
 	}
+	defer lock()
 
-	for _, volume := range r.Volumes {
-		if volume.ID == id {
-			return volume, nil
-		}
-	}
-
-	return &Volume{}, ErrVolumeNotFound
-}
-
-// FindSnapshot finds a snapshot within a repository
-func (r *Repository) FindSnapshot(id string) (*Volume, *Snapshot, error) {
-	if id == "latest" {
-		latestVolume := &Volume{}
-		latestSnapshot := &Snapshot{}
-		found := false
-		for _, volume := range r.Volumes {
-			for _, snapshotID := range volume.Snapshots {
-				snapshot, err := volume.LoadSnapshot(snapshotID, r)
-				if err == nil {
-					if !found || snapshot.Date.Sub(latestSnapshot.Date) > 0 {
-						latestSnapshot = &snapshot
-						latestVolume = volume
-						found = true
-					}
-				}
-			}
-		}
-
-		if found {
-			return latestVolume, latestSnapshot, nil
-		}
-	} else {
-		for _, volume := range r.Volumes {
-			snapshot, err := volume.LoadSnapshot(id, r)
-			if err == nil {
-				return volume, &snapshot, err
-			}
-		}
-	}
-
-	return &Volume{}, &Snapshot{}, ErrSnapshotNotFound
-}
-
-// Init creates a new repository
-func (r *Repository) init() error {
-	err := r.Backend.InitRepository()
-	if err == nil {
-		err = r.Save()
-	}
-
-	return err
-}
-
-// Save writes a repository's metadata
-func (r *Repository) Save() error {
-	r.Paths = r.Backend.Locations()
-
-	//	b, err := json.MarshalIndent(*r, "", "    ")
-	b, err := json.Marshal(*r)
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
 
-	encb, err := Encrypt(b, r.Password)
-	if err == nil {
-		err = r.Backend.SaveRepository(encb)
+	backend, err := knoxite.BackendFromURL(url)
+	if err != nil {
+		return err
 	}
-	return err
+	r.Backend.AddBackend(&backend)
+
+	err = r.Save()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Added %s to repository\n", backend.Location())
+	return nil
+}
+
+func executeRepoCat() error {
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	if err != nil {
+		return err
+	}
+
+	json, err := json.MarshalIndent(r, "", "    ")
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s\n", json)
+	return nil
+}
+
+func executeRepoPack() error {
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	if err != nil {
+		return err
+	}
+	index, err := knoxite.OpenChunkIndex(&r)
+	if err != nil {
+		return err
+	}
+
+	freedSize, err := index.Pack(&r)
+	if err != nil {
+		return err
+	}
+
+	err = index.Save(&r)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Freed storage space: %s\n", knoxite.SizeToString(freedSize))
+	return nil
+}
+
+func executeRepoInfo() error {
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	if err != nil {
+		return err
+	}
+
+	tab := gotable.NewTable([]string{"Storage URL", "Available Space"},
+		[]int64{-48, 15},
+		"No backends found.")
+
+	for _, be := range r.Backend.Backends {
+		space, _ := (*be).AvailableSpace()
+		tab.AppendRow([]interface{}{
+			(*be).Location(),
+			knoxite.SizeToString(space)})
+	}
+
+	tab.Print()
+	return nil
+}
+
+func openRepository(path, password string) (knoxite.Repository, error) {
+	if password == "" {
+		var err error
+		password, err = readPassword("Enter password:")
+		if err != nil {
+			return knoxite.Repository{}, err
+		}
+	}
+
+	return knoxite.OpenRepository(path, password)
+}
+
+func newRepository(path, password string) (knoxite.Repository, error) {
+	if password == "" {
+		var err error
+		password, err = readPasswordTwice("Enter a password to encrypt this repository with:", "Confirm password:")
+		if err != nil {
+			return knoxite.Repository{}, err
+		}
+	}
+
+	return knoxite.NewRepository(path, password)
+}
+
+func readPassword(prompt string) (string, error) {
+	fmt.Print(prompt + " ")
+	buf, err := terminal.ReadPassword(int(syscall.Stdin))
+	fmt.Println()
+
+	return string(buf), err
+}
+
+func readPasswordTwice(prompt, promptConfirm string) (string, error) {
+	pw, err := readPassword(prompt)
+	if err != nil {
+		return pw, err
+	}
+
+	pwconfirm, err := readPassword(promptConfirm)
+	if err != nil {
+		return pw, err
+	}
+	if pw != pwconfirm {
+		return pw, ErrPasswordMismatch
+	}
+
+	return pw, nil
 }
