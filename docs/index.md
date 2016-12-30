@@ -29,7 +29,6 @@ Now we need to get the required dependencies:
 
 Let's build knoxite:
 
-    cd knoxite
     go build
 
 Run knoxite --help to see a full list of options.
