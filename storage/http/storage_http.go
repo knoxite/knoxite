@@ -71,7 +71,7 @@ func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) (*[]
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return &[]byte{}, knoxite.ErrChunkNotFound
+		return &[]byte{}, knoxite.ErrLoadChunkFailed
 	}
 
 	b, err := ioutil.ReadAll(res.Body)

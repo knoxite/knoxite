@@ -67,11 +67,6 @@ var (
 	ErrInvalidRepositoryURL  = errors.New("Invalid repository url specified")
 	ErrAvailableSpaceUnknown = errors.New("Available space is unknown or undefined")
 	ErrInvalidUsername       = errors.New("Username wrong or missing")
-	ErrChunkNotFound         = errors.New("Loading chunk failed")
-	ErrStoreChunkFailed      = errors.New("Storing chunk failed")
-	ErrStoreSnapshotFailed   = errors.New("Storing snapshot failed")
-	ErrStoreChunkIndexFailed = errors.New("Storing chunk-index failed")
-	ErrStoreRepositoryFailed = errors.New("Storing repository failed")
 
 	backends = []BackendFactory{}
 )
