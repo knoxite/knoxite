@@ -63,6 +63,10 @@ func OpenRepository(path, password string) (Repository, error) {
 	}
 
 	b, err := backend.LoadRepository()
+	if err != nil {
+		return repository, err
+	}
+
 	decb, err := Decrypt(b, password)
 	if err == nil {
 		err = json.Unmarshal(decb, &repository)
@@ -152,7 +156,6 @@ func (r *Repository) init() error {
 func (r *Repository) Save() error {
 	r.Paths = r.Backend.Locations()
 
-	//	b, err := json.MarshalIndent(*r, "", "    ")
 	b, err := json.Marshal(*r)
 	if err != nil {
 		return err
