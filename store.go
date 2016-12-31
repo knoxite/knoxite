@@ -99,15 +99,15 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 			if p.Path != lastPath && lastPath != "" {
 				fmt.Println()
 			}
-			fileProgressBar.Total = int64(p.Size)
-			fileProgressBar.Current = int64(p.Transferred)
+			fileProgressBar.Total = int64(p.CurrentItemStats.Size)
+			fileProgressBar.Current = int64(p.CurrentItemStats.Transferred)
 			fileProgressBar.RightAlignedText = fmt.Sprintf("%s / %s  %s/s",
 				knoxite.SizeToString(uint64(fileProgressBar.Current)),
 				knoxite.SizeToString(uint64(fileProgressBar.Total)),
 				knoxite.SizeToString(p.TransferSpeed()))
 
-			overallProgressBar.Total = int64(p.Statistics.Size)
-			overallProgressBar.Current = int64(p.Statistics.Transferred)
+			overallProgressBar.Total = int64(p.TotalStatistics.Size)
+			overallProgressBar.Current = int64(p.TotalStatistics.Transferred)
 			overallProgressBar.RightAlignedText = fmt.Sprintf("%s / %s",
 				knoxite.SizeToString(uint64(overallProgressBar.Current)),
 				knoxite.SizeToString(uint64(overallProgressBar.Total)))

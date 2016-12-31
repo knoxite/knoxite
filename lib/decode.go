@@ -176,17 +176,17 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 	if arc.Type == Directory {
 		//fmt.Printf("Creating directory %s\n", path)
 		os.MkdirAll(path, arc.Mode)
-		prog.Statistics.Dirs++
+		prog.TotalStatistics.Dirs++
 		progress <- prog
 	} else if arc.Type == SymLink {
 		//fmt.Printf("Creating symlink %s -> %s\n", path, arc.PointsTo)
 		os.Symlink(arc.PointsTo, path)
-		prog.Statistics.SymLinks++
+		prog.TotalStatistics.SymLinks++
 		progress <- prog
 	} else if arc.Type == File {
-		prog.Statistics.Files++
-		prog.Statistics.Size = arc.Size
-		prog.Statistics.StorageSize = arc.StorageSize
+		prog.TotalStatistics.Files++
+		prog.TotalStatistics.Size = arc.Size
+		prog.TotalStatistics.StorageSize = arc.StorageSize
 		progress <- prog
 
 		parts := uint(len(arc.Chunks))
@@ -217,8 +217,8 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 				return err
 			}
 
-			prog.Statistics.Transferred += uint64(len(data))
-			prog.Transferred += uint64(len(data))
+			prog.TotalStatistics.Transferred += uint64(len(data))
+			prog.CurrentItemStats.Transferred += uint64(len(data))
 			progress <- prog
 			// fmt.Printf("Chunk OK: %d bytes, sha256: %s\n", size, chunk.DecryptedShaSum)
 		}

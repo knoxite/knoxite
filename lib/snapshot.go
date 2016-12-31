@@ -107,7 +107,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 
 			p := newProgress(item)
 			snapshot.Lock()
-			p.Statistics = snapshot.Stats
+			p.TotalStatistics = snapshot.Stats
 			snapshot.Unlock()
 			progress <- p
 
@@ -132,13 +132,13 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 					item.Chunks = append(item.Chunks, cd)
 					item.StorageSize += n
 
-					p.StorageSize = item.StorageSize
-					p.Transferred += uint64(cd.OriginalSize)
+					p.CurrentItemStats.StorageSize = item.StorageSize
+					p.CurrentItemStats.Transferred += uint64(cd.OriginalSize)
 					snapshot.Stats.Transferred += uint64(cd.OriginalSize)
 					snapshot.Stats.StorageSize += n
 
 					snapshot.Lock()
-					p.Statistics = snapshot.Stats
+					p.TotalStatistics = snapshot.Stats
 					snapshot.Unlock()
 					progress <- p
 				}

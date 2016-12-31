@@ -60,8 +60,8 @@ func executeRestore(snapshotID, target string) error {
 		lastPath := ""
 
 		for p := range progress {
-			pb.Total = int64(p.Size)
-			pb.Current = int64(p.Transferred)
+			pb.Total = int64(p.CurrentItemStats.Size)
+			pb.Current = int64(p.CurrentItemStats.Transferred)
 			pb.RightAlignedText = fmt.Sprintf("%s / %s  %s/s",
 				knoxite.SizeToString(uint64(pb.Current)),
 				knoxite.SizeToString(uint64(pb.Total)),
@@ -75,9 +75,9 @@ func executeRestore(snapshotID, target string) error {
 				lastPath = p.Path
 				pb.Text = p.Path
 			}
-			if p.Size == p.Transferred {
+			if p.CurrentItemStats.Size == p.CurrentItemStats.Transferred {
 				// We have just finished restoring an item
-				stats.Add(p.Statistics)
+				stats.Add(p.TotalStatistics)
 			}
 
 			pb.Print()
