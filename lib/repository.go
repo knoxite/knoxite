@@ -67,9 +67,9 @@ func OpenRepository(path, password string) (Repository, error) {
 		return repository, err
 	}
 
-	decb, err := Decrypt(b, password)
+	b, err = Decrypt(b, password)
 	if err == nil {
-		err = json.Unmarshal(decb, &repository)
+		err = json.Unmarshal(b, &repository)
 	}
 	// If decrypt _or_ unmarshal failed, abort
 	if err != nil {
@@ -161,9 +161,9 @@ func (r *Repository) Save() error {
 		return err
 	}
 
-	encb, err := Encrypt(b, r.Password)
+	b, err = Encrypt(b, r.Password)
 	if err == nil {
-		err = r.Backend.SaveRepository(encb)
+		err = r.Backend.SaveRepository(b)
 	}
 	return err
 }

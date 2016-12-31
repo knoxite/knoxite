@@ -35,25 +35,24 @@ func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 	index := ChunkIndex{}
 	b, err := repository.Backend.LoadChunkIndex()
 	if err == nil {
-		decb, derr := Decrypt(b, repository.Password)
-		if derr != nil {
-			return index, derr
+		b, err = Decrypt(b, repository.Password)
+		if err != nil {
+			return index, err
 		}
 
 		if repository.Version == 1 {
-			reader := bytes.NewReader(decb)
-			zipreader, zerr := gzip.NewReader(reader)
+			zr, zerr := gzip.NewReader(bytes.NewReader(b))
 			if zerr != nil {
 				return index, zerr
 			}
-			defer zipreader.Close()
-			decb, zerr = ioutil.ReadAll(zipreader)
+			defer zr.Close()
+			b, zerr = ioutil.ReadAll(zr)
 			if zerr != nil {
 				return index, zerr
 			}
 		}
 
-		err = json.Unmarshal(decb, &index)
+		err = json.Unmarshal(b, &index)
 	} else {
 		err = index.reindex(repository)
 		if err == nil {
@@ -75,16 +74,16 @@ func (index *ChunkIndex) Save(repository *Repository) error {
 	}
 
 	if repository.Version == 1 {
-		var compdata bytes.Buffer
-		zipwriter := gzip.NewWriter(&compdata)
-		zipwriter.Write(b)
-		zipwriter.Close()
-		b = compdata.Bytes()
+		var buf bytes.Buffer
+		w := gzip.NewWriter(&buf)
+		w.Write(b)
+		w.Close()
+		b = buf.Bytes()
 	}
 
-	encb, err := Encrypt(b, repository.Password)
+	b, err = Encrypt(b, repository.Password)
 	if err == nil {
-		err = repository.Backend.SaveChunkIndex(encb)
+		err = repository.Backend.SaveChunkIndex(b)
 	}
 	return err
 }

@@ -174,25 +174,24 @@ func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
 		return &snapshot, err
 	}
 
-	decb, err := Decrypt(b, repository.Password)
+	b, err = Decrypt(b, repository.Password)
 	if err != nil {
 		return &snapshot, err
 	}
 
 	if repository.Version == 1 {
-		reader := bytes.NewReader(decb)
-		zipreader, zerr := gzip.NewReader(reader)
+		zr, zerr := gzip.NewReader(bytes.NewReader(b))
 		if zerr != nil {
 			return &snapshot, zerr
 		}
-		defer zipreader.Close()
-		decb, zerr = ioutil.ReadAll(zipreader)
+		defer zr.Close()
+		b, zerr = ioutil.ReadAll(zr)
 		if zerr != nil {
 			return &snapshot, zerr
 		}
 	}
 
-	err = json.Unmarshal(decb, &snapshot)
+	err = json.Unmarshal(b, &snapshot)
 	return &snapshot, err
 }
 
@@ -204,16 +203,16 @@ func (snapshot *Snapshot) Save(repository *Repository) error {
 	}
 
 	if repository.Version == 1 {
-		var compdata bytes.Buffer
-		zipwriter := gzip.NewWriter(&compdata)
-		zipwriter.Write(b)
-		zipwriter.Close()
-		b = compdata.Bytes()
+		var buf bytes.Buffer
+		w := gzip.NewWriter(&buf)
+		w.Write(b)
+		w.Close()
+		b = buf.Bytes()
 	}
 
-	encb, err := Encrypt(b, repository.Password)
+	b, err = Encrypt(b, repository.Password)
 	if err == nil {
-		err = repository.Backend.SaveSnapshot(snapshot.ID, encb)
+		err = repository.Backend.SaveSnapshot(snapshot.ID, b)
 	}
 	return err
 }

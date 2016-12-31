@@ -94,8 +94,7 @@ func decodeChunk(repository Repository, chunk Chunk, b []byte) ([]byte, error) {
 	}
 
 	if chunk.Compressed == CompressionGZip {
-		r := bytes.NewReader(b)
-		zr, err := gzip.NewReader(r)
+		zr, err := gzip.NewReader(bytes.NewReader(b))
 		if err != nil {
 			return []byte{}, err
 		}
