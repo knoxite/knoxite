@@ -8,7 +8,10 @@
 package knoxite
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/json"
+	"io/ioutil"
 	"math"
 	"path/filepath"
 	"strings"
@@ -162,11 +165,29 @@ func (snapshot *Snapshot) Clone() (*Snapshot, error) {
 func openSnapshot(id string, repository *Repository) (Snapshot, error) {
 	snapshot := Snapshot{}
 	b, err := repository.Backend.LoadSnapshot(id)
+	if err != nil {
+		return snapshot, err
+	}
 
 	decb, err := Decrypt(b, repository.Password)
-	if err == nil {
-		err = json.Unmarshal(decb, &snapshot)
+	if err != nil {
+		return snapshot, err
 	}
+
+	if repository.Version == 1 {
+		reader := bytes.NewReader(decb)
+		zipreader, zerr := gzip.NewReader(reader)
+		if zerr != nil {
+			return snapshot, zerr
+		}
+		defer zipreader.Close()
+		decb, zerr = ioutil.ReadAll(zipreader)
+		if zerr != nil {
+			return snapshot, zerr
+		}
+	}
+
+	err = json.Unmarshal(decb, &snapshot)
 	return snapshot, err
 }
 
@@ -175,6 +196,14 @@ func (snapshot *Snapshot) Save(repository *Repository) error {
 	b, err := json.Marshal(*snapshot)
 	if err != nil {
 		return err
+	}
+
+	if repository.Version == 1 {
+		var compdata bytes.Buffer
+		zipwriter := gzip.NewWriter(&compdata)
+		zipwriter.Write(b)
+		zipwriter.Close()
+		b = compdata.Bytes()
 	}
 
 	encb, err := Encrypt(b, repository.Password)
