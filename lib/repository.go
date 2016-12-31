@@ -15,13 +15,19 @@ import (
 // A Repository is a collection of backup snapshots
 // MUST BE encrypted
 type Repository struct {
-	//	Owner   string    `json:"owner"`
+	Version uint      `json:"version"`
 	Volumes []*Volume `json:"volumes"`
 	Paths   []string  `json:"storage"`
+	// Owner   string    `json:"owner"`
 
 	Backend  BackendManager `json:"-"`
 	Password string         `json:"-"`
 }
+
+// Const declarations
+const (
+	RepositoryVersion = 1
+)
 
 // Error declarations
 var (
@@ -33,6 +39,7 @@ var (
 // NewRepository returns a new repository
 func NewRepository(path, password string) (Repository, error) {
 	repository := Repository{
+		Version:  RepositoryVersion,
 		Password: password,
 	}
 	backend, err := BackendFromURL(path)
