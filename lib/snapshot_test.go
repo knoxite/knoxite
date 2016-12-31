@@ -37,7 +37,7 @@ func TestCreateSnapshot(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	snapshotOriginal := Snapshot{}
+	snapshotOriginal := &Snapshot{}
 	{
 		r, err := NewRepository(dir, testPassword)
 		if err != nil {
@@ -136,7 +136,7 @@ func TestCreateSnapshot(t *testing.T) {
 		}
 		defer os.RemoveAll(targetdir)
 
-		progress, err := DecodeSnapshot(r, *snapshot, targetdir)
+		progress, err := DecodeSnapshot(r, snapshot, targetdir)
 		if err != nil {
 			t.Errorf("Failed restoring snapshot: %s", err)
 			return

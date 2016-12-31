@@ -119,7 +119,7 @@ func (r *Repository) FindSnapshot(id string) (*Volume, *Snapshot, error) {
 				snapshot, err := volume.LoadSnapshot(snapshotID, r)
 				if err == nil {
 					if !found || snapshot.Date.Sub(latestSnapshot.Date) > 0 {
-						latestSnapshot = &snapshot
+						latestSnapshot = snapshot
 						latestVolume = volume
 						found = true
 					}
@@ -134,7 +134,7 @@ func (r *Repository) FindSnapshot(id string) (*Volume, *Snapshot, error) {
 		for _, volume := range r.Volumes {
 			snapshot, err := volume.LoadSnapshot(id, r)
 			if err == nil {
-				return volume, &snapshot, err
+				return volume, snapshot, err
 			}
 		}
 	}

@@ -33,21 +33,6 @@ func (s *Stats) Add(other Stats) {
 	s.Errors += other.Errors
 }
 
-// AddItem accumulates item into s
-func (s *Stats) AddItem(i *ItemData) {
-	s.Size += i.Size
-	s.StorageSize += i.StorageSize
-
-	switch i.Type {
-	case SymLink:
-		s.SymLinks++
-	case File:
-		s.Files++
-	case Directory:
-		s.Dirs++
-	}
-}
-
 // SizeToString prettifies sizes
 func SizeToString(size uint64) (str string) {
 	b := float64(size)

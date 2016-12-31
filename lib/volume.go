@@ -62,7 +62,7 @@ func (v *Volume) RemoveSnapshot(id string) error {
 }
 
 // LoadSnapshot loads a snapshot within a volume from a repository
-func (v *Volume) LoadSnapshot(id string, repository *Repository) (Snapshot, error) {
+func (v *Volume) LoadSnapshot(id string, repository *Repository) (*Snapshot, error) {
 	for _, snapshot := range v.Snapshots {
 		if snapshot == id {
 			snapshot, err := openSnapshot(id, repository)
@@ -70,5 +70,5 @@ func (v *Volume) LoadSnapshot(id string, repository *Repository) (Snapshot, erro
 		}
 	}
 
-	return Snapshot{}, ErrSnapshotNotFound
+	return &Snapshot{}, ErrSnapshotNotFound
 }

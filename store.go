@@ -163,7 +163,7 @@ func executeStore(volumeID string, args []string, opts StoreOptions) error {
 	// release the shutdown lock
 	lock()
 
-	err = store(&repository, &chunkIndex, &snapshot, targets, opts)
+	err = store(&repository, &chunkIndex, snapshot, targets, opts)
 	if err != nil {
 		return err
 	}
