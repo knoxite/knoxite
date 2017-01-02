@@ -12,7 +12,6 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 	"errors"
-	// "reflect"
 )
 
 // Which encryption algo
@@ -25,18 +24,6 @@ const (
 var (
 	ErrInvalidPassword = errors.New("Empty password not permitted")
 )
-
-// EncryptionText returns a user-friendly string indicating the encryption algo that was used
-func EncryptionText(enum int) string {
-	switch enum {
-	case EncryptionNone:
-		return "none"
-	case EncryptionAES:
-		return "AES"
-	}
-
-	return "unknown"
-}
 
 // encryptAESCFB encryptes src to dst
 func encryptAESCFB(dst, src, key, iv []byte) error {

@@ -8,11 +8,8 @@
 package knoxite
 
 import (
-	"bytes"
-	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 )
 
 // A ChunkIndexItem links a chunk with one or many snapshots
@@ -41,14 +38,9 @@ func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 		}
 
 		if repository.Version == 1 {
-			zr, zerr := gzip.NewReader(bytes.NewReader(b))
-			if zerr != nil {
-				return index, zerr
-			}
-			defer zr.Close()
-			b, zerr = ioutil.ReadAll(zr)
-			if zerr != nil {
-				return index, zerr
+			b, err = Uncompress(b)
+			if err != nil {
+				return index, err
 			}
 		}
 
@@ -74,11 +66,10 @@ func (index *ChunkIndex) Save(repository *Repository) error {
 	}
 
 	if repository.Version == 1 {
-		var buf bytes.Buffer
-		w := gzip.NewWriter(&buf)
-		w.Write(b)
-		w.Close()
-		b = buf.Bytes()
+		b, err = Compress(b)
+		if err != nil {
+			return err
+		}
 	}
 
 	b, err = Encrypt(b, repository.Password)

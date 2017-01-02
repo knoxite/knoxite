@@ -10,12 +10,10 @@ package knoxite
 import (
 	"bufio"
 	"bytes"
-	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -94,12 +92,7 @@ func decodeChunk(repository Repository, chunk Chunk, b []byte) ([]byte, error) {
 	}
 
 	if chunk.Compressed == CompressionGZip {
-		zr, err := gzip.NewReader(bytes.NewReader(b))
-		if err != nil {
-			return []byte{}, err
-		}
-		defer zr.Close()
-		b, err = ioutil.ReadAll(zr)
+		b, err = Uncompress(b)
 		if err != nil {
 			return []byte{}, err
 		}

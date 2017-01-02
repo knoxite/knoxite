@@ -8,8 +8,6 @@
 package knoxite
 
 import (
-	"bytes"
-	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -20,14 +18,7 @@ import (
 	"github.com/restic/chunker"
 )
 
-// Which compression algo
 const (
-	CompressionNone = iota
-	CompressionGZip
-	CompressionLZW
-	CompressionFlate
-	CompressionZlib
-
 	preferredChunkSize = 1 * (1 << 20) // 1 MiB
 )
 
@@ -58,11 +49,10 @@ func processChunk(id int, compress, encrypt bool, password string, dataParts, pa
 		var err error
 		b := j.Data
 		if compress {
-			var cb bytes.Buffer
-			w := gzip.NewWriter(&cb)
-			w.Write(b)
-			w.Close()
-			b = cb.Bytes()
+			b, err = Compress(b)
+			if err != nil {
+				panic(err)
+			}
 		}
 		if encrypt {
 			b, err = Encrypt(b, password)
@@ -160,22 +150,4 @@ func chunkFile(filename string, compress, encrypt bool, password string, dataPar
 	}()
 
 	return c, nil
-}
-
-// CompressionText returns a user-friendly string indicating the compression algo that was used
-func CompressionText(enum int) string {
-	switch enum {
-	case CompressionNone:
-		return "none"
-	case CompressionGZip:
-		return "GZip"
-	case CompressionLZW:
-		return "LZW"
-	case CompressionFlate:
-		return "Flate"
-	case CompressionZlib:
-		return "zlib"
-	}
-
-	return "unknown"
 }

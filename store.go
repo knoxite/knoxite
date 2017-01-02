@@ -78,7 +78,8 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	}
 
 	progress := snapshot.Add(wd, targets, *repository, chunkIndex,
-		strings.ToLower(opts.Compression) == "gzip", strings.ToLower(opts.Encryption) != "none",
+		strings.ToLower(opts.Compression) == strings.ToLower(CompressionText(knoxite.CompressionGZip)),
+		strings.ToLower(opts.Encryption) != strings.ToLower(EncryptionText(knoxite.EncryptionNone)),
 		uint(len(repository.Backend.Backends))-opts.FailureTolerance, opts.FailureTolerance)
 
 	fileProgressBar := goprogressbar.NewProgressBar("", 0, 0, 60)
@@ -188,4 +189,34 @@ func executeStore(volumeID string, args []string, opts StoreOptions) error {
 		return err
 	}
 	return repository.Save()
+}
+
+// CompressionText returns a user-friendly string indicating the compression algo that was used
+func CompressionText(enum int) string {
+	switch enum {
+	case knoxite.CompressionNone:
+		return "none"
+	case knoxite.CompressionGZip:
+		return "GZip"
+	case knoxite.CompressionLZW:
+		return "LZW"
+	case knoxite.CompressionFlate:
+		return "Flate"
+	case knoxite.CompressionZlib:
+		return "zlib"
+	}
+
+	return "unknown"
+}
+
+// EncryptionText returns a user-friendly string indicating the encryption algo that was used
+func EncryptionText(enum int) string {
+	switch enum {
+	case knoxite.EncryptionNone:
+		return "none"
+	case knoxite.EncryptionAES:
+		return "AES"
+	}
+
+	return "unknown"
 }
