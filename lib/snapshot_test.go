@@ -118,13 +118,13 @@ func TestCreateSnapshot(t *testing.T) {
 			t.Errorf("Failed verifying snapshot description: %s != %s", snapshot.Description, snapshotOriginal.Description)
 		}
 
-		for i, item := range snapshot.Items {
-			if item.Path != snapshotOriginal.Items[i].Path {
-				t.Errorf("Failed verifying snapshot item: %s != %s", item.Path, snapshotOriginal.Items[i].Path)
+		for i, archive := range snapshot.Archives {
+			if archive.Path != snapshotOriginal.Archives[i].Path {
+				t.Errorf("Failed verifying snapshot archive: %s != %s", archive.Path, snapshotOriginal.Archives[i].Path)
 				return
 			}
-			if item.Size != snapshotOriginal.Items[i].Size {
-				t.Errorf("Failed verifying snapshot item size: %d != %d", item.Size, snapshotOriginal.Items[i].Size)
+			if archive.Size != snapshotOriginal.Archives[i].Size {
+				t.Errorf("Failed verifying snapshot archive size: %d != %d", archive.Size, snapshotOriginal.Archives[i].Size)
 				return
 			}
 		}
@@ -144,16 +144,16 @@ func TestCreateSnapshot(t *testing.T) {
 		for range progress {
 		}
 
-		for i, item := range snapshot.Items {
-			file1 := filepath.Join(targetdir, item.Path)
+		for i, archive := range snapshot.Archives {
+			file1 := filepath.Join(targetdir, archive.Path)
 			sha1, err := shasumFile(file1)
 			if err != nil {
 				t.Errorf("Failed generating shasum for %s: %s", file1, err)
 				return
 			}
-			sha2, err := shasumFile(snapshotOriginal.Items[i].Path)
+			sha2, err := shasumFile(snapshotOriginal.Archives[i].Path)
 			if err != nil {
-				t.Errorf("Failed generating shasum for %s: %s", snapshotOriginal.Items[i].Path, err)
+				t.Errorf("Failed generating shasum for %s: %s", snapshotOriginal.Archives[i].Path, err)
 				return
 			}
 			if sha1 != sha2 {

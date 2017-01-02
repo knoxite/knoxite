@@ -11,16 +11,16 @@ type Progress struct {
 	Error            error
 }
 
-func newProgress(item *ItemData) Progress {
+func newProgress(archive *Archive) Progress {
 	return Progress{
-		Path:  item.Path,
+		Path:  archive.Path,
 		Timer: time.Now(),
 		CurrentItemStats: Stats{
-			Size:        item.Size,
-			StorageSize: item.StorageSize,
+			Size:        archive.Size,
+			StorageSize: archive.StorageSize,
 		},
 		TotalStatistics: Stats{
-			Size: item.Size,
+			Size: archive.Size,
 		},
 		Error: nil,
 	}

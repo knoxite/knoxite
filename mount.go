@@ -79,7 +79,7 @@ func executeMount(snapshotID, mountpoint string) error {
 	updateIndex(&repository, snapshot)
 	fmt.Println("Updating index done")
 	for _, arc := range root.Items {
-		roottree.Add(arc.Item.Path, arc)
+		roottree.Add(arc.Archive.Path, arc)
 	}
 
 	ready := make(chan struct{}, 1)
@@ -112,7 +112,7 @@ func executeMount(snapshotID, mountpoint string) error {
 // Node in our virtual filesystem
 type Node struct {
 	Items      map[string]*Node
-	Item       knoxite.ItemData
+	Archive    knoxite.Archive
 	Repository *knoxite.Repository
 	//	sync.RWMutex
 }
@@ -121,7 +121,7 @@ var (
 	root *Node
 )
 
-func node(name string, arc knoxite.ItemData, repository *knoxite.Repository) *Node {
+func node(name string, arc knoxite.Archive, repository *knoxite.Repository) *Node {
 	l := strings.Split(name, string(filepath.Separator))
 
 	item := root
@@ -133,12 +133,11 @@ func node(name string, arc knoxite.ItemData, repository *knoxite.Repository) *No
 		v, ok := item.Items[s]
 		if !ok {
 			path := filepath.Join(l[:k+1]...)
-			idata := arc
 			fmt.Println("Adding to tree:", path)
 			if name != path {
 				// We stored an absolute path and need to fake the parent
 				// dirs for the first item in the archive
-				idata = knoxite.ItemData{
+				arc = knoxite.Archive{
 					Type:    knoxite.Directory,
 					GID:     arc.GID,
 					ModTime: arc.ModTime,
@@ -149,7 +148,7 @@ func node(name string, arc knoxite.ItemData, repository *knoxite.Repository) *No
 
 			v = &Node{}
 			v.Items = make(map[string]*Node)
-			v.Item = idata
+			v.Archive = arc
 			v.Repository = repository
 			item.Items[s] = v
 		}
@@ -163,7 +162,7 @@ func node(name string, arc knoxite.ItemData, repository *knoxite.Repository) *No
 func updateIndex(repository *knoxite.Repository, snapshot *knoxite.Snapshot) {
 	root = &Node{}
 	root.Items = make(map[string]*Node)
-	for _, arc := range snapshot.Items {
+	for _, arc := range snapshot.Archives {
 		path := arc.Path
 		if path[0] == '/' {
 			// This archive contains an absolute path
@@ -179,10 +178,10 @@ func updateIndex(repository *knoxite.Repository, snapshot *knoxite.Snapshot) {
 func (node *Node) Attr(ctx context.Context, a *fuse.Attr) error {
 	// fmt.Println("Attr:", node.Item.Path)
 	// a.Inode = node.Inode
-	a.Mode = node.Item.Mode
-	a.Size = node.Item.Size
+	a.Mode = node.Archive.Mode
+	a.Size = node.Archive.Size
 
-	switch node.Item.Type {
+	switch node.Archive.Type {
 	case knoxite.SymLink:
 		a.Mode |= os.ModeSymlink
 	case knoxite.Directory:
@@ -210,7 +209,7 @@ func (node *Node) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
 
 	for k, v := range node.Items {
 		ent := fuse.Dirent{Name: k}
-		switch v.Item.Type {
+		switch v.Archive.Type {
 		case knoxite.File:
 			ent.Type = fuse.DT_File
 		case knoxite.Directory:
@@ -236,7 +235,7 @@ func (node *Node) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.Op
 
 // Read reads from a file
 func (node *Node) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
-	d, err := knoxite.ReadArchive(*node.Repository, node.Item, int(req.Offset), req.Size)
+	d, err := knoxite.ReadArchive(*node.Repository, node.Archive, int(req.Offset), req.Size)
 	if err != nil {
 		if err != io.EOF {
 			return err
@@ -251,7 +250,7 @@ func (node *Node) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.Re
 
 // Readlink returns the target a symlink is pointing to
 func (node *Node) Readlink(ctx context.Context, req *fuse.ReadlinkRequest) (string, error) {
-	return node.Item.PointsTo, nil
+	return node.Archive.PointsTo, nil
 }
 
 // ReadAll reads an entire archive's content

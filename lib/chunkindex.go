@@ -122,13 +122,13 @@ func (index *ChunkIndex) reindex(repository *Repository) error {
 				return err
 			}
 
-			for _, item := range snapshot.Items {
+			for _, archive := range snapshot.Archives {
 				if first {
 					first = false
 					fmt.Println("Chunk-Index is empty, re-indexing all snapshots...")
 				}
 
-				index.AddItem(&item, snapshot.ID)
+				index.AddArchive(&archive, snapshot.ID)
 			}
 		}
 	}
@@ -136,9 +136,9 @@ func (index *ChunkIndex) reindex(repository *Repository) error {
 	return nil
 }
 
-// AddItem updates chunk-index with the new chunks
-func (index *ChunkIndex) AddItem(id *ItemData, snapshot string) {
-	for _, chunk := range id.Chunks {
+// AddArchive updates chunk-index with the new chunks
+func (index *ChunkIndex) AddArchive(archive *Archive, snapshot string) {
+	for _, chunk := range archive.Chunks {
 		found := false
 		for _, c := range index.Chunks {
 			if chunk.ShaSum == c.ShaSum {

@@ -50,7 +50,7 @@ func executeLs(snapshotID string) error {
 			return ferr
 		}
 
-		for _, archive := range snapshot.Items {
+		for _, archive := range snapshot.Archives {
 			username := strconv.FormatInt(int64(archive.UID), 10)
 			u, uerr := user.LookupId(username)
 			if uerr == nil {

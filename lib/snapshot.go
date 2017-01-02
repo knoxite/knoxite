@@ -26,11 +26,11 @@ import (
 type Snapshot struct {
 	sync.Mutex
 
-	ID          string     `json:"id"`
-	Date        time.Time  `json:"date"`
-	Description string     `json:"description"`
-	Stats       Stats      `json:"stats"`
-	Items       []ItemData `json:"items"`
+	ID          string    `json:"id"`
+	Date        time.Time `json:"date"`
+	Description string    `json:"description"`
+	Stats       Stats     `json:"stats"`
+	Archives    []Archive `json:"items"`
 }
 
 // NewSnapshot creates a new snapshot
@@ -49,28 +49,28 @@ func NewSnapshot(description string) (*Snapshot, error) {
 	return &snapshot, nil
 }
 
-func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, out chan ItemResult) {
+func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, out chan ArchiveResult) {
 	var wg sync.WaitGroup
 	for _, path := range paths {
 		c := findFiles(path)
 
 		for result := range c {
 			if result.Error == nil {
-				rel, err := filepath.Rel(cwd, result.Item.Path)
+				rel, err := filepath.Rel(cwd, result.Archive.Path)
 				if err == nil && !strings.HasPrefix(rel, "../") {
-					result.Item.Path = rel
+					result.Archive.Path = rel
 				}
-				if isSpecialPath(result.Item.Path) {
+				if isSpecialPath(result.Archive.Path) {
 					continue
 				}
 
 				snapshot.Lock()
-				snapshot.Stats.Size += result.Item.Size
+				snapshot.Stats.Size += result.Archive.Size
 				snapshot.Unlock()
 			}
 
 			wg.Add(1)
-			go func(r ItemResult) {
+			go func(r ArchiveResult) {
 				out <- r
 				wg.Done()
 			}(result)
@@ -84,7 +84,7 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ou
 // Add adds a path to a Snapshot
 func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt bool, dataParts, parityParts uint) chan Progress {
 	progress := make(chan Progress)
-	fwd := make(chan ItemResult)
+	fwd := make(chan ArchiveResult)
 
 	go snapshot.gatherTargetInformation(cwd, paths, fwd)
 
@@ -96,24 +96,24 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 				break
 			}
 
-			item := result.Item
-			rel, err := filepath.Rel(cwd, item.Path)
+			archive := result.Archive
+			rel, err := filepath.Rel(cwd, archive.Path)
 			if err == nil && !strings.HasPrefix(rel, "../") {
-				item.Path = rel
+				archive.Path = rel
 			}
-			if isSpecialPath(item.Path) {
+			if isSpecialPath(archive.Path) {
 				continue
 			}
 
-			p := newProgress(item)
+			p := newProgress(archive)
 			snapshot.Lock()
 			p.TotalStatistics = snapshot.Stats
 			snapshot.Unlock()
 			progress <- p
 
-			if isRegularFile(item.FileInfo) {
+			if isRegularFile(archive.FileInfo) {
 				dataParts = uint(math.Max(1, float64(dataParts)))
-				chunkchan, err := chunkFile(item.AbsPath, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
+				chunkchan, err := chunkFile(archive.AbsPath, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
 				if err != nil {
 					panic(err)
 				}
@@ -129,10 +129,10 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 					// release the memory, we don't need the data anymore
 					cd.Data = &[][]byte{}
 
-					item.Chunks = append(item.Chunks, cd)
-					item.StorageSize += n
+					archive.Chunks = append(archive.Chunks, cd)
+					archive.StorageSize += n
 
-					p.CurrentItemStats.StorageSize = item.StorageSize
+					p.CurrentItemStats.StorageSize = archive.StorageSize
 					p.CurrentItemStats.Transferred += uint64(cd.OriginalSize)
 					snapshot.Stats.Transferred += uint64(cd.OriginalSize)
 					snapshot.Stats.StorageSize += n
@@ -144,8 +144,8 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 				}
 			}
 
-			snapshot.AddItem(item)
-			chunkIndex.AddItem(item, snapshot.ID)
+			snapshot.AddArchive(archive)
+			chunkIndex.AddArchive(archive, snapshot.ID)
 		}
 		close(progress)
 	}()
@@ -161,7 +161,7 @@ func (snapshot *Snapshot) Clone() (*Snapshot, error) {
 	}
 
 	s.Stats = snapshot.Stats
-	s.Items = snapshot.Items
+	s.Archives = snapshot.Archives
 
 	return s, nil
 }
@@ -217,24 +217,24 @@ func (snapshot *Snapshot) Save(repository *Repository) error {
 	return err
 }
 
-// AddItem adds an item to a snapshot
-func (snapshot *Snapshot) AddItem(id *ItemData) {
-	items := []ItemData{}
+// AddArchive adds an archive to a snapshot
+func (snapshot *Snapshot) AddArchive(archive *Archive) {
+	archives := []Archive{}
 
 	found := false
-	for _, i := range snapshot.Items {
-		if i.Path == id.Path {
+	for _, v := range snapshot.Archives {
+		if v.Path == archive.Path {
 			found = true
 
-			items = append(items, *id)
+			archives = append(archives, *archive)
 		} else {
-			items = append(items, i)
+			archives = append(archives, v)
 		}
 	}
 
 	if !found {
-		items = append(items, *id)
+		archives = append(archives, *archive)
 	}
 
-	snapshot.Items = items
+	snapshot.Archives = archives
 }

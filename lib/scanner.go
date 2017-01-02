@@ -22,9 +22,9 @@ const (
 	SymLink          // A SymLink
 )
 
-// ItemData contains all metadata belonging to a file/directory
+// Archive contains all metadata belonging to a file/directory
 // MUST BE encrypted
-type ItemData struct {
+type Archive struct {
 	Path        string      `json:"path"`               // Where in filesystem does this belong to
 	Type        uint        `json:"type"`               // Is this a File, Directory or SymLink
 	PointsTo    string      `json:"pointsto,omitempty"` // If this is a SymLink, where does it point to
@@ -39,15 +39,15 @@ type ItemData struct {
 	FileInfo    os.FileInfo `json:"-"`                  // FileInfo struct
 }
 
-// ItemResult wraps ItemData and an error
-// Either Item or Error is nil
-type ItemResult struct {
-	Item  *ItemData
-	Error error
+// ArchiveResult wraps Archive and an error
+// Either Archive or Error is nil
+type ArchiveResult struct {
+	Archive *Archive
+	Error   error
 }
 
-func findFiles(rootPath string) chan ItemResult {
-	c := make(chan ItemResult)
+func findFiles(rootPath string) chan ArchiveResult {
+	c := make(chan ArchiveResult)
 	go func() {
 		err := filepath.Walk(rootPath, func(path string, fi os.FileInfo, err error) error {
 			if err != nil {
@@ -70,7 +70,7 @@ func findFiles(rootPath string) chan ItemResult {
 			if !ok {
 				return &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
 			}
-			item := ItemData{
+			archive := Archive{
 				Path:     path,
 				AbsPath:  path,
 				Mode:     fi.Mode(),
@@ -87,23 +87,23 @@ func findFiles(rootPath string) chan ItemResult {
 					return nil
 				}
 
-				item.Type = SymLink
-				item.PointsTo = symlink
+				archive.Type = SymLink
+				archive.PointsTo = symlink
 			} else if fi.IsDir() {
-				item.Type = Directory
+				archive.Type = Directory
 			} else {
-				item.Type = File
+				archive.Type = File
 				if isRegularFile(fi) {
-					item.Size = uint64(fi.Size())
+					archive.Size = uint64(fi.Size())
 				}
 			}
 
-			c <- ItemResult{Item: &item, Error: nil}
+			c <- ArchiveResult{Archive: &archive, Error: nil}
 			return nil
 		})
 
 		if err != nil {
-			c <- ItemResult{Item: nil, Error: err}
+			c <- ArchiveResult{Archive: nil, Error: err}
 		}
 		close(c)
 	}()

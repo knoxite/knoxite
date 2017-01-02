@@ -71,7 +71,7 @@ func (e *DataReconstructionError) Error() string {
 func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string) (prog chan Progress, err error) {
 	prog = make(chan Progress)
 	go func() {
-		for _, arc := range snapshot.Items {
+		for _, arc := range snapshot.Archives {
 			path := filepath.Join(dst, arc.Path)
 			err := DecodeArchive(prog, repository, arc, path)
 			if err != nil {
@@ -169,7 +169,7 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 }
 
 // DecodeArchive restores a single archive to path
-func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, path string) error {
+func DecodeArchive(progress chan Progress, repository Repository, arc Archive, path string) error {
 	p := newProgress(&arc)
 
 	if arc.Type == Directory {
@@ -248,7 +248,7 @@ func init() {
 }
 
 // DecodeArchiveData returns the content of a single archive
-func DecodeArchiveData(repository Repository, arc ItemData) ([]byte, Stats, error) {
+func DecodeArchiveData(repository Repository, arc Archive) ([]byte, Stats, error) {
 	var b []byte
 	var stats Stats
 
@@ -287,7 +287,7 @@ func DecodeArchiveData(repository Repository, arc ItemData) ([]byte, Stats, erro
 	return b, stats, nil
 }
 
-func readArchiveChunk(repository Repository, arc ItemData, chunkNum uint) (*[]byte, error) {
+func readArchiveChunk(repository Repository, arc Archive, chunkNum uint) (*[]byte, error) {
 	var b []byte
 	var err error
 
@@ -313,7 +313,7 @@ func readArchiveChunk(repository Repository, arc ItemData, chunkNum uint) (*[]by
 	return &b, nil
 }
 
-func indexOfChunk(arc ItemData, chunkNum uint) (int, error) {
+func indexOfChunk(arc Archive, chunkNum uint) (int, error) {
 	for i, chunk := range arc.Chunks {
 		if chunk.Num == chunkNum {
 			return i, nil
@@ -323,7 +323,7 @@ func indexOfChunk(arc ItemData, chunkNum uint) (int, error) {
 	return 0, &ChunkError{chunkNum}
 }
 
-func chunkForOffset(arc ItemData, offset int) (uint, int, error) {
+func chunkForOffset(arc Archive, offset int) (uint, int, error) {
 	size := 0
 	for i := 0; i < len(arc.Chunks); i++ {
 		idx, err := indexOfChunk(arc, uint(i))
@@ -344,7 +344,7 @@ func chunkForOffset(arc ItemData, offset int) (uint, int, error) {
 }
 
 // ReadArchive reads from an archive
-func ReadArchive(repository Repository, arc ItemData, offset int, size int) (*[]byte, error) {
+func ReadArchive(repository Repository, arc Archive, offset int, size int) (*[]byte, error) {
 	var b []byte
 
 	// fmt.Println("Read req:", offset, size)
