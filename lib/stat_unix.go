@@ -1,5 +1,12 @@
 // +build darwin dragonfly freebsd linux netbsd openbsd solaris
 
+/*
+ * knoxite
+ *     Copyright (c) 2016-2017, Christian Muehlhaeuser <muesli@gmail.com>
+ *
+ *   For license see LICENSE
+ */
+
 package knoxite
 
 import "syscall"

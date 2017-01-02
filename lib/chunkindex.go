@@ -1,8 +1,8 @@
 /*
  * knoxite
- *     Copyright (c) 2016, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2017, Christian Muehlhaeuser <muesli@gmail.com>
  *
- *   For license see LICENSE.txt
+ *   For license see LICENSE
  */
 
 package knoxite
