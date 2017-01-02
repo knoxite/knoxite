@@ -131,8 +131,8 @@ func chunkFile(filename string, compress, encrypt bool, password string, dataPar
 
 		i := uint(0)
 		for {
-			partBuffer := make([]byte, preferredChunkSize)
-			chunk, err := chunker.Next(partBuffer)
+			buf := make([]byte, preferredChunkSize)
+			chunk, err := chunker.Next(buf)
 			if err == io.EOF {
 				wg.Done()
 				break

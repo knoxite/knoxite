@@ -161,38 +161,40 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 		return []byte{}, &DataReconstructionError{chunk, parsFound, chunk.DataParts - parsFound}
 	}
 
-	data, err := repository.Backend.LoadChunk(chunk, 0)
+	b, err := repository.Backend.LoadChunk(chunk, 0)
 	if err != nil {
 		return []byte{}, err
 	}
-	return decodeChunk(repository, chunk, data)
+	return decodeChunk(repository, chunk, b)
 }
 
 // DecodeArchive restores a single archive to path
 func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, path string) error {
-	prog := newProgress(&arc)
+	p := newProgress(&arc)
 
 	if arc.Type == Directory {
 		//fmt.Printf("Creating directory %s\n", path)
 		os.MkdirAll(path, arc.Mode)
-		prog.TotalStatistics.Dirs++
-		progress <- prog
+		p.TotalStatistics.Dirs++
+		progress <- p
 	} else if arc.Type == SymLink {
 		//fmt.Printf("Creating symlink %s -> %s\n", path, arc.PointsTo)
 		os.Symlink(arc.PointsTo, path)
-		prog.TotalStatistics.SymLinks++
-		progress <- prog
+		p.TotalStatistics.SymLinks++
+		progress <- p
 	} else if arc.Type == File {
-		prog.TotalStatistics.Files++
-		prog.TotalStatistics.Size = arc.Size
-		prog.TotalStatistics.StorageSize = arc.StorageSize
-		progress <- prog
-
 		parts := uint(len(arc.Chunks))
 		//fmt.Printf("Creating file %s (%d chunks).\n", path, parts)
 
-		// write to disk
+		p.TotalStatistics.Files++
+		p.TotalStatistics.Size = arc.Size
+		p.TotalStatistics.StorageSize = arc.StorageSize
+		progress <- p
+
+		// FIXME: we don't always need to create the path
+		// this is just a safety measure for now
 		os.MkdirAll(filepath.Dir(path), 0755)
+		// write to disk
 		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, arc.Mode)
 		if err != nil {
 			return err
@@ -205,20 +207,19 @@ func DecodeArchive(progress chan Progress, repository Repository, arc ItemData, 
 			}
 
 			chunk := arc.Chunks[idx]
-			data, errc := loadChunk(repository, chunk)
+			b, errc := loadChunk(repository, chunk)
 			if errc != nil {
 				return errc
 			}
 
-			// write/save buffer to disk
-			_, err = f.Write(data)
+			_, err = f.Write(b)
 			if err != nil {
 				return err
 			}
 
-			prog.TotalStatistics.Transferred += uint64(len(data))
-			prog.CurrentItemStats.Transferred += uint64(len(data))
-			progress <- prog
+			p.TotalStatistics.Transferred += uint64(len(b))
+			p.CurrentItemStats.Transferred += uint64(len(b))
+			progress <- p
 			// fmt.Printf("Chunk OK: %d bytes, sha256: %s\n", size, chunk.DecryptedShaSum)
 		}
 

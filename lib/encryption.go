@@ -61,7 +61,7 @@ func decryptAESCFB(dst, src, key, iv []byte) error {
 }
 
 // Encrypt data
-func Encrypt(data []byte, password string) ([]byte, error) {
+func Encrypt(b []byte, password string) ([]byte, error) {
 	var err error
 	if len(password) == 0 {
 		return []byte{}, ErrInvalidPassword
@@ -71,21 +71,14 @@ func Encrypt(data []byte, password string) ([]byte, error) {
 	var iv = key[:aes.BlockSize]
 
 	// Encrypt
-	encrypted := make([]byte, len(data))
-	err = encryptAESCFB(encrypted, data, key[:], iv)
-
-	// Decryption check
-	/*	decrypted := make([]byte, len(data))
-		err = DecryptAESCFB(decrypted, encrypted, key[:], iv)
-		if err != nil || !reflect.DeepEqual(data, decrypted) {
-			panic(err)
-		} */
+	encrypted := make([]byte, len(b))
+	err = encryptAESCFB(encrypted, b, key[:], iv)
 
 	return encrypted, err
 }
 
 // Decrypt data
-func Decrypt(data []byte, password string) ([]byte, error) {
+func Decrypt(b []byte, password string) ([]byte, error) {
 	var err error
 	if len(password) == 0 {
 		return []byte{}, ErrInvalidPassword
@@ -95,8 +88,8 @@ func Decrypt(data []byte, password string) ([]byte, error) {
 	var iv = key[:aes.BlockSize]
 
 	// Decrypt
-	decrypted := make([]byte, len(data))
-	err = decryptAESCFB(decrypted, data, key[:], iv)
+	decrypted := make([]byte, len(b))
+	err = decryptAESCFB(decrypted, b, key[:], iv)
 
 	return decrypted, err
 }
