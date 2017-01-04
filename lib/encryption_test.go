@@ -8,6 +8,8 @@
 package knoxite
 
 import (
+	"bytes"
+	"io/ioutil"
 	"testing"
 )
 
@@ -20,7 +22,11 @@ func TestEncryption(t *testing.T) {
 		t.Error(err)
 	}
 
-	bd, err := Decrypt(be, testPassword)
+	dr, err := Decrypt(bytes.NewReader(be), testPassword)
+	if err != nil {
+		t.Error(err)
+	}
+	bd, err := ioutil.ReadAll(dr)
 	if err != nil {
 		t.Error(err)
 	}
@@ -37,7 +43,7 @@ func TestEmptyPassword(t *testing.T) {
 		t.Errorf("Expected %v, got %v", ErrInvalidPassword, err)
 	}
 
-	_, err = Decrypt(b, "")
+	_, err = Decrypt(bytes.NewReader(b), "")
 	if err != ErrInvalidPassword {
 		t.Errorf("Expected %v, got %v", ErrInvalidPassword, err)
 	}

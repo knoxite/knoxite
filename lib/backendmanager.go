@@ -7,7 +7,10 @@
 
 package knoxite
 
-import "errors"
+import (
+	"errors"
+	"io"
+)
 
 // BackendManager stores data on multiple backends
 type BackendManager struct {
@@ -45,15 +48,15 @@ func (backend *BackendManager) Locations() []string {
 }
 
 // LoadChunk loads a Chunk from backends
-func (backend *BackendManager) LoadChunk(chunk Chunk, part uint) ([]byte, error) {
+func (backend *BackendManager) LoadChunk(chunk Chunk, part uint) (io.ReadCloser, error) {
 	for _, be := range backend.Backends {
-		b, err := (*be).LoadChunk(chunk.ShaSum, uint(part), chunk.DataParts)
+		r, err := (*be).LoadChunk(chunk.ShaSum, uint(part), chunk.DataParts)
 		if err == nil {
-			return *b, err
+			return r, err
 		}
 	}
 
-	return []byte{}, ErrLoadChunkFailed
+	return nil, ErrLoadChunkFailed
 }
 
 // StoreChunk stores a single Chunk on backends

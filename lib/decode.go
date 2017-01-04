@@ -8,16 +8,15 @@
 package knoxite
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
-
-	"github.com/klauspost/reedsolomon"
 )
 
 // ChunkError records an error and the index
@@ -83,83 +82,38 @@ func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string) (prog
 	return prog, nil
 }
 
-func decodeChunk(repository Repository, chunk Chunk, b []byte) ([]byte, error) {
+func decodeChunk(repository Repository, chunk Chunk, r io.Reader) (io.ReadCloser, error) {
+	var ro io.ReadCloser
 	var err error
 	if chunk.Encrypted == EncryptionAES {
-		b, err = Decrypt(b, repository.Password)
+		ro, err = Decrypt(r, repository.Password)
 		if err != nil {
-			return []byte{}, err
+			return nil, err
 		}
+		defer ro.Close()
 	}
 
 	if chunk.Compressed == CompressionGZip {
-		b, err = Uncompress(b)
+		ro, err = Uncompress(ro)
 		if err != nil {
-			return []byte{}, err
+			return nil, err
 		}
+		defer ro.Close()
+	}
+
+	b, err := ioutil.ReadAll(ro)
+	if err != nil {
+		return nil, err
 	}
 
 	shadata := sha256.Sum256(b)
 	shasum := hex.EncodeToString(shadata[:])
-
 	if chunk.DecryptedShaSum != shasum {
-		return []byte{}, &CheckSumError{"sha256", chunk.DecryptedShaSum, shasum}
+		return nil, &CheckSumError{"sha256", chunk.DecryptedShaSum, shasum}
 	}
 
-	return b, nil
-}
-
-func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
-	if chunk.ParityParts > 0 {
-		enc, err := reedsolomon.New(int(chunk.DataParts), int(chunk.ParityParts))
-		if err != nil {
-			return []byte{}, err
-		}
-		pars := make([][]byte, chunk.DataParts+chunk.ParityParts)
-		parsFound := uint(0)
-		parsMissing := 0
-
-		// try to load all parts until we can successfully combine/reconstruct the chunk
-		for i := 0; i < int(chunk.DataParts+chunk.ParityParts); i++ {
-			var cerr error
-			pars[i], cerr = repository.Backend.LoadChunk(chunk, uint(i))
-			if cerr != nil {
-				pars[i] = nil
-				parsMissing++
-				continue
-			}
-			parsFound++
-
-			// check if we already have a sufficient amount of parts
-			if parsFound >= chunk.DataParts {
-				var b bytes.Buffer
-				w := bufio.NewWriter(&b)
-
-				// if more than one data-part was missing, we need to reconstruct the chunk
-				if parsMissing > 0 {
-					err = enc.Reconstruct(pars)
-					if err != nil {
-						continue
-					}
-				}
-				err = enc.Join(w, pars, chunk.Size)
-				if err != nil {
-					// reconstruction failed, let's try it with another parity part
-					continue
-				}
-				w.Flush()
-				return decodeChunk(repository, chunk, b.Bytes())
-			}
-		}
-
-		return []byte{}, &DataReconstructionError{chunk, parsFound, chunk.DataParts - parsFound}
-	}
-
-	b, err := repository.Backend.LoadChunk(chunk, 0)
-	if err != nil {
-		return []byte{}, err
-	}
-	return decodeChunk(repository, chunk, b)
+	ro = ioutil.NopCloser(bytes.NewBuffer(b))
+	return ro, nil
 }
 
 // DecodeArchive restores a single archive to path
@@ -205,18 +159,25 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 			}
 
 			chunk := arc.Chunks[idx]
-			b, errc := loadChunk(repository, chunk)
+			cr, errc := chunk.Load(repository)
 			if errc != nil {
 				return errc
 			}
 
-			_, err = f.Write(b)
-			if err != nil {
-				return err
+			r, errc := decodeChunk(repository, chunk, cr)
+			if errc != nil {
+				return errc
 			}
+			defer r.Close()
 
-			p.TotalStatistics.Transferred += uint64(len(b))
-			p.CurrentItemStats.Transferred += uint64(len(b))
+			n, errc := io.Copy(f, r)
+			if errc != nil {
+				return errc
+			}
+			cr.Close()
+
+			p.TotalStatistics.Transferred += uint64(n)
+			p.CurrentItemStats.Transferred += uint64(n)
 			progress <- p
 			// fmt.Printf("Chunk OK: %d bytes, sha256: %s\n", size, chunk.DecryptedShaSum)
 		}
@@ -242,47 +203,6 @@ var (
 
 func init() {
 	cache = make(map[string][]byte)
-
-}
-
-// DecodeArchiveData returns the content of a single archive
-func DecodeArchiveData(repository Repository, arc Archive) ([]byte, Stats, error) {
-	var b []byte
-	var stats Stats
-
-	if arc.Type == File {
-		parts := uint(len(arc.Chunks))
-
-		for i := uint(0); i < parts; i++ {
-			idx, err := arc.IndexOfChunk(i)
-			if err != nil {
-				return b, stats, err
-			}
-
-			chunk := arc.Chunks[idx]
-			mutex.Lock()
-			cd, ok := cache[chunk.ShaSum]
-			if ok {
-				fmt.Println("Using cached chunk", chunk.ShaSum)
-			} else {
-				cd, err = loadChunk(repository, chunk)
-				if err != nil {
-					return b, stats, err
-				}
-				cache[chunk.ShaSum] = cd
-			}
-
-			mutex.Unlock()
-			b = append(b, cd...)
-		}
-
-		stats.StorageSize += arc.StorageSize
-		stats.Size += arc.Size
-		stats.Transferred += arc.Size
-		stats.Files++
-	}
-
-	return b, stats, nil
 }
 
 func readArchiveChunk(repository Repository, arc Archive, chunkNum uint) (*[]byte, error) {
@@ -298,8 +218,20 @@ func readArchiveChunk(repository Repository, arc Archive, chunkNum uint) (*[]byt
 	mutex.Lock()
 	cd, ok := cache[chunk.ShaSum]
 	if !ok {
-		cd, err = loadChunk(repository, chunk)
+		r, lerr := chunk.Load(repository)
+		if lerr != nil {
+			return &b, err
+		}
+		defer r.Close()
+
+		r, err = decodeChunk(repository, chunk, r)
 		if err != nil {
+			return &b, err
+		}
+		defer r.Close()
+
+		cd, err = ioutil.ReadAll(r)
+		if lerr != nil {
 			return &b, err
 		}
 		cache[chunk.ShaSum] = cd

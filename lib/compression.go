@@ -10,7 +10,7 @@ package knoxite
 import (
 	"bytes"
 	"compress/gzip"
-	"io/ioutil"
+	"io"
 )
 
 // Which compression algo
@@ -34,12 +34,11 @@ func Compress(b []byte) ([]byte, error) {
 }
 
 // Uncompress data
-func Uncompress(b []byte) ([]byte, error) {
-	zr, err := gzip.NewReader(bytes.NewReader(b))
+func Uncompress(r io.Reader) (io.ReadCloser, error) {
+	zr, err := gzip.NewReader(r)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
-	defer zr.Close()
 
-	return ioutil.ReadAll(zr)
+	return zr, nil
 }

@@ -8,8 +8,10 @@
 package knoxite
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 )
 
 // A Repository is a collection of backup snapshots
@@ -67,9 +69,13 @@ func OpenRepository(path, password string) (Repository, error) {
 		return repository, err
 	}
 
-	b, err = Decrypt(b, password)
+	r, err := Decrypt(bytes.NewReader(b), password)
 	if err == nil {
-		err = json.Unmarshal(b, &repository)
+		defer r.Close()
+		b, err = ioutil.ReadAll(r)
+		if err == nil {
+			err = json.Unmarshal(b, &repository)
+		}
 	}
 	// If decrypt _or_ unmarshal failed, abort
 	if err != nil {

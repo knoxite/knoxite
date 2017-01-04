@@ -8,6 +8,7 @@
 package knoxite
 
 import (
+	"io"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -65,9 +66,9 @@ func (backend StorageLocal) Stat(path string) (uint64, error) {
 }
 
 // ReadFile reads a file from disk
-func (backend StorageLocal) ReadFile(path string) (*[]byte, error) {
-	b, err := ioutil.ReadFile(path)
-	return &b, err
+func (backend StorageLocal) ReadFile(path string) (io.ReadCloser, error) {
+	file, err := os.Open(path)
+	return file, err
 }
 
 // WriteFile writes a file to disk

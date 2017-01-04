@@ -8,7 +8,9 @@
 package knoxite
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"math"
 	"path/filepath"
 	"strings"
@@ -184,16 +186,23 @@ func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
 		return &snapshot, err
 	}
 
-	b, err = Decrypt(b, repository.Password)
+	r, err := Decrypt(bytes.NewReader(b), repository.Password)
 	if err != nil {
 		return &snapshot, err
 	}
+	defer r.Close()
 
 	if repository.Version == 1 {
-		b, err = Uncompress(b)
+		r, err = Uncompress(r)
 		if err != nil {
 			return &snapshot, err
 		}
+		defer r.Close()
+	}
+
+	b, err = ioutil.ReadAll(r)
+	if err != nil {
+		return &snapshot, err
 	}
 
 	err = json.Unmarshal(b, &snapshot)

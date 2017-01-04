@@ -8,13 +8,17 @@
 package knoxite
 
 import (
+	"bufio"
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"sync"
 
+	"github.com/klauspost/reedsolomon"
 	"github.com/restic/chunker"
 )
 
@@ -46,6 +50,60 @@ type ChunkResult struct {
 type inputChunk struct {
 	Data []byte
 	Num  uint
+}
+
+func (chunk Chunk) Load(repository Repository) (io.ReadCloser, error) {
+	if chunk.ParityParts > 0 {
+		enc, err := reedsolomon.New(int(chunk.DataParts), int(chunk.ParityParts))
+		if err != nil {
+			return nil, err
+		}
+		pars := make([][]byte, chunk.DataParts+chunk.ParityParts)
+		parsFound := uint(0)
+		parsMissing := 0
+
+		// try to load all parts until we can successfully combine/reconstruct the chunk
+		for i := 0; i < int(chunk.DataParts+chunk.ParityParts); i++ {
+			var cerr error
+			r, cerr := repository.Backend.LoadChunk(chunk, uint(i))
+			if cerr == nil {
+				pars[i], cerr = ioutil.ReadAll(r)
+			}
+			r.Close()
+
+			if cerr != nil {
+				pars[i] = nil
+				parsMissing++
+				continue
+			}
+			parsFound++
+
+			// check if we already have a sufficient amount of parts
+			if parsFound >= chunk.DataParts {
+				var b bytes.Buffer
+				w := bufio.NewWriter(&b)
+
+				// if more than one data-part was missing, we need to reconstruct the chunk
+				if parsMissing > 0 {
+					err = enc.Reconstruct(pars)
+					if err != nil {
+						continue
+					}
+				}
+				err = enc.Join(w, pars, chunk.Size)
+				if err != nil {
+					// reconstruction failed, let's try it with another parity part
+					continue
+				}
+				// w.Flush()
+				return ioutil.NopCloser(bufio.NewReader(&b)), nil
+			}
+		}
+
+		return nil, &DataReconstructionError{chunk, parsFound, chunk.DataParts - parsFound}
+	}
+
+	return repository.Backend.LoadChunk(chunk, 0)
 }
 
 func processChunk(id int, compress, encrypt bool, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- ChunkResult, wg *sync.WaitGroup) {

@@ -12,6 +12,8 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 	"errors"
+	"io"
+	"io/ioutil"
 )
 
 // Which encryption algo
@@ -25,28 +27,6 @@ var (
 	ErrInvalidPassword = errors.New("Empty password not permitted")
 )
 
-// encryptAESCFB encryptes src to dst
-func encryptAESCFB(dst, src, key, iv []byte) error {
-	aesBlockEncrypter, err := aes.NewCipher(key)
-	if err != nil {
-		return err
-	}
-	aesEncrypter := cipher.NewCFBEncrypter(aesBlockEncrypter, iv)
-	aesEncrypter.XORKeyStream(dst, src)
-	return nil
-}
-
-// decryptAESCFB dcryptes src to dst
-func decryptAESCFB(dst, src, key, iv []byte) error {
-	aesBlockDecrypter, err := aes.NewCipher(key)
-	if err != nil {
-		return err
-	}
-	aesDecrypter := cipher.NewCFBDecrypter(aesBlockDecrypter, iv)
-	aesDecrypter.XORKeyStream(dst, src)
-	return nil
-}
-
 // Encrypt data
 func Encrypt(b []byte, password string) ([]byte, error) {
 	var err error
@@ -58,25 +38,35 @@ func Encrypt(b []byte, password string) ([]byte, error) {
 	var iv = key[:aes.BlockSize]
 
 	// Encrypt
+	block, err := aes.NewCipher(key[:])
+	if err != nil {
+		return nil, err
+	}
+
 	encrypted := make([]byte, len(b))
-	err = encryptAESCFB(encrypted, b, key[:], iv)
+	aesEncrypter := cipher.NewCFBEncrypter(block, iv)
+	aesEncrypter.XORKeyStream(encrypted, b)
 
 	return encrypted, err
 }
 
 // Decrypt data
-func Decrypt(b []byte, password string) ([]byte, error) {
-	var err error
+func Decrypt(r io.Reader, password string) (io.ReadCloser, error) {
 	if len(password) == 0 {
-		return []byte{}, ErrInvalidPassword
+		return nil, ErrInvalidPassword
 	}
 
 	var key = sha256.Sum256([]byte(password))
 	var iv = key[:aes.BlockSize]
 
 	// Decrypt
-	decrypted := make([]byte, len(b))
-	err = decryptAESCFB(decrypted, b, key[:], iv)
+	block, err := aes.NewCipher(key[:])
+	if err != nil {
+		return nil, err
+	}
 
-	return decrypted, err
+	stream := cipher.NewCFBDecrypter(block, iv)
+	reader := &cipher.StreamReader{S: stream, R: r}
+
+	return ioutil.NopCloser(reader), nil
 }

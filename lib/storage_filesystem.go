@@ -8,7 +8,8 @@
 package knoxite
 
 import (
-	"fmt"
+	"io"
+	"io/ioutil"
 	"path/filepath"
 	"strconv"
 )
@@ -29,7 +30,7 @@ type BackendFilesystem interface {
 	// CreatePath creates a dir including all its parents dirs, when required
 	CreatePath(path string) error
 	// ReadFile reads a file from disk
-	ReadFile(path string) (*[]byte, error)
+	ReadFile(path string) (io.ReadCloser, error)
 	// WriteFile writes a file to disk
 	WriteFile(path string, data *[]byte) (uint64, error)
 	// DeleteFile deletes a file from disk
@@ -61,7 +62,7 @@ func NewStorageFilesystem(path string, storage BackendFilesystem) (StorageFilesy
 }
 
 // LoadChunk loads a Chunk from disk
-func (backend StorageFilesystem) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
+func (backend StorageFilesystem) LoadChunk(shasum string, part, totalParts uint) (io.ReadCloser, error) {
 	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))
 	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
 
@@ -92,12 +93,13 @@ func (backend StorageFilesystem) DeleteChunk(shasum string, part, totalParts uin
 
 // LoadSnapshot loads a snapshot
 func (backend StorageFilesystem) LoadSnapshot(id string) ([]byte, error) {
-	b, err := (*backend.storage).ReadFile(filepath.Join(backend.snapshotPath, id))
+	r, err := (*backend.storage).ReadFile(filepath.Join(backend.snapshotPath, id))
 	if err != nil {
-		fmt.Println(err)
+		return []byte{}, err
 	}
+	defer r.Close()
 
-	return *b, err
+	return ioutil.ReadAll(r)
 }
 
 // SaveSnapshot stores a snapshot
@@ -108,11 +110,13 @@ func (backend StorageFilesystem) SaveSnapshot(id string, b []byte) error {
 
 // LoadChunkIndex reads the chunk-index
 func (backend StorageFilesystem) LoadChunkIndex() ([]byte, error) {
-	b, err := (*backend.storage).ReadFile(backend.chunkIndexPath)
+	r, err := (*backend.storage).ReadFile(backend.chunkIndexPath)
 	if err != nil {
 		return []byte{}, err
 	}
-	return *b, err
+	defer r.Close()
+
+	return ioutil.ReadAll(r)
 }
 
 // SaveChunkIndex stores the chunk-index
@@ -148,12 +152,13 @@ func (backend StorageFilesystem) InitRepository() error {
 
 // LoadRepository reads the metadata for a repository
 func (backend StorageFilesystem) LoadRepository() ([]byte, error) {
-	b, err := (*backend.storage).ReadFile(backend.repositoryPath)
+	r, err := (*backend.storage).ReadFile(backend.repositoryPath)
 	if err != nil {
 		return []byte{}, err
 	}
+	defer r.Close()
 
-	return *b, err
+	return ioutil.ReadAll(r)
 }
 
 // SaveRepository stores the metadata for a repository
