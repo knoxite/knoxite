@@ -80,7 +80,7 @@ func executeRestore(snapshotID, target string) error {
 				stats.Add(p.TotalStatistics)
 			}
 
-			pb.Print()
+			pb.LazyPrint()
 		}
 		fmt.Println()
 		fmt.Println("Restore done:", stats.String())

@@ -119,9 +119,9 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 			}
 
 			goprogressbar.MoveCursorUp(1)
-			fileProgressBar.Print()
+			fileProgressBar.LazyPrint()
 			goprogressbar.MoveCursorDown(1)
-			overallProgressBar.Print()
+			overallProgressBar.LazyPrint()
 		}
 	}
 
