@@ -55,7 +55,8 @@ func executeRestore(snapshotID, target string) error {
 		if derr != nil {
 			return derr
 		}
-		pb := goprogressbar.NewProgressBar("", 0, 0, 60)
+
+		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 60}
 		stats := knoxite.Stats{}
 		lastPath := ""
 

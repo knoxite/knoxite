@@ -66,8 +66,6 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	// we want to be notified during the first phase of a shutdown
 	cancel := shutdown.First()
 
-	fmt.Println()
-	overallProgressBar := goprogressbar.NewProgressBar("Overall Progress", 0, 0, 60)
 	wd, gerr := os.Getwd()
 	if gerr != nil {
 		return gerr
@@ -82,7 +80,11 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 		strings.ToLower(opts.Encryption) != strings.ToLower(EncryptionText(knoxite.EncryptionNone)),
 		uint(len(repository.Backend.Backends))-opts.FailureTolerance, opts.FailureTolerance)
 
-	fileProgressBar := goprogressbar.NewProgressBar("", 0, 0, 60)
+	fileProgressBar := &goprogressbar.ProgressBar{Width: 60}
+	overallProgressBar := &goprogressbar.ProgressBar{Text: "Overall Progress", Width: 60}
+	pb := goprogressbar.MultiProgressBar{}
+	pb.AddProgressBar(fileProgressBar)
+	pb.AddProgressBar(overallProgressBar)
 	lastPath := ""
 
 	for p := range progress {
@@ -118,10 +120,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 				fileProgressBar.Text = p.Path
 			}
 
-			goprogressbar.MoveCursorUp(1)
-			fileProgressBar.LazyPrint()
-			goprogressbar.MoveCursorDown(1)
-			overallProgressBar.LazyPrint()
+			pb.LazyPrint()
 		}
 	}
 
