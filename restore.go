@@ -63,7 +63,7 @@ func executeRestore(snapshotID, target string) error {
 		for p := range progress {
 			pb.Total = int64(p.CurrentItemStats.Size)
 			pb.Current = int64(p.CurrentItemStats.Transferred)
-			pb.RightAlignedText = fmt.Sprintf("%s / %s  %s/s",
+			pb.PrependText = fmt.Sprintf("%s / %s  %s/s",
 				knoxite.SizeToString(uint64(pb.Current)),
 				knoxite.SizeToString(uint64(pb.Total)),
 				knoxite.SizeToString(p.TransferSpeed()))

@@ -81,7 +81,16 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 		uint(len(repository.Backend.Backends))-opts.FailureTolerance, opts.FailureTolerance)
 
 	fileProgressBar := &goprogressbar.ProgressBar{Width: 60}
-	overallProgressBar := &goprogressbar.ProgressBar{Text: "Overall Progress", Width: 60}
+	overallProgressBar := &goprogressbar.ProgressBar{
+		Text:  "Overall Progress",
+		Width: 60,
+		PrependTextFunc: func(p *goprogressbar.ProgressBar) string {
+			return fmt.Sprintf("%s / %s",
+				knoxite.SizeToString(uint64(p.Current)),
+				knoxite.SizeToString(uint64(p.Total)))
+		},
+	}
+
 	pb := goprogressbar.MultiProgressBar{}
 	pb.AddProgressBar(fileProgressBar)
 	pb.AddProgressBar(overallProgressBar)
@@ -104,16 +113,13 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 			}
 			fileProgressBar.Total = int64(p.CurrentItemStats.Size)
 			fileProgressBar.Current = int64(p.CurrentItemStats.Transferred)
-			fileProgressBar.RightAlignedText = fmt.Sprintf("%s / %s  %s/s",
+			fileProgressBar.PrependText = fmt.Sprintf("%s / %s  %s/s",
 				knoxite.SizeToString(uint64(fileProgressBar.Current)),
 				knoxite.SizeToString(uint64(fileProgressBar.Total)),
 				knoxite.SizeToString(p.TransferSpeed()))
 
 			overallProgressBar.Total = int64(p.TotalStatistics.Size)
 			overallProgressBar.Current = int64(p.TotalStatistics.Transferred)
-			overallProgressBar.RightAlignedText = fmt.Sprintf("%s / %s",
-				knoxite.SizeToString(uint64(overallProgressBar.Current)),
-				knoxite.SizeToString(uint64(overallProgressBar.Total)))
 
 			if p.Path != lastPath {
 				lastPath = p.Path
