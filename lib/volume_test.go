@@ -92,3 +92,41 @@ func TestFindVolume(t *testing.T) {
 		t.Errorf("Failed finding latest volume: %s %s", err, vol.ID)
 	}
 }
+
+func TestRemoveSnapshot(t *testing.T) {
+	testPassword := "this_is_a_password"
+
+	dir, err := ioutil.TempDir("", "knoxite")
+	if err != nil {
+		t.Errorf("Failed creating temporary dir for repository: %s", err)
+		return
+	}
+	defer os.RemoveAll(dir)
+
+	r, _ := NewRepository(dir, testPassword)
+	vol, _ := NewVolume("test", "")
+	r.AddVolume(vol)
+
+	snapshot, _ := NewSnapshot("test_snapshot")
+	snapshot.Save(&r)
+	vol.AddSnapshot(snapshot.ID)
+
+	snapshot2, _ := NewSnapshot("test_snapshot_too")
+	snapshot2.Save(&r)
+	vol.AddSnapshot(snapshot2.ID)
+
+	err = vol.RemoveSnapshot(snapshot.ID)
+	if err != nil {
+		t.Errorf("Failed removing snapshot: %s", err)
+	}
+
+	_, _, err = r.FindSnapshot(snapshot2.ID)
+	if err != nil {
+		t.Errorf("Failed finding snapshot: %s", err)
+	}
+
+	err = vol.RemoveSnapshot("invalidID")
+	if err == nil {
+		t.Errorf("Expected no error, got: %s", err)
+	}
+}
