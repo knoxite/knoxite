@@ -112,15 +112,21 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 				dataParts = uint(math.Max(1, float64(dataParts)))
 				chunkchan, err := chunkFile(archive.AbsPath, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
 				if err != nil {
-					panic(err)
+					p = newProgressError(err)
+					progress <- p
+					break
 				}
+
 				for cd := range chunkchan {
 					// fmt.Printf("\tSplit %s (#%d, %d bytes), compression: %s, encryption: %s, sha256: %s\n", id.Path, cd.Num, cd.Size, CompressionText(cd.Compressed), EncryptionText(cd.Encrypted), cd.ShaSum)
 
 					// store this chunk
 					n, err := repository.Backend.StoreChunk(cd)
 					if err != nil {
-						panic(err)
+						p = newProgressError(err)
+						progress <- p
+						close(progress)
+						return
 					}
 
 					// release the memory, we don't need the data anymore
