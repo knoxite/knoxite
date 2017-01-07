@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/klauspost/shutdown2"
 	"github.com/muesli/goprogressbar"
@@ -75,6 +76,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 		return ErrRedundancyAmount
 	}
 
+	startTime := time.Now()
 	progress := snapshot.Add(wd, targets, *repository, chunkIndex,
 		strings.ToLower(opts.Compression) == strings.ToLower(CompressionText(knoxite.CompressionGZip)),
 		strings.ToLower(opts.Encryption) != strings.ToLower(EncryptionText(knoxite.EncryptionNone)),
@@ -85,9 +87,10 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 		Text:  "Overall Progress",
 		Width: 60,
 		PrependTextFunc: func(p *goprogressbar.ProgressBar) string {
-			return fmt.Sprintf("%s / %s",
+			return fmt.Sprintf("%s / %s  %s/s",
 				knoxite.SizeToString(uint64(p.Current)),
-				knoxite.SizeToString(uint64(p.Total)))
+				knoxite.SizeToString(uint64(p.Total)),
+				knoxite.SizeToString(uint64(float64(p.Current)/time.Since(startTime).Seconds())))
 		},
 	}
 
@@ -113,9 +116,8 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 			}
 			fileProgressBar.Total = int64(p.CurrentItemStats.Size)
 			fileProgressBar.Current = int64(p.CurrentItemStats.Transferred)
-			fileProgressBar.PrependText = fmt.Sprintf("%s / %s  %s/s",
+			fileProgressBar.PrependText = fmt.Sprintf("%s  %s/s",
 				knoxite.SizeToString(uint64(fileProgressBar.Current)),
-				knoxite.SizeToString(uint64(fileProgressBar.Total)),
 				knoxite.SizeToString(p.TransferSpeed()))
 
 			overallProgressBar.Total = int64(p.TotalStatistics.Size)
