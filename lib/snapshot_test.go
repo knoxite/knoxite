@@ -174,7 +174,7 @@ func TestCreateSnapshot(t *testing.T) {
 	}
 }
 
-func TestFindUnknownSnapshot(t *testing.T) {
+func TestFindSnapshot(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	dir, err := ioutil.TempDir("", "knoxite")
@@ -184,21 +184,21 @@ func TestFindUnknownSnapshot(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	r, err := NewRepository(dir, testPassword)
-	if err != nil {
-		t.Errorf("Failed creating repository: %s", err)
-		return
-	}
-
-	vol, err := NewVolume("test", "")
-	if err != nil {
-		t.Errorf("Failed creating volume: %s", err)
-		return
-	}
+	r, _ := NewRepository(dir, testPassword)
+	vol, _ := NewVolume("test", "")
 	r.AddVolume(vol)
 
 	_, _, err = r.FindSnapshot("invalidID")
 	if err != ErrSnapshotNotFound {
 		t.Errorf("Expected %v, got %v", ErrSnapshotNotFound, err)
+	}
+
+	snapshot, _ := NewSnapshot("test_snapshot")
+	snapshot.Save(&r)
+	vol.AddSnapshot(snapshot.ID)
+
+	_, s, err := r.FindSnapshot("latest")
+	if err != nil || s == nil {
+		t.Errorf("Failed finding latest snapshot: %s %s", err, snapshot.ID)
 	}
 }

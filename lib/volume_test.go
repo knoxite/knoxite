@@ -67,7 +67,7 @@ func TestCreateVolume(t *testing.T) {
 	}
 }
 
-func TestFindUnknownVolume(t *testing.T) {
+func TestFindVolume(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	dir, err := ioutil.TempDir("", "knoxite")
@@ -77,14 +77,18 @@ func TestFindUnknownVolume(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	r, err := NewRepository(dir, testPassword)
-	if err != nil {
-		t.Errorf("Failed creating repository: %s", err)
-		return
-	}
+	r, _ := NewRepository(dir, testPassword)
 
 	_, err = r.FindVolume("invalidID")
 	if err != ErrVolumeNotFound {
 		t.Errorf("Expected %v, got %v", ErrVolumeNotFound, err)
+	}
+
+	vol, _ := NewVolume("test", "")
+	r.AddVolume(vol)
+
+	v, err := r.FindVolume("latest")
+	if err != nil || v == nil {
+		t.Errorf("Failed finding latest volume: %s %s", err, vol.ID)
 	}
 }
