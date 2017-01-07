@@ -118,10 +118,17 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 				}
 
 				for cd := range chunkchan {
+					if cd.Error != nil {
+						p = newProgressError(err)
+						progress <- p
+						close(progress)
+						return
+					}
+					chunk := cd.Chunk
 					// fmt.Printf("\tSplit %s (#%d, %d bytes), compression: %s, encryption: %s, sha256: %s\n", id.Path, cd.Num, cd.Size, CompressionText(cd.Compressed), EncryptionText(cd.Encrypted), cd.ShaSum)
 
 					// store this chunk
-					n, err := repository.Backend.StoreChunk(cd)
+					n, err := repository.Backend.StoreChunk(chunk)
 					if err != nil {
 						p = newProgressError(err)
 						progress <- p
@@ -130,14 +137,14 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 					}
 
 					// release the memory, we don't need the data anymore
-					cd.Data = &[][]byte{}
+					chunk.Data = &[][]byte{}
 
-					archive.Chunks = append(archive.Chunks, cd)
+					archive.Chunks = append(archive.Chunks, chunk)
 					archive.StorageSize += n
 
 					p.CurrentItemStats.StorageSize = archive.StorageSize
-					p.CurrentItemStats.Transferred += uint64(cd.OriginalSize)
-					snapshot.Stats.Transferred += uint64(cd.OriginalSize)
+					p.CurrentItemStats.Transferred += uint64(chunk.OriginalSize)
+					snapshot.Stats.Transferred += uint64(chunk.OriginalSize)
 					snapshot.Stats.StorageSize += n
 
 					snapshot.Lock()

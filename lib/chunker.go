@@ -37,12 +37,18 @@ type Chunk struct {
 	Num             uint      `json:"num"`
 }
 
+// ChunkResult is used to transfer either a chunk or an error down the channel
+type ChunkResult struct {
+	Chunk Chunk
+	Error error
+}
+
 type inputChunk struct {
 	Data []byte
 	Num  uint
 }
 
-func processChunk(id int, compress, encrypt bool, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- Chunk, wg *sync.WaitGroup) {
+func processChunk(id int, compress, encrypt bool, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- ChunkResult, wg *sync.WaitGroup) {
 	for j := range jobs {
 		// fmt.Println("\tWorker", id, "processing job", j.Num, len(j.Data))
 
@@ -51,13 +57,17 @@ func processChunk(id int, compress, encrypt bool, password string, dataParts, pa
 		if compress {
 			b, err = Compress(b)
 			if err != nil {
-				panic(err)
+				chunks <- ChunkResult{Error: err}
+				wg.Done()
+				continue
 			}
 		}
 		if encrypt {
 			b, err = Encrypt(b, password)
 			if err != nil {
-				panic(err)
+				chunks <- ChunkResult{Error: err}
+				wg.Done()
+				continue
 			}
 		}
 
@@ -86,7 +96,9 @@ func processChunk(id int, compress, encrypt bool, password string, dataParts, pa
 		if parityParts > 0 {
 			pars, err := redundantData(b, dataParts, parityParts)
 			if err != nil {
-				panic(err)
+				chunks <- ChunkResult{Error: err}
+				wg.Done()
+				continue
 			}
 			c.Data = &pars
 		} else {
@@ -94,14 +106,14 @@ func processChunk(id int, compress, encrypt bool, password string, dataParts, pa
 			c.Data = &[][]byte{b}
 		}
 
-		chunks <- c
+		chunks <- ChunkResult{Chunk: c}
 		wg.Done()
 	}
 }
 
 // chunkFile divides filename into chunks of 1MiB each
-func chunkFile(filename string, compress, encrypt bool, password string, dataParts, parityParts int) (chan Chunk, error) {
-	c := make(chan Chunk)
+func chunkFile(filename string, compress, encrypt bool, password string, dataParts, parityParts int) (chan ChunkResult, error) {
+	c := make(chan ChunkResult)
 
 	file, err := os.Open(filename)
 	if err != nil {
@@ -128,7 +140,9 @@ func chunkFile(filename string, compress, encrypt bool, password string, dataPar
 				break
 			}
 			if err != nil {
-				panic(err)
+				c <- ChunkResult{Error: err}
+				wg.Done()
+				break
 			}
 
 			wg.Add(1)
