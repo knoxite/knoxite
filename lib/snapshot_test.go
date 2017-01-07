@@ -32,9 +32,11 @@ func TestCreateSnapshot(t *testing.T) {
 
 	tests := []struct {
 		compression bool
+		parityParts uint
 	}{
-		{false},
-		{true},
+		{false, 0},
+		{true, 0},
+		{false, 1},
 	}
 	for _, tt := range tests {
 		dir, err := ioutil.TempDir("", "knoxite")
@@ -77,7 +79,7 @@ func TestCreateSnapshot(t *testing.T) {
 				t.Errorf("Failed getting working dir: %s", err)
 				return
 			}
-			progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, r, &index, tt.compression, true, 1, 0)
+			progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, r, &index, tt.compression, true, 1, tt.parityParts)
 			for p := range progress {
 				if p.Error != nil {
 					t.Errorf("Failed adding to snapshot: %s", p.Error)
