@@ -17,7 +17,7 @@ func redundantData(b []byte, chunks, redundancyChunks int) ([][]byte, error) {
 
 	pars, err := enc.Split(b)
 	if err != nil {
-		panic(err)
+		return [][]byte{}, err
 	}
 
 	err = enc.Encode(pars)
