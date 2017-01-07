@@ -10,7 +10,10 @@ package knoxite
 import "testing"
 
 func TestBackendURLError(t *testing.T) {
-	_, err := BackendFromURL("http://a b/")
+	// Go 1.6 & up only
+	// _, err := BackendFromURL("http://a b/")
+
+	_, err := BackendFromURL("http://%test")
 	if err == nil {
 		t.Errorf("Expected an error, got %v", err)
 	}
