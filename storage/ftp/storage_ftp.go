@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -42,6 +43,12 @@ func init() {
 
 // NewBackend establishs a FTP connection and returns a StorageFTP backend
 func (*StorageFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
+	_, port, err := net.SplitHostPort(u.Host)
+	if err != nil || len(port) == 0 {
+		port = "ftp"
+		u.Host = net.JoinHostPort(u.Host, port)
+	}
+
 	// Starting a connection
 	con, err := ftp.DialTimeout(u.Host, 30*time.Second)
 	if err != nil {
