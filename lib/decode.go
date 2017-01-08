@@ -73,7 +73,9 @@ func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string) (prog
 			path := filepath.Join(dst, arc.Path)
 			err := DecodeArchive(prog, repository, arc, path)
 			if err != nil {
-				panic(err)
+				p := newProgressError(err)
+				prog <- p
+				break
 			}
 		}
 		close(prog)

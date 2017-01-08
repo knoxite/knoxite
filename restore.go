@@ -61,6 +61,11 @@ func executeRestore(snapshotID, target string) error {
 		lastPath := ""
 
 		for p := range progress {
+			if p.Error != nil {
+				fmt.Println()
+				return p.Error
+			}
+
 			pb.Total = int64(p.CurrentItemStats.Size)
 			pb.Current = int64(p.CurrentItemStats.Transferred)
 			pb.PrependText = fmt.Sprintf("%s / %s  %s/s",
