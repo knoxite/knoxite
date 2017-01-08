@@ -11,11 +11,12 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
 
   sudo service pure-ftpd stop
 
+  sudo mkdir /home/ftpuser
   sudo groupadd ftpgroup
-  sudo useradd -g ftpgroup -d /dev/null -s /etc ftpuser
+  sudo useradd -g ftpgroup -d /home/ftpuser -s /etc ftpuser
   sudo chown -R ftpuser:ftpgroup /home/ftpuser
 
-  sudo pure-pw useradd knoxite -u ftpuser -d /home/ftpuser
+  sudo cp admin/pureftpd.passwd /etc/pure-ftpd/
   sudo pure-pw mkdb
 
   sudo service pure-ftpd start
