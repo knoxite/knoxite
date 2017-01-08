@@ -130,7 +130,11 @@ func TestMain(m *testing.M) {
 				}
 
 				db := b.(*ftp.StorageFTP)
-				err = db.Ftp.Delete("knoxite-citest")
+				err = db.Ftp.RemoveDir("knoxite-citest")
+				if err != nil {
+					panic(err)
+				}
+				err = db.Ftp.MakeDir("knoxite-citest")
 				if err != nil {
 					panic(err)
 				}
