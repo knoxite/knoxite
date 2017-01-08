@@ -23,4 +23,5 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
   sudo service pure-ftpd start
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   echo "Not supported on OSX"
+  unset KNOXITE_FTP_URL
 fi

@@ -12,7 +12,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"flag"
-	"fmt"
 	mrand "math/rand"
 	"os"
 	"path/filepath"
@@ -47,7 +46,6 @@ func ftpDeletePath(c *ftp.ServerConn, path string) {
 		panic(err)
 	}
 	for _, l := range list {
-		fmt.Println("FTP deleting", l.Name)
 		if l.Type == ftp.EntryTypeFolder {
 			ftpDeletePath(c, filepath.Join(path, l.Name))
 		}
@@ -157,9 +155,9 @@ func TestMain(m *testing.M) {
 					panic(err)
 				}
 
-				db := b.(*knoxiteftp.StorageFTP)
-
+				//FIXME: extract path from ftpurl
 				path := "knoxite-citest"
+				db := b.(*knoxiteftp.StorageFTP)
 				ftpDeletePath(db.Ftp, path)
 
 				err = db.Ftp.MakeDir(path)
