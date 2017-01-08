@@ -133,6 +133,11 @@ func (backend *StorageDropbox) ReadFile(path string) (*[]byte, error) {
 
 // WriteFile write files on dropbox
 func (backend *StorageDropbox) WriteFile(path string, data *[]byte) (size uint64, err error) {
+	entry, err := backend.db.Metadata(path, false, false, "", "", 1)
+	if err == nil && !entry.IsDeleted && uint64(entry.Bytes) == size {
+		return 0, nil
+	}
+
 	_, err = backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(*data)), len(*data), path, true, "")
 	return uint64(len(*data)), err
 }
