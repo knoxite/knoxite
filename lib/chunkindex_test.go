@@ -28,8 +28,8 @@ func TestChunkIndexReindex(t *testing.T) {
 	r.AddVolume(vol)
 
 	snapshot, _ := NewSnapshot("test_snapshot")
-	index, err := OpenChunkIndex(&r)
-	wd, err := os.Getwd()
+	index, _ := OpenChunkIndex(&r)
+	wd, _ := os.Getwd()
 	progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, r, &index, false, true, 1, 0)
 	for p := range progress {
 		if p.Error != nil {
