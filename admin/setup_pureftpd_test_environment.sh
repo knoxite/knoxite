@@ -31,9 +31,9 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 
     # Create a password db from the passwd template
     /usr/local/bin/pure-pw mkdb /tmp/pureftpd.pdb -f admin/pureftpd.osx.passwd
+    chmod a+r /tmp/pureftpd.pdb
 
-    ls -l /usr/local/sbin/pure-ftpd
-    ls -l /tmp/pureftpd.pdb
     sudo /usr/local/sbin/pure-ftpd -l puredb:/tmp/pureftpd.pdb -E -d -O clf:/tmp/pureftpd_transfer.log -B
+    sleep 5
     tail -f /tmp/pureftpd_transfer.log &
 fi
