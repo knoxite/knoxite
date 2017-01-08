@@ -63,10 +63,10 @@ func (*StorageBackblaze) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	var bucket *backblaze.Bucket
 	bucket, err = cl.Bucket(bucketPrefix[1])
 	if err != nil || bucket == nil {
-		// Bucket probably doesn't exists
+		// Bucket probably doesn't exist
 		bucket, err = cl.CreateBucket(bucketPrefix[1], backblaze.AllPrivate)
 		if err != nil {
-			// Bucket exists but we don't have access on it
+			// Bucket exists but we don't have access to it
 			return &StorageBackblaze{}, err
 		}
 	}
