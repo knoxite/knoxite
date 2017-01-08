@@ -66,7 +66,7 @@ func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) (*[]
 	//	fmt.Printf("Fetching from: %s.\n", backend.URL+"/download/"+chunk.ShaSum)
 	res, err := http.Get(backend.URL.String() + "/download/" + shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10))
 	if err != nil {
-		log.Fatal(err)
+		return &[]byte{}, err
 	}
 	defer res.Body.Close()
 

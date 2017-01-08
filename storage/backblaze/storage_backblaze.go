@@ -125,7 +125,7 @@ func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint
 	metadata := make(map[string]string)
 	i, err := backend.bucket.UploadFile(fileName, metadata, buf)
 	if err != nil {
-		return 0, knoxite.ErrStoreChunkFailed
+		return 0, err
 	}
 	file := backblaze.File(*i)
 	return uint64(file.ContentLength), err
