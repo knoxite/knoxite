@@ -11,8 +11,10 @@ package dropbox
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -113,6 +115,9 @@ func (backend *StorageDropbox) CreatePath(path string) error {
 // Stat returns the size of a file
 func (backend *StorageDropbox) Stat(path string) (uint64, error) {
 	entry, err := backend.db.Metadata(path, false, false, "", "", 1)
+	if entry.IsDeleted {
+		return 0, &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
+	}
 	return uint64(entry.Bytes), err
 }
 
