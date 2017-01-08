@@ -53,7 +53,7 @@ func (*StorageDropbox) NewBackend(u url.URL) (knoxite.Backend, error) {
 
 	if backend.url.User == nil || len(backend.url.User.Username()) == 0 {
 		if err := backend.db.Auth(); err != nil {
-			panic(err)
+			return &StorageDropbox{}, err
 		}
 		backend.url.User = url.User(backend.db.AccessToken())
 	} else {
