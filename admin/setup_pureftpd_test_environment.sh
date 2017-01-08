@@ -36,5 +36,5 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     /usr/local/bin/pure-pw mkdb /tmp/pureftpd.pdb -f admin/pureftpd.osx.passwd
     sudo chmod a+r /tmp/pureftpd.pdb
 
-    sudo /usr/local/sbin/pure-ftpd -l puredb:/tmp/pureftpd.pdb -E -d -B -S 127.0.0.1,2121
+    /usr/local/sbin/pure-ftpd -l puredb:/tmp/pureftpd.pdb -E -d -B -S 127.0.0.1,2121
 fi
