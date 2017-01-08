@@ -164,6 +164,5 @@ func (backend *StorageFTP) WriteFile(path string, data *[]byte) (size uint64, er
 
 // DeleteFile deletes a file from ftp
 func (backend *StorageFTP) DeleteFile(path string) error {
-	// FIXME: implement this
-	return knoxite.ErrDeleteChunkFailed
+	return backend.ftp.Delete(path)
 }
