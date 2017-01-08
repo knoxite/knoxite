@@ -13,6 +13,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"flag"
 	mrand "math/rand"
 	"net/url"
 	"os"
@@ -24,6 +25,8 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	flag.Parse()
+
 	path := os.Getenv("KNOXITE_DROPBOX_URL")
 	if len(path) == 0 {
 		panic("KNOXITE_DROPBOX_URL is undefined")
@@ -39,7 +42,7 @@ func TestMain(m *testing.M) {
 	}
 
 	dropboxURL = u
-	m.Run()
+	os.Exit(m.Run())
 }
 
 func teardownRepo(u *url.URL) {
