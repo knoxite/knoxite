@@ -17,6 +17,9 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
 
     sudo service pure-ftpd stop
 
+    # change port to 2121
+    sudo sh -c "echo ',2121' > /etc/pure-ftpd/conf/Bind"
+
     # Create a password db from the passwd template
     sudo cp admin/pureftpd.passwd /etc/pure-ftpd/
     sudo pure-pw mkdb
@@ -31,9 +34,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 
     # Create a password db from the passwd template
     /usr/local/bin/pure-pw mkdb /tmp/pureftpd.pdb -f admin/pureftpd.osx.passwd
-    chmod a+r /tmp/pureftpd.pdb
+    sudo chmod a+r /tmp/pureftpd.pdb
 
-    sudo /usr/local/sbin/pure-ftpd -l puredb:/tmp/pureftpd.pdb -E -d -O clf:/tmp/pureftpd_transfer.log -B
-    sleep 5
-    tail -f /tmp/pureftpd_transfer.log &
+    sudo /usr/local/sbin/pure-ftpd -l puredb:/tmp/pureftpd.pdb -E -d -B -S 127.0.0.1,2121
 fi
