@@ -174,6 +174,21 @@ func TestSnapshotCreate(t *testing.T) {
 	}
 }
 
+func TestSnapshotClone(t *testing.T) {
+	snapshot, _ := NewSnapshot("test_snapshot")
+	s, err := snapshot.Clone()
+	if err != nil || s == nil {
+		t.Errorf("Failed cloning snapshot: %s", err)
+	}
+
+	if snapshot.Description != s.Description {
+		t.Errorf("Description mismatch, got %s expected %s", s.Description, snapshot.Description)
+	}
+	if snapshot.ID == s.ID {
+		t.Errorf("ID conflict after cloning, duplicate snapshot ID %s", snapshot.ID)
+	}
+}
+
 func TestSnapshotFind(t *testing.T) {
 	testPassword := "this_is_a_password"
 
