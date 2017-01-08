@@ -67,7 +67,7 @@ func TestStorageAmazonS3Location(t *testing.T) {
 
 	s3, _ := (&StorageAmazonS3{}).NewBackend(*s3url)
 	if s3.Location() != s3url.String() {
-		t.Errorf("Expected %v, got %v", s3.Location(), s3url.String())
+		t.Errorf("Expected %v, got %v", s3url.String(), s3.Location())
 	}
 }
 
