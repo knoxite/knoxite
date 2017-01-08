@@ -36,7 +36,7 @@ func init() {
 // NewBackend returns a StorageBackblaze backend
 func (*StorageBackblaze) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	// Checking username and password
-	if URL.User.Username() == "" {
+	if URL.User == nil || URL.User.Username() == "" {
 		return &StorageBackblaze{}, knoxite.ErrInvalidUsername
 	}
 	pw, pwexist := URL.User.Password()

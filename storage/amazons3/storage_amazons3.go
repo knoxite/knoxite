@@ -47,7 +47,7 @@ func (*StorageAmazonS3) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		return &StorageAmazonS3{}, errors.New("Invalid s3 url scheme")
 	}
 
-	if URL.User.Username() == "" {
+	if URL.User == nil || URL.User.Username() == "" {
 		return &StorageAmazonS3{}, knoxite.ErrInvalidUsername
 	}
 
