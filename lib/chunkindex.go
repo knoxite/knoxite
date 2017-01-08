@@ -46,14 +46,17 @@ func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 
 		err = json.Unmarshal(b, &index)
 	} else {
-		err = index.reindex(repository)
-		if err == nil {
-			if len(index.Chunks) > 0 {
-				fmt.Println("Successfully re-indexed snapshots.")
+		if !repository.IsEmpty() {
+			fmt.Println("Chunk-Index is empty, re-indexing all snapshots...")
+			err = index.reindex(repository)
+			if err == nil {
+				if len(index.Chunks) > 0 {
+					fmt.Println("Successfully re-indexed snapshots.")
+				}
 			}
-
-			err = index.Save(repository)
 		}
+
+		err = index.Save(repository)
 	}
 	return index, err
 }
@@ -105,7 +108,6 @@ func (index *ChunkIndex) Pack(repository *Repository) (freedSize uint64, err err
 }
 
 func (index *ChunkIndex) reindex(repository *Repository) error {
-	first := true
 	for _, vol := range repository.Volumes {
 		for _, snapshotID := range vol.Snapshots {
 			snapshot, err := vol.LoadSnapshot(snapshotID, repository)
@@ -114,11 +116,6 @@ func (index *ChunkIndex) reindex(repository *Repository) error {
 			}
 
 			for _, archive := range snapshot.Archives {
-				if first {
-					first = false
-					fmt.Println("Chunk-Index is empty, re-indexing all snapshots...")
-				}
-
 				index.AddArchive(&archive, snapshot.ID)
 			}
 		}
