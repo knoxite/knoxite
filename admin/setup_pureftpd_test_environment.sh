@@ -33,7 +33,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     brew install pure-ftpd
 
     # Create a password db from the passwd template
-    echo 'knoxite:$7$C6..../....tRYPIWawghx9HRSYk6NTgh1xrviiFfdlTTvviqGuK24$ZmU8xQAa2VC1NDufUHKYys9a65D1moXI24JeSEjfE65:501:20::/Users/travis/./::::::::::::' > /tmp/pureftpd.passwd
+    echo 'knoxite:$7$C6..../....UHsuYTodjuMFgq.esCywrnooaUU7Lixu8TFb/ut9xj/$QjKkhpIhHwpWdRhEfvYdWS4pCio.qLMRqTDZ8yxAgZA:501:20::/Users/travis/./::::::::::::' > /tmp/pureftpd.passwd
     /usr/local/bin/pure-pw mkdb /tmp/pureftpd.pdb -f /tmp/pureftpd.passwd
 
     /usr/local/sbin/pure-ftpd -d -B -S 127.0.0.1,2121 -l puredb:/tmp/pureftpd.pdb
