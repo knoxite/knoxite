@@ -19,6 +19,9 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
   sudo cp admin/pureftpd.passwd /etc/pure-ftpd/
   sudo pure-pw mkdb
 
+  sudo sh -c "echo '/etc/pure-ftpd/pureftpd.pdb' > /etc/pure-ftpd/conf/PureDB"
+  sudo ln -s /etc/pure-ftpd/conf/PureDB /etc/pure-ftpd/auth/PureDB
+
   sudo service pure-ftpd start
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   echo "Not supported on OSX"
