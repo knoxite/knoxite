@@ -1,5 +1,3 @@
-// +build ci
-
 /*
  * knoxite
  *     Copyright (c) 2017, Christian Muehlhaeuser <muesli@gmail.com>
