@@ -110,10 +110,26 @@ func TestMain(m *testing.M) {
 			description: "Amazon S3 Storage",
 			tearDown: func(tb *testBackend) {
 				// create a random bucket name every time to avoid collisions
-				rnd := make([]byte, 8)
+				rnd = make([]byte, 8)
 				rand.Read(rnd)
 
 				tb.url = amazons3url + hex.EncodeToString(rnd)
+			},
+		})
+	}
+
+	ftpurl := os.Getenv("KNOXITE_FTP_URL")
+	if len(ftpurl) > 0 {
+		testBackends = append(testBackends, &testBackend{
+			url:         ftpurl + hex.EncodeToString(rnd),
+			protocols:   []string{"ftp"},
+			description: "FTP Storage",
+			tearDown: func(tb *testBackend) {
+				// create a random repo path every time to avoid collisions
+				rnd = make([]byte, 8)
+				rand.Read(rnd)
+
+				tb.url = ftpurl + hex.EncodeToString(rnd)
 			},
 		})
 	}
