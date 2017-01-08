@@ -27,10 +27,6 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   sudo mkdir -p $HOME/knoxite-citest
   sudo chown -R $USER /$HOME/knoxite-citest
 
-  echo "ENV:"
-  id -u
-  id -g
-
   /usr/local/bin/pure-pw mkdb /tmp/pureftpd.pdb -f admin/pureftpd.osx.passwd
   sudo /usr/local/sbin/pure-ftpd -l puredb:/tmp/pureftpd.pdb -E -O clf:/tmp/pureftpd_transfer.log -B &
 fi
