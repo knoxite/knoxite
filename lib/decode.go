@@ -13,7 +13,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -200,7 +199,7 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 		}
 
 		for i := uint(0); i < parts; i++ {
-			idx, erri := indexOfChunk(arc, i)
+			idx, erri := arc.IndexOfChunk(i)
 			if erri != nil {
 				return erri
 			}
@@ -255,7 +254,7 @@ func DecodeArchiveData(repository Repository, arc Archive) ([]byte, Stats, error
 		parts := uint(len(arc.Chunks))
 
 		for i := uint(0); i < parts; i++ {
-			idx, err := indexOfChunk(arc, i)
+			idx, err := arc.IndexOfChunk(i)
 			if err != nil {
 				return b, stats, err
 			}
@@ -290,7 +289,7 @@ func readArchiveChunk(repository Repository, arc Archive, chunkNum uint) (*[]byt
 	var b []byte
 	var err error
 
-	idx, err := indexOfChunk(arc, chunkNum)
+	idx, err := arc.IndexOfChunk(chunkNum)
 	if err != nil {
 		return &b, err
 	}
@@ -312,43 +311,13 @@ func readArchiveChunk(repository Repository, arc Archive, chunkNum uint) (*[]byt
 	return &b, nil
 }
 
-func indexOfChunk(arc Archive, chunkNum uint) (int, error) {
-	for i, chunk := range arc.Chunks {
-		if chunk.Num == chunkNum {
-			return i, nil
-		}
-	}
-
-	return 0, &ChunkError{chunkNum}
-}
-
-func chunkForOffset(arc Archive, offset int) (uint, int, error) {
-	size := 0
-	for i := 0; i < len(arc.Chunks); i++ {
-		idx, err := indexOfChunk(arc, uint(i))
-		if err != nil {
-			return 0, 0, &SeekError{offset}
-		}
-
-		chunk := arc.Chunks[idx]
-		if size+chunk.OriginalSize > offset {
-			internalOffset := offset - size
-			return chunk.Num, internalOffset, nil
-		}
-
-		size += chunk.OriginalSize
-	}
-
-	return 0, 0, io.EOF
-}
-
 // ReadArchive reads from an archive
 func ReadArchive(repository Repository, arc Archive, offset int, size int) (*[]byte, error) {
 	var b []byte
 
 	// fmt.Println("Read req:", offset, size)
 	if arc.Type == File {
-		neededPart, internalOffset, err := chunkForOffset(arc, offset)
+		neededPart, internalOffset, err := arc.ChunkForOffset(offset)
 		if err != nil {
 			return &b, err
 		}
