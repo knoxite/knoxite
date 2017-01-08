@@ -11,9 +11,9 @@ export MINIO_ACCESS_KEY=USWUXHGYZQYFYFFIT3RE
 export MINIO_SECRET_KEY=MOJRH0mkL1IPauahWITSVvyDrQbEEIwljvmxdq03
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    OS = "linux"
+    OS="linux"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    OS = "darwin"
+    OS="darwin"
 fi
 
 curl https://dl.minio.io/server/minio/release/$OS-amd64/minio --output minio_test
