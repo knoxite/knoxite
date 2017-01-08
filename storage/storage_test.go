@@ -20,7 +20,6 @@ import (
 	knoxite "github.com/knoxite/knoxite/lib"
 
 	_ "github.com/knoxite/knoxite/storage/amazons3"
-
 	backblaze "github.com/knoxite/knoxite/storage/backblaze"
 	dropbox "github.com/knoxite/knoxite/storage/dropbox"
 
@@ -32,24 +31,28 @@ type testBackend struct {
 	url         string
 	protocols   []string
 	description string
-	tearDown    func(url string)
+	tearDown    func(tb *testBackend)
 }
 
 var (
-	testBackends []testBackend
+	testBackends []*testBackend
 )
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 
+	// create a random bucket name every time to avoid collisions
+	rnd := make([]byte, 8)
+	rand.Read(rnd)
+
 	backblazeurl := os.Getenv("KNOXITE_BACKBLAZE_URL")
 	if len(backblazeurl) > 0 {
-		testBackends = append(testBackends, testBackend{
-			url:         backblazeurl,
+		testBackends = append(testBackends, &testBackend{
+			url:         backblazeurl + hex.EncodeToString(rnd),
 			protocols:   []string{"backblaze"},
 			description: "Backblaze Storage",
-			tearDown: func(url string) {
-				b, err := knoxite.BackendFromURL(url)
+			tearDown: func(tb *testBackend) {
+				b, err := knoxite.BackendFromURL(tb.url)
 				if err != nil {
 					panic(err)
 				}
@@ -80,12 +83,12 @@ func TestMain(m *testing.M) {
 
 	dropboxurl := os.Getenv("KNOXITE_DROPBOX_URL")
 	if len(dropboxurl) > 0 {
-		testBackends = append(testBackends, testBackend{
-			url:         dropboxurl,
+		testBackends = append(testBackends, &testBackend{
+			url:         dropboxurl + hex.EncodeToString(rnd),
 			protocols:   []string{"dropbox"},
 			description: "Dropbox Storage",
-			tearDown: func(url string) {
-				b, err := knoxite.BackendFromURL(url)
+			tearDown: func(tb *testBackend) {
+				b, err := knoxite.BackendFromURL(tb.url)
 				if err != nil {
 					panic(err)
 				}
@@ -95,6 +98,22 @@ func TestMain(m *testing.M) {
 				if err != nil {
 					panic(err)
 				}
+			},
+		})
+	}
+
+	amazons3url := os.Getenv("KNOXITE_AMAZONS3_URL")
+	if len(amazons3url) > 0 {
+		testBackends = append(testBackends, &testBackend{
+			url:         amazons3url + hex.EncodeToString(rnd),
+			protocols:   []string{"s3", "s3s"},
+			description: "Amazon S3 Storage",
+			tearDown: func(tb *testBackend) {
+				// create a random bucket name every time to avoid collisions
+				rnd := make([]byte, 8)
+				rand.Read(rnd)
+
+				tb.url = amazons3url + hex.EncodeToString(rnd)
 			},
 		})
 	}
@@ -157,7 +176,7 @@ func TestStorageInitRepository(t *testing.T) {
 		if err := b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		defer tt.tearDown(tt.url)
+		defer tt.tearDown(tt)
 	}
 }
 
@@ -172,7 +191,7 @@ func TestStorageSaveRepository(t *testing.T) {
 		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		defer tt.tearDown(tt.url)
+		defer tt.tearDown(tt)
 
 		rnd := make([]byte, 256)
 		rand.Read(rnd)
@@ -204,7 +223,7 @@ func TestStorageLoadRepository(t *testing.T) {
 		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		defer tt.tearDown(tt.url)
+		defer tt.tearDown(tt)
 
 		rnd := make([]byte, 256)
 		rand.Read(rnd)
@@ -236,7 +255,7 @@ func TestStorageSaveSnapshot(t *testing.T) {
 		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		defer tt.tearDown(tt.url)
+		defer tt.tearDown(tt)
 
 		rnddata := make([]byte, 256)
 		rand.Read(rnddata)
@@ -272,7 +291,7 @@ func TestStorageLoadSnapshot(t *testing.T) {
 		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		defer tt.tearDown(tt.url)
+		defer tt.tearDown(tt)
 
 		rnddata := make([]byte, 256)
 		rand.Read(rnddata)
@@ -308,7 +327,7 @@ func TestStorageStoreChunk(t *testing.T) {
 		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		defer tt.tearDown(tt.url)
+		defer tt.tearDown(tt)
 
 		rnddata := make([]byte, 256)
 		rand.Read(rnddata)
@@ -358,7 +377,7 @@ func TestStorageLoadChunk(t *testing.T) {
 		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		defer tt.tearDown(tt.url)
+		defer tt.tearDown(tt)
 
 		rnddata := make([]byte, 256)
 		rand.Read(rnddata)
@@ -396,7 +415,7 @@ func TestStorageDeleteChunk(t *testing.T) {
 		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		defer tt.tearDown(tt.url)
+		defer tt.tearDown(tt)
 
 		rnddata := make([]byte, 256)
 		rand.Read(rnddata)
