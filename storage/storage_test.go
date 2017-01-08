@@ -22,8 +22,7 @@ import (
 	_ "github.com/knoxite/knoxite/storage/amazons3"
 	backblaze "github.com/knoxite/knoxite/storage/backblaze"
 	dropbox "github.com/knoxite/knoxite/storage/dropbox"
-
-	_ "github.com/knoxite/knoxite/storage/ftp"
+	ftp "github.com/knoxite/knoxite/storage/ftp"
 	_ "github.com/knoxite/knoxite/storage/http"
 )
 
@@ -121,15 +120,20 @@ func TestMain(m *testing.M) {
 	ftpurl := os.Getenv("KNOXITE_FTP_URL")
 	if len(ftpurl) > 0 {
 		testBackends = append(testBackends, &testBackend{
-			url:         ftpurl + hex.EncodeToString(rnd),
+			url:         ftpurl,
 			protocols:   []string{"ftp"},
 			description: "FTP Storage",
 			tearDown: func(tb *testBackend) {
-				// create a random repo path every time to avoid collisions
-				rnd = make([]byte, 8)
-				rand.Read(rnd)
+				b, err := knoxite.BackendFromURL(tb.url)
+				if err != nil {
+					panic(err)
+				}
 
-				tb.url = ftpurl + hex.EncodeToString(rnd)
+				db := b.(*ftp.StorageFTP)
+				err = db.Ftp.Delete("knoxite-citest")
+				if err != nil {
+					panic(err)
+				}
 			},
 		})
 	}

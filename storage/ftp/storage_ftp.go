@@ -25,7 +25,7 @@ import (
 // StorageFTP stores data on a remote FTP
 type StorageFTP struct {
 	url   url.URL
-	ftp   *ftp.ServerConn
+	Ftp   *ftp.ServerConn
 	login bool
 	knoxite.StorageFilesystem
 }
@@ -49,7 +49,7 @@ func (*StorageFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 
 	// Authenticate the client if desired
 	loggedIn := false
-	if len(u.User.Username()) > 0 {
+	if u.User != nil && len(u.User.Username()) > 0 {
 		// Doesn't matter if pw exists
 		pw, _ := u.User.Password()
 		err = con.Login(u.User.Username(), pw)
@@ -61,7 +61,7 @@ func (*StorageFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 
 	storage := StorageFTP{
 		url:   u,
-		ftp:   con,
+		Ftp:   con,
 		login: loggedIn,
 	}
 	storageftp, err := knoxite.NewStorageFilesystem(u.Path, &storage)
@@ -81,11 +81,11 @@ func (backend *StorageFTP) Location() string {
 // Close the backend
 func (backend *StorageFTP) Close() error {
 	if backend.login {
-		if err := backend.ftp.Logout(); err != nil {
+		if err := backend.Ftp.Logout(); err != nil {
 			return err
 		}
 	}
-	return backend.ftp.Quit()
+	return backend.Ftp.Quit()
 }
 
 // Protocols returns the Protocol Schemes supported by this backend
@@ -111,7 +111,7 @@ func (backend *StorageFTP) CreatePath(path string) error {
 			// don't try to create root-dir
 			continue
 		}
-		if err := backend.ftp.MakeDir(filepath.Join(slicedPath[:i+1]...)); err != nil {
+		if err := backend.Ftp.MakeDir(filepath.Join(slicedPath[:i+1]...)); err != nil {
 			// We only want to return an error when creating the last directory
 			// in this path failed. Parent dirs _may_ already exist
 			if i+1 == len(slicedPath) {
@@ -126,7 +126,7 @@ func (backend *StorageFTP) CreatePath(path string) error {
 // Stat returns the size of a file on ftp
 func (backend *StorageFTP) Stat(path string) (uint64, error) {
 	base, last := filepath.Split(path)
-	entries, err := backend.ftp.List(base)
+	entries, err := backend.Ftp.List(base)
 	if err != nil {
 		return 0, err
 	}
@@ -146,7 +146,7 @@ func (backend *StorageFTP) Stat(path string) (uint64, error) {
 
 // ReadFile reads a file from ftp
 func (backend *StorageFTP) ReadFile(path string) (*[]byte, error) {
-	file, err := backend.ftp.Retr(path)
+	file, err := backend.Ftp.Retr(path)
 	if err != nil {
 		return nil, err
 	}
@@ -158,11 +158,11 @@ func (backend *StorageFTP) ReadFile(path string) (*[]byte, error) {
 
 // WriteFile writes file to ftp
 func (backend *StorageFTP) WriteFile(path string, data *[]byte) (size uint64, err error) {
-	err = backend.ftp.Stor(path, bytes.NewReader(*data))
+	err = backend.Ftp.Stor(path, bytes.NewReader(*data))
 	return uint64(len(*data)), err
 }
 
 // DeleteFile deletes a file from ftp
 func (backend *StorageFTP) DeleteFile(path string) error {
-	return backend.ftp.Delete(path)
+	return backend.Ftp.Delete(path)
 }

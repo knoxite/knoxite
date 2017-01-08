@@ -11,7 +11,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
 
   sudo service pure-ftpd stop
 
-  sudo mkdir /home/ftpuser
+  sudo mkdir -p /home/ftpuser/knoxite-citest
   sudo groupadd ftpgroup
   sudo useradd -g ftpgroup -d /home/ftpuser -s /etc ftpuser
   sudo chown -R ftpuser:ftpgroup /home/ftpuser
