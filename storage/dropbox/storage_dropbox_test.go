@@ -26,6 +26,11 @@ func TestMain(m *testing.M) {
 	if len(path) == 0 {
 		panic("KNOXITE_DROPBOX_URL is undefined")
 	}
+	// create a random bucket name every time to avoid collisions
+	rnd := make([]byte, 8)
+	rand.Read(rnd)
+	path += hex.EncodeToString(rnd)
+
 	u, err := url.Parse(path)
 	if err != nil {
 		panic(err)
