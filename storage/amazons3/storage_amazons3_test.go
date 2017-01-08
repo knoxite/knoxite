@@ -316,6 +316,43 @@ func TestStorageAmazonS3LoadChunk(t *testing.T) {
 	}
 }
 
+func TestStorageAmazonS3DeleteChunk(t *testing.T) {
+	s3 := createValidStorageAmazonS3Object()
+	if err := s3.InitRepository(); err != nil {
+		t.Error(err)
+	}
+
+	rnddata := make([]byte, 256)
+	rand.Read(rnddata)
+
+	totalParts := uint(mrand.Int())
+	// get a random part number which is smaller than the totalParts number
+	part := uint(mrand.Intn(int(totalParts)))
+
+	shasumdata := sha256.Sum256(rnddata)
+	shasum := hex.EncodeToString(shasumdata[:])
+
+	_, err := s3.StoreChunk(shasum, part, totalParts, &rnddata)
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err := s3.LoadChunk(shasum, part, totalParts)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = s3.DeleteChunk(shasum, part, totalParts)
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err := s3.LoadChunk(shasum, part, totalParts)
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+}
+
 func createValidStorageAmazonS3Object() knoxite.Backend {
 	s3, _ := (&StorageAmazonS3{}).NewBackend(*createValidStorageURL())
 	return s3
