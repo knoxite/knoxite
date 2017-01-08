@@ -121,6 +121,15 @@ func (backend *StorageBackblaze) LoadChunk(shasum string, part, totalParts uint)
 func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
+	list, err := backend.bucket.ListFileVersions(fileName, "", 1)
+	if err == nil {
+		for _, v := range list.Files {
+			if v.Size == len(*data) {
+				return 0, nil
+			}
+		}
+	}
+
 	buf := bytes.NewBuffer(*data)
 	metadata := make(map[string]string)
 	i, err := backend.bucket.UploadFile(fileName, metadata, buf)
