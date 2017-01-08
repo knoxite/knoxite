@@ -188,7 +188,11 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 
 		// FIXME: we don't always need to create the path
 		// this is just a safety measure for now
-		os.MkdirAll(filepath.Dir(path), 0755)
+		err := os.MkdirAll(filepath.Dir(path), 0755)
+		if err != nil {
+			return err
+		}
+
 		// write to disk
 		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, arc.Mode)
 		if err != nil {
