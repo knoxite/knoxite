@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func TestCreateVolume(t *testing.T) {
+func TestVolumeCreate(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	dir, err := ioutil.TempDir("", "knoxite")
@@ -67,7 +67,7 @@ func TestCreateVolume(t *testing.T) {
 	}
 }
 
-func TestFindVolume(t *testing.T) {
+func TestVolumeFind(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	dir, err := ioutil.TempDir("", "knoxite")
@@ -93,7 +93,7 @@ func TestFindVolume(t *testing.T) {
 	}
 }
 
-func TestRemoveSnapshot(t *testing.T) {
+func TestSnapshotRemove(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	dir, err := ioutil.TempDir("", "knoxite")

@@ -27,7 +27,7 @@ func shasumFile(path string) (string, error) {
 	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
-func TestCreateSnapshot(t *testing.T) {
+func TestSnapshotCreate(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	tests := []struct {
@@ -174,7 +174,7 @@ func TestCreateSnapshot(t *testing.T) {
 	}
 }
 
-func TestFindSnapshot(t *testing.T) {
+func TestSnapshotFind(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	dir, err := ioutil.TempDir("", "knoxite")
