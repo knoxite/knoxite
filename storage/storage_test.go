@@ -14,6 +14,7 @@ import (
 	"flag"
 	mrand "math/rand"
 	"os"
+	"reflect"
 	"testing"
 
 	knoxite "github.com/knoxite/knoxite/lib"
@@ -150,7 +151,7 @@ func TestStorageInitRepository(t *testing.T) {
 		b, err := knoxite.BackendFromURL(tt.url)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
-			return
+			continue
 		}
 
 		if err := b.InitRepository(); err != nil {
@@ -165,7 +166,7 @@ func TestStorageSaveRepository(t *testing.T) {
 		b, err := knoxite.BackendFromURL(tt.url)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
-			return
+			continue
 		}
 
 		if err = b.InitRepository(); err != nil {
@@ -186,14 +187,8 @@ func TestStorageSaveRepository(t *testing.T) {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		if len(data) != len(rnd) {
-			t.Errorf("%s: Data length missmatch", tt.description)
-		}
-
-		for i := 0; i != len(data); i++ {
-			if data[i] != rnd[i] {
-				t.Errorf("%s: Data missmatch", tt.description)
-			}
+		if !reflect.DeepEqual(data, rnd) {
+			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
 }
@@ -203,7 +198,7 @@ func TestStorageLoadRepository(t *testing.T) {
 		b, err := knoxite.BackendFromURL(tt.url)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
-			return
+			continue
 		}
 
 		if err = b.InitRepository(); err != nil {
@@ -224,14 +219,8 @@ func TestStorageLoadRepository(t *testing.T) {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		if len(data) != len(rnd) {
-			t.Errorf("%s: Data length missmatch", tt.description)
-		}
-
-		for i := 0; i != len(data); i++ {
-			if data[i] != rnd[i] {
-				t.Errorf("%s: Data missmatch", tt.description)
-			}
+		if !reflect.DeepEqual(data, rnd) {
+			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
 }
@@ -241,7 +230,7 @@ func TestStorageSaveSnapshot(t *testing.T) {
 		b, err := knoxite.BackendFromURL(tt.url)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
-			return
+			continue
 		}
 
 		if err = b.InitRepository(); err != nil {
@@ -266,14 +255,8 @@ func TestStorageSaveSnapshot(t *testing.T) {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		if len(data) != len(rnddata) {
-			t.Errorf("%s: Data length missmatch", tt.description)
-		}
-
-		for i := 0; i != len(data); i++ {
-			if data[i] != rnddata[i] {
-				t.Errorf("%s: Data missmatch", tt.description)
-			}
+		if !reflect.DeepEqual(data, rnddata) {
+			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
 }
@@ -283,7 +266,7 @@ func TestStorageLoadSnapshot(t *testing.T) {
 		b, err := knoxite.BackendFromURL(tt.url)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
-			return
+			continue
 		}
 
 		if err = b.InitRepository(); err != nil {
@@ -308,14 +291,8 @@ func TestStorageLoadSnapshot(t *testing.T) {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		if len(data) != len(rnddata) {
-			t.Errorf("%s: Data length missmatch", tt.description)
-		}
-
-		for i := 0; i != len(data); i++ {
-			if data[i] != rnddata[i] {
-				t.Errorf("%s: Data missmatch", tt.description)
-			}
+		if !reflect.DeepEqual(data, rnddata) {
+			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
 }
@@ -325,7 +302,7 @@ func TestStorageStoreChunk(t *testing.T) {
 		b, err := knoxite.BackendFromURL(tt.url)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
-			return
+			continue
 		}
 
 		if err = b.InitRepository(); err != nil {
@@ -364,13 +341,8 @@ func TestStorageStoreChunk(t *testing.T) {
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		if len(*data) != len(rnddata) {
-			t.Errorf("%s: Data length missmatch", tt.description)
-		}
-		for i := 0; i != len(*data); i++ {
-			if (*data)[i] != rnddata[i] {
-				t.Errorf("%s: Data missmatch", tt.description)
-			}
+		if !reflect.DeepEqual(data, rnddata) {
+			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
 }
@@ -380,7 +352,7 @@ func TestStorageLoadChunk(t *testing.T) {
 		b, err := knoxite.BackendFromURL(tt.url)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
-			return
+			continue
 		}
 
 		if err = b.InitRepository(); err != nil {
@@ -407,13 +379,8 @@ func TestStorageLoadChunk(t *testing.T) {
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		if len(*data) != len(rnddata) {
-			t.Errorf("%s: Data length missmatch", tt.description)
-		}
-		for i := 0; i != len(*data); i++ {
-			if (*data)[i] != rnddata[i] {
-				t.Errorf("%s: Data missmatch", tt.description)
-			}
+		if !reflect.DeepEqual(data, rnddata) {
+			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
 }
@@ -423,7 +390,7 @@ func TestStorageDeleteChunk(t *testing.T) {
 		b, err := knoxite.BackendFromURL(tt.url)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
-			return
+			continue
 		}
 
 		if err = b.InitRepository(); err != nil {
