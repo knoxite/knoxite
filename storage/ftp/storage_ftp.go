@@ -41,7 +41,7 @@ func init() {
 	knoxite.RegisterBackendFactory(&StorageFTP{})
 }
 
-// NewBackend establishs a FTP connection and returns a StorageFTP backend
+// NewBackend establishes an FTP connection and returns a StorageFTP backend
 func (*StorageFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 	_, port, err := net.SplitHostPort(u.Host)
 	if err != nil || len(port) == 0 {
