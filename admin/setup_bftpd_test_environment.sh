@@ -9,4 +9,5 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
   sudo apt-get -qq update
   sudo apt-get install -y bftpd
 elif [[ "$OSTYPE" == "darwin"* ]]; then
+  echo "Not supported on OSX"
 fi
