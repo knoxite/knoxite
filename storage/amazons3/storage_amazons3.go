@@ -10,6 +10,7 @@ package amazons3
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"net/url"
 	"strconv"
@@ -43,7 +44,7 @@ func (*StorageAmazonS3) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	case "s3s":
 		ssl = true
 	default:
-		panic("Invalid s3 url scheme")
+		return &StorageAmazonS3{}, errors.New("Invalid s3 url scheme")
 	}
 
 	if URL.User.Username() == "" {
