@@ -127,13 +127,13 @@ func TestSnapshotCreate(t *testing.T) {
 				t.Errorf("Failed verifying snapshot description: %s != %s", snapshot.Description, snapshotOriginal.Description)
 			}
 
-			for i, archive := range snapshot.Archives {
-				if archive.Path != snapshotOriginal.Archives[i].Path {
-					t.Errorf("Failed verifying snapshot archive: %s != %s", archive.Path, snapshotOriginal.Archives[i].Path)
+			for i, archive := range snapshotOriginal.Archives {
+				if archive.Path != snapshot.Archives[i].Path {
+					t.Errorf("Failed verifying snapshot archive: %s != %s", archive.Path, snapshot.Archives[i].Path)
 					return
 				}
-				if archive.Size != snapshotOriginal.Archives[i].Size {
-					t.Errorf("Failed verifying snapshot archive size: %d != %d", archive.Size, snapshotOriginal.Archives[i].Size)
+				if archive.Size != snapshot.Archives[i].Size {
+					t.Errorf("Failed verifying snapshot archive size: %d != %d", archive.Size, snapshot.Archives[i].Size)
 					return
 				}
 			}
@@ -181,11 +181,25 @@ func TestSnapshotClone(t *testing.T) {
 		t.Errorf("Failed cloning snapshot: %s", err)
 	}
 
+	if snapshot.ID == s.ID {
+		t.Errorf("ID conflict after cloning, duplicate snapshot ID %s", snapshot.ID)
+	}
 	if snapshot.Description != s.Description {
 		t.Errorf("Description mismatch, got %s expected %s", s.Description, snapshot.Description)
 	}
-	if snapshot.ID == s.ID {
-		t.Errorf("ID conflict after cloning, duplicate snapshot ID %s", snapshot.ID)
+	if !snapshot.Date.Equal(s.Date) {
+		t.Errorf("Date mismatch: got %v != expected %v", s.Date, snapshot.Date)
+	}
+
+	for i, archive := range snapshot.Archives {
+		if archive.Path != s.Archives[i].Path {
+			t.Errorf("Failed verifying snapshot archive: %s != %s", archive.Path, s.Archives[i].Path)
+			return
+		}
+		if archive.Size != snapshot.Archives[i].Size {
+			t.Errorf("Failed verifying snapshot archive size: %d != %d", archive.Size, s.Archives[i].Size)
+			return
+		}
 	}
 }
 
