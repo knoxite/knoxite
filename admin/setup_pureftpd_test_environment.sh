@@ -32,7 +32,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   echo "Home:"
   echo $HOME
 
-  sudo /usr/local/sbin/pure-pw mkdb -f admin/pureftpd.osx.passwd -F admin/pureftpd.pdb
+  sudo /usr/local/bin/pure-pw mkdb -f admin/pureftpd.osx.passwd -F admin/pureftpd.pdb
 
-  sudo /usr/local/sbin/pure-ftpd -l puredb:admin/pureftpd.pdb -8 UTF-8 -E -O clf:/tmp/pureftpd_transfer.log -B
+  sudo /usr/local/sbin/pure-ftpd -l puredb:admin/pureftpd.pdb -E -O clf:/tmp/pureftpd_transfer.log -B &
 fi
