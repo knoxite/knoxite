@@ -25,7 +25,7 @@ type StorageBackblaze struct {
 	url            url.URL
 	repositoryFile string
 	chunkIndexFile string
-	bucket         *backblaze.Bucket
+	Bucket         *backblaze.Bucket
 	backblaze      *backblaze.B2
 }
 
@@ -53,13 +53,13 @@ func (*StorageBackblaze) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		return &StorageBackblaze{}, err
 	}
 
-	// Creating the bucket prefixes
+	// Creating the Bucket prefixes
 	bucketPrefix := strings.Split(URL.Path, "/")
 	if len(bucketPrefix) != 2 {
 		return &StorageBackblaze{}, knoxite.ErrInvalidRepositoryURL
 	}
 
-	// Getting/Creating a bucket for backblaze
+	// Getting/Creating a Bucket for backblaze
 	var bucket *backblaze.Bucket
 	bucket, err = cl.Bucket(bucketPrefix[1])
 	if err != nil || bucket == nil {
@@ -74,7 +74,7 @@ func (*StorageBackblaze) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		url:            URL,
 		repositoryFile: bucketPrefix[1] + "-repository",
 		chunkIndexFile: bucketPrefix[1] + "-chunkindex",
-		bucket:         bucket,
+		Bucket:         bucket,
 		backblaze:      cl,
 	}, nil
 
@@ -109,7 +109,7 @@ func (backend *StorageBackblaze) AvailableSpace() (uint64, error) {
 // LoadChunk loads a Chunk from backblaze
 func (backend *StorageBackblaze) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
-	_, obj, err := backend.bucket.DownloadFileByName(fileName)
+	_, obj, err := backend.Bucket.DownloadFileByName(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (backend *StorageBackblaze) LoadChunk(shasum string, part, totalParts uint)
 func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
-	list, err := backend.bucket.ListFileVersions(fileName, "", 1)
+	list, err := backend.Bucket.ListFileVersions(fileName, "", 1)
 	if err == nil {
 		for _, v := range list.Files {
 			if v.Size == len(*data) {
@@ -132,7 +132,7 @@ func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint
 
 	buf := bytes.NewBuffer(*data)
 	metadata := make(map[string]string)
-	i, err := backend.bucket.UploadFile(fileName, metadata, buf)
+	i, err := backend.Bucket.UploadFile(fileName, metadata, buf)
 	if err != nil {
 		return 0, err
 	}
@@ -144,7 +144,7 @@ func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint
 func (backend *StorageBackblaze) DeleteChunk(shasum string, part, totalParts uint) error {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
-	v, err := backend.bucket.ListFileVersions(fileName, "", 1)
+	v, err := backend.Bucket.ListFileVersions(fileName, "", 1)
 	if err != nil {
 		return err
 	}
@@ -152,13 +152,13 @@ func (backend *StorageBackblaze) DeleteChunk(shasum string, part, totalParts uin
 		return knoxite.ErrDeleteChunkFailed
 	}
 
-	_, err = backend.bucket.DeleteFileVersion(fileName, v.Files[0].ID)
+	_, err = backend.Bucket.DeleteFileVersion(fileName, v.Files[0].ID)
 	return err
 }
 
 // LoadSnapshot loads a snapshot
 func (backend *StorageBackblaze) LoadSnapshot(id string) ([]byte, error) {
-	_, obj, err := backend.bucket.DownloadFileByName("snapshot-" + id)
+	_, obj, err := backend.Bucket.DownloadFileByName("snapshot-" + id)
 	if err != nil {
 		return nil, knoxite.ErrSnapshotNotFound
 	}
@@ -169,13 +169,13 @@ func (backend *StorageBackblaze) LoadSnapshot(id string) ([]byte, error) {
 func (backend *StorageBackblaze) SaveSnapshot(id string, data []byte) error {
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	_, err := backend.bucket.UploadFile("snapshot-"+id, metadata, buf)
+	_, err := backend.Bucket.UploadFile("snapshot-"+id, metadata, buf)
 	return err
 }
 
 // LoadChunkIndex reads the chunk-index
 func (backend *StorageBackblaze) LoadChunkIndex() ([]byte, error) {
-	_, obj, err := backend.bucket.DownloadFileByName(backend.chunkIndexFile)
+	_, obj, err := backend.Bucket.DownloadFileByName(backend.chunkIndexFile)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +186,7 @@ func (backend *StorageBackblaze) LoadChunkIndex() ([]byte, error) {
 func (backend *StorageBackblaze) SaveChunkIndex(data []byte) error {
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	_, err := backend.bucket.UploadFile(backend.chunkIndexFile, metadata, buf)
+	_, err := backend.Bucket.UploadFile(backend.chunkIndexFile, metadata, buf)
 	return err
 }
 
@@ -198,7 +198,7 @@ func (backend *StorageBackblaze) InitRepository() error {
 	// Creating the files on backblaze
 	metadata := make(map[string]string)
 
-	if _, err := backend.bucket.UploadFile(backend.repositoryFile, metadata, buf); err != nil {
+	if _, err := backend.Bucket.UploadFile(backend.repositoryFile, metadata, buf); err != nil {
 		return err
 	}
 	return nil
@@ -206,7 +206,7 @@ func (backend *StorageBackblaze) InitRepository() error {
 
 // LoadRepository reads the metadata for a repository
 func (backend *StorageBackblaze) LoadRepository() ([]byte, error) {
-	_, obj, err := backend.bucket.DownloadFileByName(backend.repositoryFile)
+	_, obj, err := backend.Bucket.DownloadFileByName(backend.repositoryFile)
 	if err != nil {
 		return nil, err
 	}
@@ -217,6 +217,6 @@ func (backend *StorageBackblaze) LoadRepository() ([]byte, error) {
 func (backend *StorageBackblaze) SaveRepository(data []byte) error {
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	_, err := backend.bucket.UploadFile(backend.repositoryFile, metadata, buf)
+	_, err := backend.Bucket.UploadFile(backend.repositoryFile, metadata, buf)
 	return err
 }
