@@ -14,6 +14,7 @@ go:
 
 before_install:
 - ./admin/setup_minio_test_environment.sh
+- ./admin/setup_bftpd_test_environment.sh
 - go get github.com/axw/gocov/gocov
 - go get github.com/mattn/goveralls
 
