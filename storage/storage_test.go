@@ -360,7 +360,7 @@ func TestStorageStoreChunk(t *testing.T) {
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		if !reflect.DeepEqual(data, rnddata) {
+		if !reflect.DeepEqual(*data, rnddata) {
 			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
@@ -398,7 +398,7 @@ func TestStorageLoadChunk(t *testing.T) {
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		if !reflect.DeepEqual(data, rnddata) {
+		if !reflect.DeepEqual(*data, rnddata) {
 			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
