@@ -21,7 +21,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     sudo sh -c "echo ',2121' > /etc/pure-ftpd/conf/Bind"
 
     # Create a password db from the passwd template
-    sudo sh -c "echo 'knoxite:$1$ONFUv0U0$zLjMcFT8W7.mQelSHUp2b1:1000:1000::/home/travis/./::::::::::::' > /etc/pure-ftpd/pureftpd.passwd"
+    sudo sh -c "echo 'knoxite:\$1\$ONFUv0U0\$zLjMcFT8W7.mQelSHUp2b1:1000:1000::/home/travis/./::::::::::::' > /etc/pure-ftpd/pureftpd.passwd"
     sudo pure-pw mkdb
 
     sudo sh -c "echo '/etc/pure-ftpd/pureftpd.pdb' > /etc/pure-ftpd/conf/PureDB"
