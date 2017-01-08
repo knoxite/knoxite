@@ -10,6 +10,7 @@ package http
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
@@ -62,20 +63,19 @@ func (backend *StorageHTTP) AvailableSpace() (uint64, error) {
 }
 
 // LoadChunk loads a Chunk from network
-func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
+func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) (io.ReadCloser, error) {
 	//	fmt.Printf("Fetching from: %s.\n", backend.URL+"/download/"+chunk.ShaSum)
 	res, err := http.Get(backend.URL.String() + "/download/" + shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10))
 	if err != nil {
-		return &[]byte{}, err
+		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return &[]byte{}, knoxite.ErrLoadChunkFailed
+		return nil, knoxite.ErrLoadChunkFailed
 	}
 
-	b, err := ioutil.ReadAll(res.Body)
-	return &b, err
+	return res.Body, nil
 }
 
 // StoreChunk stores a single Chunk on network

@@ -11,7 +11,7 @@ package ftp
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/url"
 	"os"
@@ -151,15 +151,8 @@ func (backend *StorageFTP) Stat(path string) (uint64, error) {
 }
 
 // ReadFile reads a file from ftp
-func (backend *StorageFTP) ReadFile(path string) (*[]byte, error) {
-	file, err := backend.ftp.Retr(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	data, err := ioutil.ReadAll(file)
-	return &data, err
+func (backend *StorageFTP) ReadFile(path string) (io.ReadCloser, error) {
+	return backend.ftp.Retr(path)
 }
 
 // WriteFile writes file to ftp

@@ -11,6 +11,7 @@ package amazons3
 import (
 	"bytes"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net/url"
 	"strconv"
@@ -101,14 +102,9 @@ func (backend *StorageAmazonS3) AvailableSpace() (uint64, error) {
 }
 
 // LoadChunk loads a Chunk from network
-func (backend *StorageAmazonS3) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
+func (backend *StorageAmazonS3) LoadChunk(shasum string, part, totalParts uint) (io.ReadCloser, error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
-	obj, err := backend.client.GetObject(backend.chunkBucket, fileName)
-	if err != nil {
-		return nil, err
-	}
-	data, err := ioutil.ReadAll(obj)
-	return &data, err
+	return backend.client.GetObject(backend.chunkBucket, fileName)
 }
 
 // StoreChunk stores a single Chunk on network

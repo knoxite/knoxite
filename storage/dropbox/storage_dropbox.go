@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -122,13 +123,13 @@ func (backend *StorageDropbox) Stat(path string) (uint64, error) {
 }
 
 // ReadFile reads a file from dropbox
-func (backend *StorageDropbox) ReadFile(path string) (*[]byte, error) {
+func (backend *StorageDropbox) ReadFile(path string) (io.ReadCloser, error) {
 	obj, _, err := backend.db.Download(path, "", 0)
 	if err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadAll(obj)
-	return &data, err
+
+	return obj, nil
 }
 
 // WriteFile write files on dropbox

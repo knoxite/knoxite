@@ -10,6 +10,7 @@ package backblaze
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"net/url"
 	"strconv"
@@ -107,14 +108,14 @@ func (backend *StorageBackblaze) AvailableSpace() (uint64, error) {
 }
 
 // LoadChunk loads a Chunk from backblaze
-func (backend *StorageBackblaze) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
+func (backend *StorageBackblaze) LoadChunk(shasum string, part, totalParts uint) (io.ReadCloser, error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 	_, obj, err := backend.Bucket.DownloadFileByName(fileName)
 	if err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadAll(obj)
-	return &data, err
+
+	return obj, nil
 }
 
 // StoreChunk stores a single Chunk on backblaze
