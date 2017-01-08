@@ -13,6 +13,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -131,8 +132,7 @@ func (backend *StorageFTP) Stat(path string) (uint64, error) {
 		return 0, err
 	}
 	if len(entries) == 0 {
-		//FIXME: there's probably a proper error for this already
-		return 0, errors.New("Couldn't stat path on FTP server")
+		return 0, &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
 	}
 	for _, v := range entries {
 		if v.Name == last {
@@ -140,8 +140,7 @@ func (backend *StorageFTP) Stat(path string) (uint64, error) {
 		}
 	}
 
-	//FIXME: there's probably a proper error for this already
-	return 0, errors.New("Not found")
+	return 0, &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
 }
 
 // ReadFile reads a file from ftp
