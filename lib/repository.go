@@ -142,6 +142,17 @@ func (r *Repository) FindSnapshot(id string) (*Volume, *Snapshot, error) {
 	return &Volume{}, &Snapshot{}, ErrSnapshotNotFound
 }
 
+// IsEmpty returns true if there a no snapshots stored in a repository
+func (r *Repository) IsEmpty() bool {
+	for _, volume := range r.Volumes {
+		if len(volume.Snapshots) > 0 {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Init creates a new repository
 func (r *Repository) init() error {
 	err := r.Backend.InitRepository()
