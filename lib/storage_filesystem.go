@@ -74,7 +74,7 @@ func (backend StorageFilesystem) StoreChunk(shasum string, part, totalParts uint
 	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
 
 	n, err := (*backend.storage).Stat(fileName)
-	if err == nil && n == size {
+	if err == nil && n == uint64(len(*data)) {
 		return 0, nil
 	}
 
