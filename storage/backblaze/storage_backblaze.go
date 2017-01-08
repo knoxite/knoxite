@@ -132,9 +132,19 @@ func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint
 }
 
 // DeleteChunk deletes a single Chunk
-func (backend *StorageBackblaze) DeleteChunk(shasum string, parts, totalParts uint) error {
-	// FIXME: implement this
-	return knoxite.ErrDeleteChunkFailed
+func (backend *StorageBackblaze) DeleteChunk(shasum string, part, totalParts uint) error {
+	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
+
+	v, err := backend.bucket.ListFileVersions(fileName, "", 1)
+	if err != nil {
+		return err
+	}
+	if len(v.Files) == 0 {
+		return knoxite.ErrDeleteChunkFailed
+	}
+
+	_, err = backend.bucket.DeleteFileVersion(fileName, v.Files[0].ID)
+	return err
 }
 
 // LoadSnapshot loads a snapshot
