@@ -21,7 +21,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     sudo sh -c "echo ',2121' > /etc/pure-ftpd/conf/Bind"
 
     # Create a password db from the passwd template
-    sudo cp admin/pureftpd.passwd /etc/pure-ftpd/
+    sudo sh -c "echo 'knoxite:$1$ONFUv0U0$zLjMcFT8W7.mQelSHUp2b1:1000:1000::/home/travis/./::::::::::::' > /etc/pure-ftpd/pureftpd.passwd"
     sudo pure-pw mkdb
 
     sudo sh -c "echo '/etc/pure-ftpd/pureftpd.pdb' > /etc/pure-ftpd/conf/PureDB"
@@ -33,8 +33,8 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     brew install pure-ftpd
 
     # Create a password db from the passwd template
-    /usr/local/bin/pure-pw mkdb /tmp/pureftpd.pdb -f admin/pureftpd.osx.passwd
-    sudo chmod a+r /tmp/pureftpd.pdb
+    echo 'knoxite:$7$C6..../....tRYPIWawghx9HRSYk6NTgh1xrviiFfdlTTvviqGuK24$ZmU8xQAa2VC1NDufUHKYys9a65D1moXI24JeSEjfE65:501:20::/Users/travis/./::::::::::::' > /tmp/pureftpd.passwd
+    /usr/local/bin/pure-pw mkdb /tmp/pureftpd.pdb -f /tmp/pureftpd.passwd
 
-    /usr/local/sbin/pure-ftpd -l puredb:/tmp/pureftpd.pdb -E -d -B -S 127.0.0.1,2121
+    /usr/local/sbin/pure-ftpd -d -B -S 127.0.0.1,2121 -l puredb:/tmp/pureftpd.pdb
 fi
