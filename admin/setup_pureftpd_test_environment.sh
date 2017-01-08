@@ -22,6 +22,17 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
 
   sudo service pure-ftpd start
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-  echo "Not supported on OSX"
-  unset KNOXITE_FTP_URL
+  brew install pure-ftpd
+
+  sudo mkdir -p $HOME/knoxite-citest
+  sudo chown -R $USER /$HOME/knoxite-citest
+
+  echo "User:"
+  echo $USER
+  echo "Home:"
+  echo $HOME
+
+  sudo /usr/local/sbin/pure-pw mkdb -f admin/pureftpd.osx.passwd -F admin/pureftpd.pdb
+
+  sudo /usr/local/sbin/pure-ftpd -l puredb:admin/pureftpd.pdb -8 UTF-8 -E -O clf:/tmp/pureftpd_transfer.log -B
 fi
