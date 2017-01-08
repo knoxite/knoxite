@@ -147,7 +147,11 @@ func TestStorageDescription(t *testing.T) {
 
 func TestStorageInitRepository(t *testing.T) {
 	for _, tt := range testBackends {
-		b, _ := knoxite.BackendFromURL(tt.url)
+		b, err := knoxite.BackendFromURL(tt.url)
+		if err != nil {
+			t.Errorf("%s: %s", tt.description, err)
+			return
+		}
 
 		if err := b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
@@ -158,8 +162,13 @@ func TestStorageInitRepository(t *testing.T) {
 
 func TestStorageSaveRepository(t *testing.T) {
 	for _, tt := range testBackends {
-		b, _ := knoxite.BackendFromURL(tt.url)
-		if err := b.InitRepository(); err != nil {
+		b, err := knoxite.BackendFromURL(tt.url)
+		if err != nil {
+			t.Errorf("%s: %s", tt.description, err)
+			return
+		}
+
+		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 		defer tt.tearDown(tt.url)
@@ -167,7 +176,7 @@ func TestStorageSaveRepository(t *testing.T) {
 		rnd := make([]byte, 256)
 		rand.Read(rnd)
 
-		err := b.SaveRepository(rnd)
+		err = b.SaveRepository(rnd)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -191,8 +200,13 @@ func TestStorageSaveRepository(t *testing.T) {
 
 func TestStorageLoadRepository(t *testing.T) {
 	for _, tt := range testBackends {
-		b, _ := knoxite.BackendFromURL(tt.url)
-		if err := b.InitRepository(); err != nil {
+		b, err := knoxite.BackendFromURL(tt.url)
+		if err != nil {
+			t.Errorf("%s: %s", tt.description, err)
+			return
+		}
+
+		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 		defer tt.tearDown(tt.url)
@@ -200,7 +214,7 @@ func TestStorageLoadRepository(t *testing.T) {
 		rnd := make([]byte, 256)
 		rand.Read(rnd)
 
-		err := b.SaveRepository(rnd)
+		err = b.SaveRepository(rnd)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -224,8 +238,13 @@ func TestStorageLoadRepository(t *testing.T) {
 
 func TestStorageSaveSnapshot(t *testing.T) {
 	for _, tt := range testBackends {
-		b, _ := knoxite.BackendFromURL(tt.url)
-		if err := b.InitRepository(); err != nil {
+		b, err := knoxite.BackendFromURL(tt.url)
+		if err != nil {
+			t.Errorf("%s: %s", tt.description, err)
+			return
+		}
+
+		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 		defer tt.tearDown(tt.url)
@@ -237,7 +256,7 @@ func TestStorageSaveSnapshot(t *testing.T) {
 		rand.Read(rndid)
 		id := hex.EncodeToString(rndid)
 
-		err := b.SaveSnapshot(id, rnddata)
+		err = b.SaveSnapshot(id, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -261,8 +280,13 @@ func TestStorageSaveSnapshot(t *testing.T) {
 
 func TestStorageLoadSnapshot(t *testing.T) {
 	for _, tt := range testBackends {
-		b, _ := knoxite.BackendFromURL(tt.url)
-		if err := b.InitRepository(); err != nil {
+		b, err := knoxite.BackendFromURL(tt.url)
+		if err != nil {
+			t.Errorf("%s: %s", tt.description, err)
+			return
+		}
+
+		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 		defer tt.tearDown(tt.url)
@@ -274,7 +298,7 @@ func TestStorageLoadSnapshot(t *testing.T) {
 		rand.Read(rndid)
 		id := hex.EncodeToString(rndid)
 
-		err := b.SaveSnapshot(id, rnddata)
+		err = b.SaveSnapshot(id, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -298,8 +322,13 @@ func TestStorageLoadSnapshot(t *testing.T) {
 
 func TestStorageStoreChunk(t *testing.T) {
 	for _, tt := range testBackends {
-		b, _ := knoxite.BackendFromURL(tt.url)
-		if err := b.InitRepository(); err != nil {
+		b, err := knoxite.BackendFromURL(tt.url)
+		if err != nil {
+			t.Errorf("%s: %s", tt.description, err)
+			return
+		}
+
+		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 		defer tt.tearDown(tt.url)
@@ -348,8 +377,13 @@ func TestStorageStoreChunk(t *testing.T) {
 
 func TestStorageLoadChunk(t *testing.T) {
 	for _, tt := range testBackends {
-		b, _ := knoxite.BackendFromURL(tt.url)
-		if err := b.InitRepository(); err != nil {
+		b, err := knoxite.BackendFromURL(tt.url)
+		if err != nil {
+			t.Errorf("%s: %s", tt.description, err)
+			return
+		}
+
+		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 		defer tt.tearDown(tt.url)
@@ -364,7 +398,7 @@ func TestStorageLoadChunk(t *testing.T) {
 		shasumdata := sha256.Sum256(rnddata)
 		shasum := hex.EncodeToString(shasumdata[:])
 
-		_, err := b.StoreChunk(shasum, part, totalParts, &rnddata)
+		_, err = b.StoreChunk(shasum, part, totalParts, &rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -386,8 +420,13 @@ func TestStorageLoadChunk(t *testing.T) {
 
 func TestStorageDeleteChunk(t *testing.T) {
 	for _, tt := range testBackends {
-		b, _ := knoxite.BackendFromURL(tt.url)
-		if err := b.InitRepository(); err != nil {
+		b, err := knoxite.BackendFromURL(tt.url)
+		if err != nil {
+			t.Errorf("%s: %s", tt.description, err)
+			return
+		}
+
+		if err = b.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 		defer tt.tearDown(tt.url)
@@ -402,7 +441,7 @@ func TestStorageDeleteChunk(t *testing.T) {
 		shasumdata := sha256.Sum256(rnddata)
 		shasum := hex.EncodeToString(shasumdata[:])
 
-		_, err := b.StoreChunk(shasum, part, totalParts, &rnddata)
+		_, err = b.StoreChunk(shasum, part, totalParts, &rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
