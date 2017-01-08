@@ -13,6 +13,7 @@ import (
 	"encoding/hex"
 	"flag"
 	mrand "math/rand"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -26,7 +27,6 @@ import (
 	knoxitebackblaze "github.com/knoxite/knoxite/storage/backblaze"
 	knoxitedropbox "github.com/knoxite/knoxite/storage/dropbox"
 	knoxiteftp "github.com/knoxite/knoxite/storage/ftp"
-	_ "github.com/knoxite/knoxite/storage/http"
 )
 
 type testBackend struct {
@@ -155,12 +155,15 @@ func TestMain(m *testing.M) {
 					panic(err)
 				}
 
-				//FIXME: extract path from ftpurl
-				path := "knoxite-citest"
-				db := b.(*knoxiteftp.StorageFTP)
-				ftpDeletePath(db.Ftp, path)
+				u, err := url.Parse(tb.url)
+				if err != nil {
+					panic(err)
+				}
 
-				err = db.Ftp.MakeDir(path)
+				db := b.(*knoxiteftp.StorageFTP)
+				ftpDeletePath(db.Ftp, u.Path)
+
+				err = db.Ftp.MakeDir(u.Path)
 				if err != nil {
 					panic(err)
 				}
