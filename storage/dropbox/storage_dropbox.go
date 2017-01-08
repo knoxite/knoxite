@@ -134,6 +134,6 @@ func (backend *StorageDropbox) WriteFile(path string, data *[]byte) (size uint64
 
 // DeleteFile deletes a file from dropbox
 func (backend *StorageDropbox) DeleteFile(path string) error {
-	// FIXME: implement this
-	return knoxite.ErrDeleteChunkFailed
+	_, err := backend.db.Delete(path)
+	return err
 }
