@@ -337,7 +337,7 @@ func TestStorageAmazonS3DeleteChunk(t *testing.T) {
 		t.Error(err)
 	}
 
-	_, err := s3.LoadChunk(shasum, part, totalParts)
+	_, err = s3.LoadChunk(shasum, part, totalParts)
 	if err != nil {
 		t.Error(err)
 	}
@@ -347,7 +347,7 @@ func TestStorageAmazonS3DeleteChunk(t *testing.T) {
 		t.Error(err)
 	}
 
-	_, err := s3.LoadChunk(shasum, part, totalParts)
+	_, err = s3.LoadChunk(shasum, part, totalParts)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
