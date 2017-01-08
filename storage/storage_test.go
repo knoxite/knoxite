@@ -15,18 +15,15 @@ import (
 	mrand "math/rand"
 	"net/url"
 	"os"
-	"path/filepath"
 	"reflect"
 	"testing"
-
-	"github.com/jlaffaye/ftp"
 
 	knoxite "github.com/knoxite/knoxite/lib"
 
 	_ "github.com/knoxite/knoxite/storage/amazons3"
-	knoxitebackblaze "github.com/knoxite/knoxite/storage/backblaze"
-	knoxitedropbox "github.com/knoxite/knoxite/storage/dropbox"
-	knoxiteftp "github.com/knoxite/knoxite/storage/ftp"
+	"github.com/knoxite/knoxite/storage/backblaze"
+	"github.com/knoxite/knoxite/storage/dropbox"
+	"github.com/knoxite/knoxite/storage/ftp"
 )
 
 type testBackend struct {
@@ -39,29 +36,6 @@ type testBackend struct {
 var (
 	testBackends []*testBackend
 )
-
-func ftpDeletePath(c *ftp.ServerConn, path string) {
-	list, err := c.List(path)
-	if err != nil {
-		panic(err)
-	}
-	for _, l := range list {
-		if l.Type == ftp.EntryTypeFolder {
-			ftpDeletePath(c, filepath.Join(path, l.Name))
-		}
-		if l.Type == ftp.EntryTypeFile {
-			err = c.Delete(filepath.Join(path, l.Name))
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-
-	err = c.RemoveDir(path)
-	if err != nil {
-		panic(err)
-	}
-}
 
 func TestMain(m *testing.M) {
 	flag.Parse()
@@ -82,7 +56,7 @@ func TestMain(m *testing.M) {
 					panic(err)
 				}
 
-				db := b.(*knoxitebackblaze.StorageBackblaze)
+				db := b.(*backblaze.StorageBackblaze)
 				list, err := db.Bucket.ListFileNames("", 128)
 				if err != nil {
 					panic(err)
@@ -118,7 +92,7 @@ func TestMain(m *testing.M) {
 					panic(err)
 				}
 
-				db := b.(*knoxitedropbox.StorageDropbox)
+				db := b.(*dropbox.StorageDropbox)
 				err = db.DeleteFile(db.Path)
 				if err != nil {
 					panic(err)
@@ -160,10 +134,13 @@ func TestMain(m *testing.M) {
 					panic(err)
 				}
 
-				db := b.(*knoxiteftp.StorageFTP)
-				ftpDeletePath(db.Ftp, u.Path)
+				db := b.(*ftp.StorageFTP)
+				err = db.DeletePath(u.Path)
+				if err != nil {
+					panic(err)
+				}
 
-				err = db.Ftp.MakeDir(u.Path)
+				err = db.CreatePath(u.Path)
 				if err != nil {
 					panic(err)
 				}

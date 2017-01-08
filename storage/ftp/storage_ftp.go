@@ -165,3 +165,27 @@ func (backend *StorageFTP) WriteFile(path string, data *[]byte) (size uint64, er
 func (backend *StorageFTP) DeleteFile(path string) error {
 	return backend.Ftp.Delete(path)
 }
+
+// DeletePath deletes a directory including all its content from ftp
+func (backend *StorageFTP) DeletePath(path string) error {
+	list, err := backend.Ftp.List(path)
+	if err != nil {
+		return err
+	}
+	for _, l := range list {
+		if l.Type == ftp.EntryTypeFolder {
+			err = backend.DeletePath(filepath.Join(path, l.Name))
+			if err != nil {
+				return err
+			}
+		}
+		if l.Type == ftp.EntryTypeFile {
+			err = backend.Ftp.Delete(filepath.Join(path, l.Name))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return backend.Ftp.RemoveDir(path)
+}
