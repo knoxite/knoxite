@@ -126,8 +126,14 @@ func (backend *StorageAmazonS3) StoreChunk(shasum string, part, totalParts uint,
 
 // DeleteChunk deletes a single Chunk
 func (backend *StorageAmazonS3) DeleteChunk(shasum string, part, totalParts uint) error {
-	// FIXME: implement this
-	return knoxite.ErrDeleteChunkFailed
+	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
+
+	err := backend.client.RemoveObject(backend.chunkBucket, fileName)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // LoadSnapshot loads a snapshot
