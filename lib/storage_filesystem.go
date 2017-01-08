@@ -71,9 +71,14 @@ func (backend StorageFilesystem) LoadChunk(shasum string, part, totalParts uint)
 // StoreChunk stores a single Chunk on disk
 func (backend StorageFilesystem) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
 	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))
-	(*backend.storage).CreatePath(path)
-
 	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
+
+	n, err := (*backend.storage).Stat(fileName)
+	if err == nil && n == size {
+		return 0, nil
+	}
+
+	(*backend.storage).CreatePath(path)
 	return (*backend.storage).WriteFile(fileName, data)
 }
 
