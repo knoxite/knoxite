@@ -187,9 +187,6 @@ func TestSnapshotClone(t *testing.T) {
 	if snapshot.Description != s.Description {
 		t.Errorf("Description mismatch, got %s expected %s", s.Description, snapshot.Description)
 	}
-	if !snapshot.Date.Equal(s.Date) {
-		t.Errorf("Date mismatch: got %v != expected %v", s.Date, snapshot.Date)
-	}
 
 	for i, archive := range snapshot.Archives {
 		if archive.Path != s.Archives[i].Path {
