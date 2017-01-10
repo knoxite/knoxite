@@ -369,7 +369,7 @@ func TestStorageStoreChunk(t *testing.T) {
 		shasumdata := sha256.Sum256(rnddata)
 		shasum := hex.EncodeToString(shasumdata[:])
 
-		size, err := b.StoreChunk(shasum, part, totalParts, &rnddata)
+		size, err := b.StoreChunk(shasum, part, totalParts, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -378,7 +378,7 @@ func TestStorageStoreChunk(t *testing.T) {
 		}
 
 		// Test to store the same chunk twice. Size should be 0
-		size, err = b.StoreChunk(shasum, part, totalParts, &rnddata)
+		size, err = b.StoreChunk(shasum, part, totalParts, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -390,7 +390,7 @@ func TestStorageStoreChunk(t *testing.T) {
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		if !reflect.DeepEqual(*data, rnddata) {
+		if !reflect.DeepEqual(data, rnddata) {
 			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
@@ -419,7 +419,7 @@ func TestStorageLoadChunk(t *testing.T) {
 		shasumdata := sha256.Sum256(rnddata)
 		shasum := hex.EncodeToString(shasumdata[:])
 
-		_, err = b.StoreChunk(shasum, part, totalParts, &rnddata)
+		_, err = b.StoreChunk(shasum, part, totalParts, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -428,7 +428,7 @@ func TestStorageLoadChunk(t *testing.T) {
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		if !reflect.DeepEqual(*data, rnddata) {
+		if !reflect.DeepEqual(data, rnddata) {
 			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
@@ -457,7 +457,7 @@ func TestStorageDeleteChunk(t *testing.T) {
 		shasumdata := sha256.Sum256(rnddata)
 		shasum := hex.EncodeToString(shasumdata[:])
 
-		_, err = b.StoreChunk(shasum, part, totalParts, &rnddata)
+		_, err = b.StoreChunk(shasum, part, totalParts, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
