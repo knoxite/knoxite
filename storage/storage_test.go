@@ -238,7 +238,7 @@ func TestStorageSaveRepository(t *testing.T) {
 		}
 
 		if !reflect.DeepEqual(data, rnd) {
-			t.Errorf("%s: Data missmatch", tt.description)
+			t.Errorf("%s: Data missmatch, got %s", tt.description, data)
 		}
 	}
 }
@@ -483,7 +483,10 @@ func TestStorageDeleteChunk(t *testing.T) {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		_, err = b.LoadChunk(shasum, part, totalParts)
+		r, err := b.LoadChunk(shasum, part, totalParts)
+		if err == nil {
+			_, err = ioutil.ReadAll(r)
+		}
 		if err == nil {
 			t.Errorf("%s: Expected error, got nil", tt.description)
 		}
