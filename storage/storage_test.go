@@ -473,9 +473,14 @@ func TestStorageDeleteChunk(t *testing.T) {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		_, err = b.LoadChunk(shasum, part, totalParts)
+		r, err := b.LoadChunk(shasum, part, totalParts)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
+		} else {
+			_, err = ioutil.ReadAll(r)
+			if err != nil {
+				t.Errorf("%s: %s", tt.description, err)
+			}
 		}
 
 		err = b.DeleteChunk(shasum, part, totalParts)
@@ -483,7 +488,7 @@ func TestStorageDeleteChunk(t *testing.T) {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		r, err := b.LoadChunk(shasum, part, totalParts)
+		r, err = b.LoadChunk(shasum, part, totalParts)
 		if err == nil {
 			_, err = ioutil.ReadAll(r)
 		}
