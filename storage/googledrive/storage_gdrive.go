@@ -9,6 +9,7 @@
 package googledrive
 
 import (
+	"io"
 	"net/url"
 
 	knoxite "github.com/knoxite/knoxite/lib"
@@ -54,8 +55,8 @@ func (backend *StorageGoogleDrive) AvailableSpace() (uint64, error) {
 }
 
 // LoadChunk loads a Chunk from Google Drive
-func (backend *StorageGoogleDrive) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
-	return &[]byte{}, knoxite.ErrLoadChunkFailed
+func (backend *StorageGoogleDrive) LoadChunk(shasum string, part, totalParts uint) (io.ReadCloser, error) {
+	return nil, knoxite.ErrLoadChunkFailed
 }
 
 // StoreChunk stores a single Chunk on Google Drive
