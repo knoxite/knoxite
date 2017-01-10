@@ -12,6 +12,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"flag"
+	"io/ioutil"
 	mrand "math/rand"
 	"net/url"
 	"os"
@@ -386,11 +387,16 @@ func TestStorageStoreChunk(t *testing.T) {
 			t.Errorf("%s: Already exisiting chunks should not be overwritten", tt.description)
 		}
 
-		data, err := b.LoadChunk(shasum, part, totalParts)
+		r, err := b.LoadChunk(shasum, part, totalParts)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		if !reflect.DeepEqual(*data, rnddata) {
+		data, err := ioutil.ReadAll(r)
+		if err != nil {
+			t.Errorf("%s: %s", tt.description, err)
+		}
+
+		if !reflect.DeepEqual(data, rnddata) {
 			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
@@ -424,11 +430,16 @@ func TestStorageLoadChunk(t *testing.T) {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		data, err := b.LoadChunk(shasum, part, totalParts)
+		r, err := b.LoadChunk(shasum, part, totalParts)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		if !reflect.DeepEqual(*data, rnddata) {
+		data, err := ioutil.ReadAll(r)
+		if err != nil {
+			t.Errorf("%s: %s", tt.description, err)
+		}
+
+		if !reflect.DeepEqual(data, rnddata) {
 			t.Errorf("%s: Data missmatch", tt.description)
 		}
 	}
