@@ -481,6 +481,7 @@ func TestStorageDeleteChunk(t *testing.T) {
 			if err != nil {
 				t.Errorf("%s: %s", tt.description, err)
 			}
+			r.Close()
 		}
 
 		err = b.DeleteChunk(shasum, part, totalParts)
