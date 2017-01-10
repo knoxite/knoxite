@@ -101,18 +101,19 @@ func (backend *StorageAmazonS3) AvailableSpace() (uint64, error) {
 }
 
 // LoadChunk loads a Chunk from network
-func (backend *StorageAmazonS3) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
+func (backend *StorageAmazonS3) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 	obj, err := backend.client.GetObject(backend.chunkBucket, fileName)
 	if err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadAll(obj)
-	return &data, err
+	defer obj.Close()
+
+	return ioutil.ReadAll(obj)
 }
 
 // StoreChunk stores a single Chunk on network
-func (backend *StorageAmazonS3) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
+func (backend *StorageAmazonS3) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
 	if _, err = backend.client.StatObject(backend.chunkBucket, fileName); err == nil {
@@ -120,7 +121,7 @@ func (backend *StorageAmazonS3) StoreChunk(shasum string, part, totalParts uint,
 		return 0, nil
 	}
 
-	buf := bytes.NewBuffer(*data)
+	buf := bytes.NewBuffer(data)
 	i, err := backend.client.PutObject(backend.chunkBucket, fileName, buf, "application/octet-stream")
 	return uint64(i), err
 }
@@ -143,6 +144,8 @@ func (backend *StorageAmazonS3) LoadSnapshot(id string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer obj.Close()
+
 	return ioutil.ReadAll(obj)
 }
 
@@ -159,6 +162,8 @@ func (backend *StorageAmazonS3) LoadChunkIndex() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer obj.Close()
+
 	return ioutil.ReadAll(obj)
 }
 
@@ -219,6 +224,8 @@ func (backend *StorageAmazonS3) LoadRepository() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer obj.Close()
+
 	return ioutil.ReadAll(obj)
 }
 

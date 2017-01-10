@@ -62,24 +62,23 @@ func (backend *StorageHTTP) AvailableSpace() (uint64, error) {
 }
 
 // LoadChunk loads a Chunk from network
-func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
+func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
 	//	fmt.Printf("Fetching from: %s.\n", backend.URL+"/download/"+chunk.ShaSum)
 	res, err := http.Get(backend.URL.String() + "/download/" + shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10))
 	if err != nil {
-		return &[]byte{}, err
+		return []byte{}, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return &[]byte{}, knoxite.ErrLoadChunkFailed
+		return []byte{}, knoxite.ErrLoadChunkFailed
 	}
 
-	b, err := ioutil.ReadAll(res.Body)
-	return &b, err
+	return ioutil.ReadAll(res.Body)
 }
 
 // StoreChunk stores a single Chunk on network
-func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
+func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -90,7 +89,7 @@ func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, dat
 		return 0, werr
 	}
 
-	_, err = fileWriter.Write(*data)
+	_, err = fileWriter.Write(data)
 	if err != nil {
 		return 0, err
 	}
@@ -103,16 +102,17 @@ func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, dat
 		return 0, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, knoxite.ErrStoreChunkFailed
+	}
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return 0, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return 0, knoxite.ErrStoreChunkFailed
-	}
 
 	//	fmt.Printf("\tUploaded chunk: %d bytes\n", len(*data))
-	return uint64(len(*data)), err
+	return uint64(len(data)), err
 }
 
 // DeleteChunk deletes a single Chunk
@@ -129,12 +129,8 @@ func (backend *StorageHTTP) LoadSnapshot(id string) ([]byte, error) {
 		log.Fatal(err)
 	}
 	defer res.Body.Close()
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-	//	fmt.Printf("Downloading snapshot finished: %d bytes\n", len(b))
-	return b, err
+
+	return ioutil.ReadAll(res.Body)
 }
 
 // SaveSnapshot stores a snapshot
@@ -181,12 +177,8 @@ func (backend *StorageHTTP) LoadChunkIndex() ([]byte, error) {
 		log.Fatal(err)
 	}
 	defer res.Body.Close()
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-	//	fmt.Printf("Downloading rchunk-index finished: %d bytes\n", len(b))
-	return b, err
+
+	return ioutil.ReadAll(res.Body)
 }
 
 // SaveChunkIndex stores the chunk-index
@@ -238,12 +230,8 @@ func (backend *StorageHTTP) LoadRepository() ([]byte, error) {
 		log.Fatal(err)
 	}
 	defer res.Body.Close()
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-	//	fmt.Printf("Downloading repository finished: %d bytes\n", len(b))
-	return b, err
+
+	return ioutil.ReadAll(res.Body)
 }
 
 // SaveRepository stores the metadata for a repository

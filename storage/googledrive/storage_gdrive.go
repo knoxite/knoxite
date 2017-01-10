@@ -54,12 +54,12 @@ func (backend *StorageGoogleDrive) AvailableSpace() (uint64, error) {
 }
 
 // LoadChunk loads a Chunk from Google Drive
-func (backend *StorageGoogleDrive) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
-	return &[]byte{}, knoxite.ErrLoadChunkFailed
+func (backend *StorageGoogleDrive) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
+	return []byte{}, knoxite.ErrLoadChunkFailed
 }
 
 // StoreChunk stores a single Chunk on Google Drive
-func (backend *StorageGoogleDrive) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
+func (backend *StorageGoogleDrive) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
 	return 0, knoxite.ErrStoreChunkFailed
 }
 

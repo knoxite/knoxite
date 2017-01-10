@@ -122,19 +122,20 @@ func (backend *StorageDropbox) Stat(path string) (uint64, error) {
 }
 
 // ReadFile reads a file from dropbox
-func (backend *StorageDropbox) ReadFile(path string) (*[]byte, error) {
+func (backend *StorageDropbox) ReadFile(path string) ([]byte, error) {
 	obj, _, err := backend.db.Download(path, "", 0)
 	if err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadAll(obj)
-	return &data, err
+	defer obj.Close()
+
+	return ioutil.ReadAll(obj)
 }
 
 // WriteFile write files on dropbox
-func (backend *StorageDropbox) WriteFile(path string, data *[]byte) (size uint64, err error) {
-	_, err = backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(*data)), len(*data), path, true, "")
-	return uint64(len(*data)), err
+func (backend *StorageDropbox) WriteFile(path string, data []byte) (size uint64, err error) {
+	_, err = backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(data)), len(data), path, true, "")
+	return uint64(len(data)), err
 }
 
 // DeleteFile deletes a file from dropbox

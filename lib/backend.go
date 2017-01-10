@@ -37,9 +37,9 @@ type Backend interface {
 	AvailableSpace() (uint64, error)
 
 	// LoadChunk loads a single Chunk
-	LoadChunk(shasum string, part, totalParts uint) (*[]byte, error)
+	LoadChunk(shasum string, part, totalParts uint) ([]byte, error)
 	// StoreChunk stores a single Chunk
-	StoreChunk(shasum string, part, totalParts uint, data *[]byte) (uint64, error)
+	StoreChunk(shasum string, part, totalParts uint, data []byte) (uint64, error)
 	// DeleteChunk deletes a single Chunk
 	DeleteChunk(shasum string, part, totalParts uint) error
 

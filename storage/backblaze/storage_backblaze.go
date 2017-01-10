@@ -107,30 +107,31 @@ func (backend *StorageBackblaze) AvailableSpace() (uint64, error) {
 }
 
 // LoadChunk loads a Chunk from backblaze
-func (backend *StorageBackblaze) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
+func (backend *StorageBackblaze) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 	_, obj, err := backend.Bucket.DownloadFileByName(fileName)
 	if err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadAll(obj)
-	return &data, err
+	defer obj.Close()
+
+	return ioutil.ReadAll(obj)
 }
 
 // StoreChunk stores a single Chunk on backblaze
-func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
+func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
 	list, err := backend.Bucket.ListFileVersions(fileName, "", 1)
 	if err == nil {
 		for _, v := range list.Files {
-			if v.Size == len(*data) {
+			if v.Size == len(data) {
 				return 0, nil
 			}
 		}
 	}
 
-	buf := bytes.NewBuffer(*data)
+	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
 	i, err := backend.Bucket.UploadFile(fileName, metadata, buf)
 	if err != nil {
@@ -162,6 +163,8 @@ func (backend *StorageBackblaze) LoadSnapshot(id string) ([]byte, error) {
 	if err != nil {
 		return nil, knoxite.ErrSnapshotNotFound
 	}
+	defer obj.Close()
+
 	return ioutil.ReadAll(obj)
 }
 
@@ -179,6 +182,8 @@ func (backend *StorageBackblaze) LoadChunkIndex() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer obj.Close()
+
 	return ioutil.ReadAll(obj)
 }
 
@@ -210,6 +215,8 @@ func (backend *StorageBackblaze) LoadRepository() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer obj.Close()
+
 	return ioutil.ReadAll(obj)
 }
 

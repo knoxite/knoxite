@@ -29,9 +29,9 @@ type BackendFilesystem interface {
 	// CreatePath creates a dir including all its parents dirs, when required
 	CreatePath(path string) error
 	// ReadFile reads a file from disk
-	ReadFile(path string) (*[]byte, error)
+	ReadFile(path string) ([]byte, error)
 	// WriteFile writes a file to disk
-	WriteFile(path string, data *[]byte) (uint64, error)
+	WriteFile(path string, data []byte) (uint64, error)
 	// DeleteFile deletes a file from disk
 	DeleteFile(path string) error
 }
@@ -61,7 +61,7 @@ func NewStorageFilesystem(path string, storage BackendFilesystem) (StorageFilesy
 }
 
 // LoadChunk loads a Chunk from disk
-func (backend StorageFilesystem) LoadChunk(shasum string, part, totalParts uint) (*[]byte, error) {
+func (backend StorageFilesystem) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
 	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))
 	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
 
@@ -69,12 +69,12 @@ func (backend StorageFilesystem) LoadChunk(shasum string, part, totalParts uint)
 }
 
 // StoreChunk stores a single Chunk on disk
-func (backend StorageFilesystem) StoreChunk(shasum string, part, totalParts uint, data *[]byte) (size uint64, err error) {
+func (backend StorageFilesystem) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
 	path := filepath.Join(backend.chunkPath, SubDirForChunk(shasum))
 	fileName := filepath.Join(path, shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
 
 	n, err := (*backend.storage).Stat(fileName)
-	if err == nil && n == uint64(len(*data)) {
+	if err == nil && n == uint64(len(data)) {
 		return 0, nil
 	}
 
@@ -97,12 +97,12 @@ func (backend StorageFilesystem) LoadSnapshot(id string) ([]byte, error) {
 		fmt.Println(err)
 	}
 
-	return *b, err
+	return b, err
 }
 
 // SaveSnapshot stores a snapshot
 func (backend StorageFilesystem) SaveSnapshot(id string, b []byte) error {
-	_, err := (*backend.storage).WriteFile(filepath.Join(backend.snapshotPath, id), &b)
+	_, err := (*backend.storage).WriteFile(filepath.Join(backend.snapshotPath, id), b)
 	return err
 }
 
@@ -112,12 +112,12 @@ func (backend StorageFilesystem) LoadChunkIndex() ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	return *b, err
+	return b, err
 }
 
 // SaveChunkIndex stores the chunk-index
 func (backend StorageFilesystem) SaveChunkIndex(b []byte) error {
-	_, err := (*backend.storage).WriteFile(backend.chunkIndexPath, &b)
+	_, err := (*backend.storage).WriteFile(backend.chunkIndexPath, b)
 	return err
 }
 
@@ -153,12 +153,12 @@ func (backend StorageFilesystem) LoadRepository() ([]byte, error) {
 		return []byte{}, err
 	}
 
-	return *b, err
+	return b, err
 }
 
 // SaveRepository stores the metadata for a repository
 func (backend StorageFilesystem) SaveRepository(b []byte) error {
-	_, err := (*backend.storage).WriteFile(backend.repositoryPath, &b)
+	_, err := (*backend.storage).WriteFile(backend.repositoryPath, b)
 	return err
 }
 

@@ -65,15 +65,15 @@ func (backend StorageLocal) Stat(path string) (uint64, error) {
 }
 
 // ReadFile reads a file from disk
-func (backend StorageLocal) ReadFile(path string) (*[]byte, error) {
+func (backend StorageLocal) ReadFile(path string) ([]byte, error) {
 	b, err := ioutil.ReadFile(path)
-	return &b, err
+	return b, err
 }
 
 // WriteFile writes a file to disk
-func (backend StorageLocal) WriteFile(path string, data *[]byte) (size uint64, err error) {
-	err = ioutil.WriteFile(path, *data, 0600)
-	return uint64(len(*data)), err
+func (backend StorageLocal) WriteFile(path string, data []byte) (size uint64, err error) {
+	err = ioutil.WriteFile(path, data, 0600)
+	return uint64(len(data)), err
 }
 
 // DeleteFile deletes a file from disk

@@ -151,21 +151,20 @@ func (backend *StorageFTP) Stat(path string) (uint64, error) {
 }
 
 // ReadFile reads a file from ftp
-func (backend *StorageFTP) ReadFile(path string) (*[]byte, error) {
+func (backend *StorageFTP) ReadFile(path string) ([]byte, error) {
 	file, err := backend.ftp.Retr(path)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	data, err := ioutil.ReadAll(file)
-	return &data, err
+	return ioutil.ReadAll(file)
 }
 
 // WriteFile writes file to ftp
-func (backend *StorageFTP) WriteFile(path string, data *[]byte) (size uint64, err error) {
-	err = backend.ftp.Stor(path, bytes.NewReader(*data))
-	return uint64(len(*data)), err
+func (backend *StorageFTP) WriteFile(path string, data []byte) (size uint64, err error) {
+	err = backend.ftp.Stor(path, bytes.NewReader(data))
+	return uint64(len(data)), err
 }
 
 // DeleteFile deletes a file from ftp

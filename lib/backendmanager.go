@@ -49,7 +49,7 @@ func (backend *BackendManager) LoadChunk(chunk Chunk, part uint) ([]byte, error)
 	for _, be := range backend.Backends {
 		b, err := (*be).LoadChunk(chunk.ShaSum, uint(part), chunk.DataParts)
 		if err == nil {
-			return *b, err
+			return b, err
 		}
 	}
 
@@ -67,7 +67,7 @@ func (backend *BackendManager) StoreChunk(chunk Chunk) (size uint64, err error) 
 
 		be := backend.Backends[backend.lastUsedBackend]
 		//	for _, be := range backend.Backends {
-		_, err = (*be).StoreChunk(chunk.ShaSum, uint(i), chunk.DataParts, &data)
+		_, err = (*be).StoreChunk(chunk.ShaSum, uint(i), chunk.DataParts, data)
 		if err != nil {
 			return 0, err
 		}
