@@ -13,6 +13,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -47,13 +48,22 @@ func (*StorageAmazonS3) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		return &StorageAmazonS3{}, errors.New("Invalid s3 url scheme")
 	}
 
-	if URL.User == nil || URL.User.Username() == "" {
-		return &StorageAmazonS3{}, knoxite.ErrInvalidUsername
+	var username string
+	if URL.User != nil && URL.User.Username() != "" {
+		username = URL.User.Username()
+	} else {
+		username = os.Getenv("AWS_ACCESS_KEY_ID")
+		if len(username) == 0 {
+			return &StorageAmazonS3{}, knoxite.ErrInvalidUsername
+		}
 	}
 
-	pw, pwexist := URL.User.Password()
-	if !pwexist {
-		return &StorageAmazonS3{}, knoxite.ErrInvalidPassword
+	pw, pwexists := URL.User.Password()
+	if !pwexists {
+		pw = os.Getenv("AWS_SECRET_ACCESS_KEY")
+		if len(pw) == 0 {
+			return &StorageAmazonS3{}, knoxite.ErrInvalidPassword
+		}
 	}
 
 	regionAndBucketPrefix := strings.Split(URL.Path, "/")
@@ -61,7 +71,7 @@ func (*StorageAmazonS3) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		return &StorageAmazonS3{}, knoxite.ErrInvalidRepositoryURL
 	}
 
-	cl, err := minio.New(URL.Host, URL.User.Username(), pw, ssl)
+	cl, err := minio.New(URL.Host, username, pw, ssl)
 	if err != nil {
 		return &StorageAmazonS3{}, err
 	}
