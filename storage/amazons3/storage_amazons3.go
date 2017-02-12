@@ -48,18 +48,18 @@ func (*StorageAmazonS3) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		return &StorageAmazonS3{}, errors.New("Invalid s3 url scheme")
 	}
 
-	var username string
-	if URL.User != nil && URL.User.Username() != "" {
+	var username, pw string
+	if URL.User != nil {
 		username = URL.User.Username()
-	} else {
+		pw, _ = URL.User.Password()
+	}
+	if len(username) == 0 {
 		username = os.Getenv("AWS_ACCESS_KEY_ID")
 		if len(username) == 0 {
 			return &StorageAmazonS3{}, knoxite.ErrInvalidUsername
 		}
 	}
-
-	pw, pwexists := URL.User.Password()
-	if !pwexists {
+	if len(pw) == 0 {
 		pw = os.Getenv("AWS_SECRET_ACCESS_KEY")
 		if len(pw) == 0 {
 			return &StorageAmazonS3{}, knoxite.ErrInvalidPassword
