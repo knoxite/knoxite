@@ -134,6 +134,6 @@ $ ./knoxite -r /tmp/knoxite -p "my_password" mount [snapshot ID] /mnt
 
 API docs can be found [here](http://godoc.org/github.com/knoxite/knoxite).
 
-[![Build Status](https://secure.travis-ci.org/knoxite/knoxite.png)](http://travis-ci.org/knoxite/knoxite)
+[![Build Status](https://travis-ci.org/knoxite/knoxite.svg?branch=master)](https://travis-ci.org/knoxite/knoxite)
 [![Coverage Status](https://coveralls.io/repos/github/knoxite/knoxite/badge.svg?branch=master)](https://coveralls.io/github/knoxite/knoxite?branch=master)
 [![Go ReportCard](http://goreportcard.com/badge/knoxite/knoxite)](http://goreportcard.com/report/knoxite/knoxite)
