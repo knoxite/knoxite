@@ -11,7 +11,6 @@ package ftp
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"net/url"
@@ -175,13 +174,15 @@ func (backend *StorageFTP) DeleteFile(path string) error {
 
 // DeletePath deletes a directory including all its content from ftp
 func (backend *StorageFTP) DeletePath(path string) error {
-	fmt.Println("Deleting path", path)
 	list, err := backend.ftp.List(path)
 	if err != nil {
 		return err
 	}
 	for _, l := range list {
 		if l.Type == ftp.EntryTypeFolder {
+			if len(l.Name) == 0 || strings.HasPrefix(l.Name, ".") {
+				continue
+			}
 			err = backend.DeletePath(filepath.Join(path, l.Name))
 			if err != nil {
 				return err
