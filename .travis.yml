@@ -1,5 +1,6 @@
 language: go
 gobuild_args: -v -tags ci
+dist: precise
 sudo: required
 
 os:
