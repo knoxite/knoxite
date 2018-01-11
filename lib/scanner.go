@@ -12,9 +12,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
-func findFiles(rootPath string) chan ArchiveResult {
+func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 	c := make(chan ArchiveResult)
 	go func() {
 		err := filepath.Walk(rootPath, func(path string, fi os.FileInfo, err error) error {
@@ -27,12 +28,29 @@ func findFiles(rootPath string) chan ArchiveResult {
 				return fmt.Errorf("%s: could not read", path)
 			}
 
-			/* if !isExcluded(str, fi) {
+			match := false
+			for _, exclude := range excludes {
+				//fmt.Println("Matching", path, filepath.Base(path), exclude)
+				match, err = filepath.Match(strings.ToLower(exclude), strings.ToLower(path))
+				if err != nil {
+					fmt.Println("Invalid exclude filter:", exclude)
+					return err
+				}
+				if !match {
+					match, _ = filepath.Match(strings.ToLower(exclude), strings.ToLower(filepath.Base(path)))
+				}
+
+				if match {
+					fmt.Printf("Skipping %s as it matches filter: %s\n", path, exclude)
+					break
+				}
+			}
+			if match {
 				if fi.IsDir() {
 					return filepath.SkipDir
 				}
 				return nil
-			}*/
+			}
 
 			statT, ok := toStatT(fi.Sys())
 			if !ok {

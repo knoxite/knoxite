@@ -47,10 +47,10 @@ func NewSnapshot(description string) (*Snapshot, error) {
 	return &snapshot, nil
 }
 
-func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, out chan ArchiveResult) {
+func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, excludes []string, out chan ArchiveResult) {
 	var wg sync.WaitGroup
 	for _, path := range paths {
-		c := findFiles(path)
+		c := findFiles(path, excludes)
 
 		for result := range c {
 			if result.Error == nil {
@@ -80,11 +80,11 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ou
 }
 
 // Add adds a path to a Snapshot
-func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt bool, dataParts, parityParts uint) chan Progress {
+func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt bool, dataParts, parityParts uint) chan Progress {
 	progress := make(chan Progress)
 	fwd := make(chan ArchiveResult)
 
-	go snapshot.gatherTargetInformation(cwd, paths, fwd)
+	go snapshot.gatherTargetInformation(cwd, paths, excludes, fwd)
 
 	go func() {
 		for result := range fwd {

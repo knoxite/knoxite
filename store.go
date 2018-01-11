@@ -33,6 +33,7 @@ type StoreOptions struct {
 	Compression      string
 	Encryption       string
 	FailureTolerance uint
+	Excludes         []string
 }
 
 var (
@@ -59,6 +60,7 @@ func init() {
 	storeCmd.Flags().StringVarP(&storeOpts.Compression, "compression", "c", "", "compression algo to use: none (default), gzip")
 	storeCmd.Flags().StringVarP(&storeOpts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
 	storeCmd.Flags().UintVarP(&storeOpts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
+	storeCmd.Flags().StringArrayVarP(&storeOpts.Excludes, "excludes", "x", []string{}, "list of excludes")
 
 	RootCmd.AddCommand(storeCmd)
 }
@@ -77,7 +79,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	}
 
 	startTime := time.Now()
-	progress := snapshot.Add(wd, targets, *repository, chunkIndex,
+	progress := snapshot.Add(wd, targets, opts.Excludes, *repository, chunkIndex,
 		strings.ToLower(opts.Compression) == strings.ToLower(CompressionText(knoxite.CompressionGZip)),
 		strings.ToLower(opts.Encryption) != strings.ToLower(EncryptionText(knoxite.EncryptionNone)),
 		uint(len(repository.Backend.Backends))-opts.FailureTolerance, opts.FailureTolerance)
@@ -144,8 +146,6 @@ func executeStore(volumeID string, args []string, opts StoreOptions) error {
 		}
 		targets = append(targets, target)
 	}
-
-	// filter here? exclude/include?
 
 	// acquire a shutdown lock. we don't want these next calls to be interrupted
 	lock := shutdown.Lock()
