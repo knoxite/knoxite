@@ -10,6 +10,7 @@ package knoxite
 import (
 	"encoding/json"
 	"math"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -112,6 +113,10 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, repository Repository,
 				dataParts = uint(math.Max(1, float64(dataParts)))
 				chunkchan, err := chunkFile(archive.AbsPath, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
 				if err != nil {
+					if os.IsNotExist(err) {
+						// if this file has already been deleted before we could backup it, we can gracefully ignore it and continue
+						continue
+					}
 					p = newProgressError(err)
 					progress <- p
 					break
