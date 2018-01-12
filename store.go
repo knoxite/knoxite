@@ -84,7 +84,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 		strings.ToLower(opts.Encryption) != strings.ToLower(EncryptionText(knoxite.EncryptionNone)),
 		uint(len(repository.Backend.Backends))-opts.FailureTolerance, opts.FailureTolerance)
 
-	fileProgressBar := &goprogressbar.ProgressBar{Width: 60}
+	fileProgressBar := &goprogressbar.ProgressBar{Width: 40}
 	overallProgressBar := &goprogressbar.ProgressBar{
 		Text:  "Overall Progress",
 		Width: 60,
