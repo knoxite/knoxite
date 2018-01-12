@@ -20,6 +20,9 @@ func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 	go func() {
 		err := filepath.Walk(rootPath, func(path string, fi os.FileInfo, err error) error {
 			if err != nil {
+				if os.IsNotExist(err) {
+					return nil
+				}
 				// fmt.Fprintf(os.Stderr, "Could not find %s\n", path)
 				return err
 			}
