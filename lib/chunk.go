@@ -10,7 +10,6 @@ package knoxite
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -117,7 +116,6 @@ func chunkFile(filename string, compress, encrypt bool, password string, dataPar
 
 	file, err := os.Open(filename)
 	if err != nil {
-		fmt.Println(err)
 		return c, err
 	}
 
