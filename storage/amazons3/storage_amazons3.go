@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2017, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2018, Christian Muehlhaeuser <muesli@gmail.com>
  *     Copyright (c) 2016, Stefan Luecke <glaxx@glaxx.net>
  *
  *   For license see LICENSE
@@ -113,7 +113,7 @@ func (backend *StorageAmazonS3) AvailableSpace() (uint64, error) {
 // LoadChunk loads a Chunk from network
 func (backend *StorageAmazonS3) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
-	obj, err := backend.client.GetObject(backend.chunkBucket, fileName)
+	obj, err := backend.client.GetObject(backend.chunkBucket, fileName, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -126,13 +126,13 @@ func (backend *StorageAmazonS3) LoadChunk(shasum string, part, totalParts uint) 
 func (backend *StorageAmazonS3) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
-	if _, err = backend.client.StatObject(backend.chunkBucket, fileName); err == nil {
+	if _, err = backend.client.StatObject(backend.chunkBucket, fileName, minio.StatObjectOptions{}); err == nil {
 		// Chunk is already stored
 		return 0, nil
 	}
 
 	buf := bytes.NewBuffer(data)
-	i, err := backend.client.PutObject(backend.chunkBucket, fileName, buf, "application/octet-stream")
+	i, err := backend.client.PutObject(backend.chunkBucket, fileName, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
 	return uint64(i), err
 }
 
@@ -150,7 +150,7 @@ func (backend *StorageAmazonS3) DeleteChunk(shasum string, part, totalParts uint
 
 // LoadSnapshot loads a snapshot
 func (backend *StorageAmazonS3) LoadSnapshot(id string) ([]byte, error) {
-	obj, err := backend.client.GetObject(backend.snapshotBucket, id)
+	obj, err := backend.client.GetObject(backend.snapshotBucket, id, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -162,13 +162,13 @@ func (backend *StorageAmazonS3) LoadSnapshot(id string) ([]byte, error) {
 // SaveSnapshot stores a snapshot
 func (backend *StorageAmazonS3) SaveSnapshot(id string, data []byte) error {
 	buf := bytes.NewBuffer(data)
-	_, err := backend.client.PutObject(backend.snapshotBucket, id, buf, "application/octet-stream")
+	_, err := backend.client.PutObject(backend.snapshotBucket, id, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
 	return err
 }
 
 // LoadChunkIndex reads the chunk-index
 func (backend *StorageAmazonS3) LoadChunkIndex() ([]byte, error) {
-	obj, err := backend.client.GetObject(backend.chunkBucket, knoxite.ChunkIndexFilename)
+	obj, err := backend.client.GetObject(backend.chunkBucket, knoxite.ChunkIndexFilename, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (backend *StorageAmazonS3) LoadChunkIndex() ([]byte, error) {
 // SaveChunkIndex stores the chunk-index
 func (backend *StorageAmazonS3) SaveChunkIndex(data []byte) error {
 	buf := bytes.NewBuffer(data)
-	_, err := backend.client.PutObject(backend.chunkBucket, knoxite.ChunkIndexFilename, buf, "application/octet-stream")
+	_, err := backend.client.PutObject(backend.chunkBucket, knoxite.ChunkIndexFilename, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
 	return err
 }
 
@@ -230,7 +230,7 @@ func (backend *StorageAmazonS3) InitRepository() error {
 
 // LoadRepository reads the metadata for a repository
 func (backend *StorageAmazonS3) LoadRepository() ([]byte, error) {
-	obj, err := backend.client.GetObject(backend.repositoryBucket, knoxite.RepoFilename)
+	obj, err := backend.client.GetObject(backend.repositoryBucket, knoxite.RepoFilename, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -242,6 +242,6 @@ func (backend *StorageAmazonS3) LoadRepository() ([]byte, error) {
 // SaveRepository stores the metadata for a repository
 func (backend *StorageAmazonS3) SaveRepository(data []byte) error {
 	buf := bytes.NewBuffer(data)
-	_, err := backend.client.PutObject(backend.repositoryBucket, knoxite.RepoFilename, buf, "application/octet-stream")
+	_, err := backend.client.PutObject(backend.repositoryBucket, knoxite.RepoFilename, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
 	return err
 }
