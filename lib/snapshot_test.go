@@ -8,16 +8,22 @@
 package knoxite
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/minio/highwayhash"
 )
 
-func shasumFile(path string) (string, error) {
-	hasher := sha256.New()
+func hashFile(path string) (string, error) {
+	var key [32]byte
+	hasher, err := highwayhash.New(key[:])
+	if err != nil {
+		return "", err
+	}
+
 	s, err := ioutil.ReadFile(path)
 	if err != nil {
 		return "", err
@@ -157,18 +163,18 @@ func TestSnapshotCreate(t *testing.T) {
 
 			for i, archive := range snapshot.Archives {
 				file1 := filepath.Join(targetdir, archive.Path)
-				sha1, err := shasumFile(file1)
+				hash1, err := hashFile(file1)
 				if err != nil {
 					t.Errorf("Failed generating shasum for %s: %s", file1, err)
 					return
 				}
-				sha2, err := shasumFile(snapshotOriginal.Archives[i].Path)
+				hash2, err := hashFile(snapshotOriginal.Archives[i].Path)
 				if err != nil {
 					t.Errorf("Failed generating shasum for %s: %s", snapshotOriginal.Archives[i].Path, err)
 					return
 				}
-				if sha1 != sha2 {
-					t.Errorf("Failed verifying shasum: %s != %s", sha1, sha2)
+				if hash1 != hash2 {
+					t.Errorf("Failed verifying shasum: %s != %s", hash1, hash2)
 					return
 				}
 			}
