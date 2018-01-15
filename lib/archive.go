@@ -10,7 +10,6 @@ package knoxite
 import (
 	"io"
 	"os"
-	"time"
 )
 
 // Which type
@@ -24,10 +23,10 @@ const (
 // MUST BE encrypted
 type Archive struct {
 	Path        string      `json:"path"`               // Where in filesystem does this belong to
-	Type        uint        `json:"type"`               // Is this a File, Directory or SymLink
+	Type        uint8       `json:"type"`               // Is this a File, Directory or SymLink
 	PointsTo    string      `json:"pointsto,omitempty"` // If this is a SymLink, where does it point to
 	Mode        os.FileMode `json:"mode"`               // file mode bits
-	ModTime     time.Time   `json:"modtime"`            // modification time
+	ModTime     int64       `json:"modtime"`            // modification time
 	Size        uint64      `json:"size"`               // size
 	StorageSize uint64      `json:"storagesize"`        // size in storage
 	UID         uint32      `json:"uid"`                // owner

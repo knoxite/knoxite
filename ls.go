@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os/user"
 	"strconv"
+	"time"
 
 	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
@@ -62,7 +63,7 @@ func executeLs(snapshotID string) error {
 				username,
 				groupname,
 				knoxite.SizeToString(archive.Size),
-				archive.ModTime.Format(timeFormat),
+				time.Unix(archive.ModTime, 0).Format(timeFormat),
 				archive.Path})
 		}
 

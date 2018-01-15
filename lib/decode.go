@@ -222,7 +222,7 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 		f.Close()
 
 		// Restore modification time
-		err = os.Chtimes(path, arc.ModTime, arc.ModTime)
+		err = os.Chtimes(path, time.Unix(arc.ModTime, 0), time.Unix(arc.ModTime, 0))
 		if err != nil {
 			return err
 		}
