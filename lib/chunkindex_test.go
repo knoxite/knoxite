@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2017, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2017-2018, Christian Muehlhaeuser <muesli@gmail.com>
  *
  *   For license see LICENSE
  */
