@@ -198,6 +198,18 @@ func executeStore(volumeID string, args []string, opts StoreOptions) error {
 	return repository.Save()
 }
 
+// CompressionTypeFromString returns the compression type from a user-specified string
+func CompressionTypeFromString(s string) uint16 {
+	switch strings.ToLower(s) {
+	case "gzip":
+		return knoxite.CompressionGZip
+	case "lzma":
+		return knoxite.CompressionLZMA
+	}
+
+	return knoxite.CompressionNone
+}
+
 // CompressionText returns a user-friendly string indicating the compression algo that was used
 func CompressionText(enum int) string {
 	switch enum {
@@ -214,6 +226,16 @@ func CompressionText(enum int) string {
 	}
 
 	return "unknown"
+}
+
+// EncryptionTypeFromString returns the encryption type from a user-specified string
+func EncryptionTypeFromString(s string) uint16 {
+	switch strings.ToLower(s) {
+	case "none":
+		return knoxite.EncryptionNone
+	}
+
+	return knoxite.EncryptionAES
 }
 
 // EncryptionText returns a user-friendly string indicating the encryption algo that was used
