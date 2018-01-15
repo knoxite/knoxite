@@ -365,10 +365,8 @@ func TestStorageStoreChunk(t *testing.T) {
 		// get a random part number which is smaller than the totalParts number
 		part := uint(mrand.Intn(int(totalParts)))
 
-		shasumdata := sha256.Sum256(rnddata)
-		shasum := hex.EncodeToString(shasumdata[:])
-
-		size, err := b.StoreChunk(shasum, part, totalParts, rnddata)
+		hashsum := knoxite.Hash(rnddata, knoxite.HashHighway256)
+		size, err := b.StoreChunk(hashsum, part, totalParts, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -377,7 +375,7 @@ func TestStorageStoreChunk(t *testing.T) {
 		}
 
 		// Test to store the same chunk twice. Size should be 0
-		size, err = b.StoreChunk(shasum, part, totalParts, rnddata)
+		size, err = b.StoreChunk(hashsum, part, totalParts, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -385,7 +383,7 @@ func TestStorageStoreChunk(t *testing.T) {
 			t.Errorf("%s: Already exisiting chunks should not be overwritten", tt.description)
 		}
 
-		data, err := b.LoadChunk(shasum, part, totalParts)
+		data, err := b.LoadChunk(hashsum, part, totalParts)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -415,15 +413,13 @@ func TestStorageLoadChunk(t *testing.T) {
 		// get a random part number which is smaller than the totalParts number
 		part := uint(mrand.Intn(int(totalParts)))
 
-		shasumdata := sha256.Sum256(rnddata)
-		shasum := hex.EncodeToString(shasumdata[:])
-
-		_, err = b.StoreChunk(shasum, part, totalParts, rnddata)
+		hashsum := knoxite.Hash(rnddata, knoxite.HashHighway256)
+		_, err = b.StoreChunk(hashsum, part, totalParts, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		data, err := b.LoadChunk(shasum, part, totalParts)
+		data, err := b.LoadChunk(hashsum, part, totalParts)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -453,25 +449,23 @@ func TestStorageDeleteChunk(t *testing.T) {
 		// get a random part number which is smaller than the totalParts number
 		part := uint(mrand.Intn(int(totalParts)))
 
-		shasumdata := sha256.Sum256(rnddata)
-		shasum := hex.EncodeToString(shasumdata[:])
-
-		_, err = b.StoreChunk(shasum, part, totalParts, rnddata)
+		hashsum := knoxite.Hash(rnddata, knoxite.HashHighway256)
+		_, err = b.StoreChunk(hashsum, part, totalParts, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		_, err = b.LoadChunk(shasum, part, totalParts)
+		_, err = b.LoadChunk(hashsum, part, totalParts)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		err = b.DeleteChunk(shasum, part, totalParts)
+		err = b.DeleteChunk(hashsum, part, totalParts)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		_, err = b.LoadChunk(shasum, part, totalParts)
+		_, err = b.LoadChunk(hashsum, part, totalParts)
 		if err == nil {
 			t.Errorf("%s: Expected error, got nil", tt.description)
 		}
