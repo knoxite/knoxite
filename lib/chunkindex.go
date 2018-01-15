@@ -14,7 +14,7 @@ import (
 
 // A ChunkIndexItem links a chunk with one or many snapshots
 type ChunkIndexItem struct {
-	ShaSum      string   `json:"sha256"`
+	Hash        string   `json:"hash"`
 	DataParts   uint     `json:"data_parts"`
 	ParityParts uint     `json:"parity_parts"`
 	Size        int      `json:"size"`
@@ -87,12 +87,12 @@ func (index *ChunkIndex) Pack(repository *Repository) (freedSize uint64, err err
 	chunks := []*ChunkIndexItem{}
 
 	for _, chunk := range index.Chunks {
-		//	fmt.Printf("Chunk %s referenced in Snapshots %+v\n", chunk.ShaSum, chunk.Snapshots)
+		//	fmt.Printf("Chunk %s referenced in Snapshots %+v\n", chunk.Hash, chunk.Snapshots)
 		if len(chunk.Snapshots) == 0 {
-			fmt.Printf("Chunk %s is no longer referenced by any snapshot. Deleting!\n", chunk.ShaSum)
+			fmt.Printf("Chunk %s is no longer referenced by any snapshot. Deleting!\n", chunk.Hash)
 
 			for i := uint(0); i < chunk.DataParts+chunk.ParityParts; i++ {
-				err = repository.Backend.DeleteChunk(chunk.ShaSum, i, chunk.DataParts)
+				err = repository.Backend.DeleteChunk(chunk.Hash, i, chunk.DataParts)
 				if err != nil {
 					return
 				}
@@ -137,7 +137,7 @@ func (index *ChunkIndex) AddArchive(archive *Archive, snapshot string) {
 
 		if !found {
 			chunkItem := ChunkIndexItem{
-				ShaSum:      chunk.ShaSum,
+				Hash:        chunk.Hash,
 				DataParts:   chunk.DataParts,
 				ParityParts: chunk.ParityParts,
 				Size:        chunk.Size,

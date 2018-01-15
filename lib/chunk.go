@@ -8,8 +8,6 @@
 package knoxite
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"io"
 	"os"
 	"sync"
@@ -24,16 +22,14 @@ const (
 // Chunk stores an encrypted chunk alongside with its metadata
 // MUST BE encrypted
 type Chunk struct {
-	Data            *[][]byte `json:"-"`
-	DataParts       uint      `json:"data_parts"`
-	ParityParts     uint      `json:"parity_parts"`
-	OriginalSize    int       `json:"original_size"`
-	Size            int       `json:"size"`
-	DecryptedShaSum string    `json:"decrypted_sha256"`
-	ShaSum          string    `json:"sha256"`
-	Encrypted       int       `json:"encrypted"`
-	Compressed      int       `json:"compressed"`
-	Num             uint      `json:"num"`
+	Data          *[][]byte `json:"-"`
+	DataParts     uint      `json:"data_parts"`
+	ParityParts   uint      `json:"parity_parts"`
+	OriginalSize  int       `json:"original_size"`
+	Size          int       `json:"size"`
+	DecryptedHash string    `json:"decrypted_hash"`
+	Hash          string    `json:"hash"`
+	Num           uint      `json:"num"`
 }
 
 // ChunkResult is used to transfer either a chunk or an error down the channel
@@ -47,21 +43,21 @@ type inputChunk struct {
 	Num  uint
 }
 
-func processChunk(id int, compress, encrypt bool, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- ChunkResult, wg *sync.WaitGroup) {
+func processChunk(id int, compress, encrypt uint16, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- ChunkResult, wg *sync.WaitGroup) {
 	for j := range jobs {
 		// fmt.Println("\tWorker", id, "processing job", j.Num, len(j.Data))
 
 		var err error
 		b := j.Data
-		if compress {
-			b, err = Compress(b)
+		if compress != CompressionNone {
+			b, err = Compress(b, compress)
 			if err != nil {
 				chunks <- ChunkResult{Error: err}
 				wg.Done()
 				continue
 			}
 		}
-		if encrypt {
+		if encrypt != EncryptionNone {
 			b, err = Encrypt(b, password)
 			if err != nil {
 				chunks <- ChunkResult{Error: err}
@@ -70,27 +66,17 @@ func processChunk(id int, compress, encrypt bool, password string, dataParts, pa
 			}
 		}
 
-		shadata := sha256.Sum256(b)
-		shasum := hex.EncodeToString(shadata[:])
-		shadata = sha256.Sum256(j.Data)
-		origshasum := hex.EncodeToString(shadata[:])
+		hashsum := Hash(b, HashHighway256)
+		orighashsum := Hash(j.Data, HashHighway256)
 
 		c := Chunk{
-			DataParts:       uint(dataParts),
-			ParityParts:     uint(parityParts),
-			OriginalSize:    len(j.Data),
-			Size:            len(b),
-			DecryptedShaSum: origshasum,
-			ShaSum:          shasum,
-			Encrypted:       EncryptionAES,
-			Compressed:      CompressionNone,
-			Num:             j.Num,
-		}
-		if compress {
-			c.Compressed = CompressionGZip
-		}
-		if !encrypt {
-			c.Encrypted = EncryptionNone
+			DataParts:     uint(dataParts),
+			ParityParts:   uint(parityParts),
+			OriginalSize:  len(j.Data),
+			Size:          len(b),
+			DecryptedHash: orighashsum,
+			Hash:          hashsum,
+			Num:           j.Num,
 		}
 		if parityParts > 0 {
 			pars, err := redundantData(b, dataParts, parityParts)
@@ -111,7 +97,7 @@ func processChunk(id int, compress, encrypt bool, password string, dataParts, pa
 }
 
 // chunkFile divides filename into chunks of 1MiB each
-func chunkFile(filename string, compress, encrypt bool, password string, dataParts, parityParts int) (chan ChunkResult, error) {
+func chunkFile(filename string, compress, encrypt uint16, password string, dataParts, parityParts int) (chan ChunkResult, error) {
 	c := make(chan ChunkResult)
 
 	file, err := os.Open(filename)

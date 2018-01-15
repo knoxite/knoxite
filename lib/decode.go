@@ -99,11 +99,9 @@ func decodeChunk(repository Repository, chunk Chunk, b []byte) ([]byte, error) {
 		}
 	}
 
-	shadata := sha256.Sum256(b)
-	shasum := hex.EncodeToString(shadata[:])
-
-	if chunk.DecryptedShaSum != shasum {
-		return []byte{}, &CheckSumError{"sha256", chunk.DecryptedShaSum, shasum}
+	hashsum := Hash(b, HashHighway256)
+	if chunk.DecryptedHash != hashsum {
+		return []byte{}, &CheckSumError{"highwayhash", chunk.DecryptedHash, hashsum}
 	}
 
 	return b, nil
@@ -218,7 +216,7 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 			p.TotalStatistics.Transferred += uint64(len(b))
 			p.CurrentItemStats.Transferred += uint64(len(b))
 			progress <- p
-			// fmt.Printf("Chunk OK: %d bytes, sha256: %s\n", size, chunk.DecryptedShaSum)
+			// fmt.Printf("Chunk OK: %d bytes, hash: %s\n", size, chunk.DecryptedHash)
 		}
 
 		f.Sync()
@@ -261,15 +259,15 @@ func DecodeArchiveData(repository Repository, arc Archive) ([]byte, Stats, error
 
 			chunk := arc.Chunks[idx]
 			mutex.Lock()
-			cd, ok := cache[chunk.ShaSum]
+			cd, ok := cache[chunk.Hash]
 			if ok {
-				fmt.Println("Using cached chunk", chunk.ShaSum)
+				fmt.Println("Using cached chunk", chunk.Hash)
 			} else {
 				cd, err = loadChunk(repository, chunk)
 				if err != nil {
 					return b, stats, err
 				}
-				cache[chunk.ShaSum] = cd
+				cache[chunk.Hash] = cd
 			}
 
 			mutex.Unlock()
@@ -296,13 +294,13 @@ func readArchiveChunk(repository Repository, arc Archive, chunkNum uint) (*[]byt
 
 	chunk := arc.Chunks[idx]
 	mutex.Lock()
-	cd, ok := cache[chunk.ShaSum]
+	cd, ok := cache[chunk.Hash]
 	if !ok {
 		cd, err = loadChunk(repository, chunk)
 		if err != nil {
 			return &b, err
 		}
-		cache[chunk.ShaSum] = cd
+		cache[chunk.Hash] = cd
 	}
 
 	mutex.Unlock()
