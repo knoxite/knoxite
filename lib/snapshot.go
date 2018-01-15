@@ -8,7 +8,8 @@
 package knoxite
 
 import (
-	"encoding/json"
+	"bytes"
+	"encoding/gob"
 	"math"
 	"os"
 	"path/filepath"
@@ -22,7 +23,7 @@ import (
 // A Snapshot is a compilation of one or many archives
 // MUST BE encrypted
 type Snapshot struct {
-	sync.Mutex
+	mut sync.Mutex
 
 	ID          string             `json:"id"`
 	Date        time.Time          `json:"date"`
@@ -63,7 +64,7 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 					continue
 				}
 
-				snapshot.Lock()
+				snapshot.mut.Lock()
 				snapshot.Stats.Size += result.Archive.Size
 				snapshot.Unlock()
 			}
@@ -105,9 +106,9 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 			}
 
 			p := newProgress(archive)
-			snapshot.Lock()
+			snapshot.mut.Lock()
 			p.TotalStatistics = snapshot.Stats
-			snapshot.Unlock()
+			snapshot.mut.Unlock()
 			progress <- p
 
 			if archive.Type == File {
@@ -155,9 +156,9 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 					snapshot.Stats.Transferred += uint64(chunk.OriginalSize)
 					snapshot.Stats.StorageSize += n
 
-					snapshot.Lock()
+					snapshot.mut.Lock()
 					p.TotalStatistics = snapshot.Stats
-					snapshot.Unlock()
+					snapshot.mut.Unlock()
 					progress <- p
 				}
 			}
@@ -211,13 +212,16 @@ func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
 		}
 	}
 
-	err = json.Unmarshal(b, &snapshot)
+	buf := bytes.NewBuffer(b)
+	err = gob.NewDecoder(buf).Decode(&snapshot)
 	return &snapshot, err
 }
 
 // Save writes a snapshot's metadata
 func (snapshot *Snapshot) Save(repository *Repository) error {
-	b, err := json.Marshal(snapshot)
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(snapshot)
 	if err != nil {
 		return err
 	}
