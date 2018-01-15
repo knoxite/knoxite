@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	humanize "github.com/dustin/go-humanize"
 	"github.com/klauspost/shutdown2"
 	"github.com/muesli/goprogressbar"
 	"github.com/spf13/cobra"
@@ -86,12 +87,10 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 
 	fileProgressBar := &goprogressbar.ProgressBar{Width: 40}
 	overallProgressBar := &goprogressbar.ProgressBar{
-		Text:  "Overall Progress",
+		Text:  fmt.Sprintf("%d of %d total", 0, 0),
 		Width: 60,
 		PrependTextFunc: func(p *goprogressbar.ProgressBar) string {
-			return fmt.Sprintf("%s / %s  %s/s",
-				knoxite.SizeToString(uint64(p.Current)),
-				knoxite.SizeToString(uint64(p.Total)),
+			return fmt.Sprintf("%s/s",
 				knoxite.SizeToString(uint64(float64(p.Current)/time.Since(startTime).Seconds())))
 		},
 	}
@@ -101,6 +100,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	pb.AddProgressBar(overallProgressBar)
 	lastPath := ""
 
+	items := int64(1)
 	for p := range progress {
 		select {
 		case n := <-cancel:
@@ -114,6 +114,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 				return p.Error
 			}
 			if p.Path != lastPath && lastPath != "" {
+				items++
 				fmt.Println()
 			}
 			fileProgressBar.Total = int64(p.CurrentItemStats.Size)
@@ -124,6 +125,11 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 
 			overallProgressBar.Total = int64(p.TotalStatistics.Size)
 			overallProgressBar.Current = int64(p.TotalStatistics.Transferred)
+			overallProgressBar.Text = fmt.Sprintf("%s / %s (%s of %s)",
+				knoxite.SizeToString(uint64(overallProgressBar.Current)),
+				knoxite.SizeToString(uint64(overallProgressBar.Total)),
+				humanize.Comma(items),
+				humanize.Comma(int64(p.TotalStatistics.Files+p.TotalStatistics.Dirs+p.TotalStatistics.SymLinks)))
 
 			if p.Path != lastPath {
 				lastPath = p.Path
