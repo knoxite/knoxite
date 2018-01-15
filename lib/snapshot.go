@@ -66,7 +66,15 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 
 				snapshot.mut.Lock()
 				snapshot.Stats.Size += result.Archive.Size
-				snapshot.Unlock()
+				switch result.Archive.Type {
+				case Directory:
+					snapshot.Stats.Dirs++
+				case File:
+					snapshot.Stats.Files++
+				case SymLink:
+					snapshot.Stats.SymLinks++
+				}
+				snapshot.mut.Unlock()
 			}
 
 			wg.Add(1)
