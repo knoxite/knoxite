@@ -24,12 +24,14 @@ type ChunkIndexItem struct {
 // A ChunkIndex links chunks with snapshots
 // MUST BE encrypted
 type ChunkIndex struct {
-	Chunks []*ChunkIndexItem `json:"chunks"`
+	Chunks map[string]*ChunkIndexItem `json:"chunks"`
 }
 
 // OpenChunkIndex opens an existing chunkindex
 func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
-	index := ChunkIndex{}
+	index := ChunkIndex{
+		Chunks: make(map[string]*ChunkIndexItem),
+	}
 	b, err := repository.Backend.LoadChunkIndex()
 	if err == nil {
 		b, err = Decrypt(b, repository.Password)
@@ -98,7 +100,7 @@ func (index *ChunkIndex) Save(repository *Repository) error {
 
 // Pack deletes unreferenced chunks and removes them from the index
 func (index *ChunkIndex) Pack(repository *Repository) (freedSize uint64, err error) {
-	chunks := []*ChunkIndexItem{}
+	chunks := make(map[string]*ChunkIndexItem)
 
 	for _, chunk := range index.Chunks {
 		//	fmt.Printf("Chunk %s referenced in Snapshots %+v\n", chunk.Hash, chunk.Snapshots)
@@ -113,7 +115,7 @@ func (index *ChunkIndex) Pack(repository *Repository) (freedSize uint64, err err
 				freedSize += uint64(chunk.Size)
 			}
 		} else {
-			chunks = append(chunks, chunk)
+			chunks[chunk.Hash] = chunk
 		}
 	}
 
@@ -141,15 +143,10 @@ func (index *ChunkIndex) reindex(repository *Repository) error {
 // AddArchive updates chunk-index with the new chunks
 func (index *ChunkIndex) AddArchive(archive *Archive, snapshot string) {
 	for _, chunk := range archive.Chunks {
-		found := false
-		for _, c := range index.Chunks {
-			if chunk.ShaSum == c.ShaSum {
-				found = true
-				c.Snapshots = append(c.Snapshots, snapshot)
-			}
-		}
-
-		if !found {
+		c, ok := index.Chunks[chunk.Hash]
+		if ok {
+			c.Snapshots = append(c.Snapshots, snapshot)
+		} else {
 			chunkItem := ChunkIndexItem{
 				Hash:        chunk.Hash,
 				DataParts:   chunk.DataParts,
@@ -157,7 +154,7 @@ func (index *ChunkIndex) AddArchive(archive *Archive, snapshot string) {
 				Size:        chunk.Size,
 				Snapshots:   []string{snapshot},
 			}
-			index.Chunks = append(index.Chunks, &chunkItem)
+			index.Chunks[chunk.Hash] = &chunkItem
 		}
 	}
 }

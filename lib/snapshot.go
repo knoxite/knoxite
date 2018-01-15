@@ -24,11 +24,11 @@ import (
 type Snapshot struct {
 	sync.Mutex
 
-	ID          string    `json:"id"`
-	Date        time.Time `json:"date"`
-	Description string    `json:"description"`
-	Stats       Stats     `json:"stats"`
-	Archives    []Archive `json:"items"`
+	ID          string             `json:"id"`
+	Date        time.Time          `json:"date"`
+	Description string             `json:"description"`
+	Stats       Stats              `json:"stats"`
+	Archives    map[string]Archive `json:"items"`
 }
 
 // NewSnapshot creates a new snapshot
@@ -36,6 +36,7 @@ func NewSnapshot(description string) (*Snapshot, error) {
 	snapshot := Snapshot{
 		Date:        time.Now(),
 		Description: description,
+		Archives:    make(map[string]Archive),
 	}
 
 	u, err := uuid.NewV4()
@@ -245,22 +246,5 @@ func (snapshot *Snapshot) Save(repository *Repository) error {
 
 // AddArchive adds an archive to a snapshot
 func (snapshot *Snapshot) AddArchive(archive *Archive) {
-	archives := []Archive{}
-
-	found := false
-	for _, v := range snapshot.Archives {
-		if v.Path == archive.Path {
-			found = true
-
-			archives = append(archives, *archive)
-		} else {
-			archives = append(archives, v)
-		}
-	}
-
-	if !found {
-		archives = append(archives, *archive)
-	}
-
-	snapshot.Archives = archives
+	snapshot.Archives[archive.Path] = *archive
 }
