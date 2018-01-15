@@ -14,7 +14,7 @@ import (
 	"errors"
 )
 
-// Which encryption algo
+// Available encryption algos
 const (
 	EncryptionNone = iota
 	EncryptionAES

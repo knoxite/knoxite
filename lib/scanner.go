@@ -33,7 +33,7 @@ func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 
 			match := false
 			for _, exclude := range excludes {
-				//fmt.Println("Matching", path, filepath.Base(path), exclude)
+				// fmt.Println("Matching", path, filepath.Base(path), exclude)
 				match, err = filepath.Match(strings.ToLower(exclude), strings.ToLower(path))
 				if err != nil {
 					fmt.Println("Invalid exclude filter:", exclude)
@@ -44,7 +44,7 @@ func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 				}
 
 				if match {
-					fmt.Printf("Skipping %s as it matches filter: %s\n", path, exclude)
+					// fmt.Printf("\n\nSkipping %s as it matches filter: %s\n\n", path, exclude)
 					break
 				}
 			}
@@ -71,7 +71,6 @@ func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 			if isSymLink(fi) {
 				symlink, lerr := os.Readlink(path)
 				if lerr != nil {
-					//FIXME: we should probably even (re)store invalid symlinks
 					fmt.Fprintf(os.Stderr, "error resolving symlink for: %v - %v\n", path, lerr)
 					return nil
 				}
