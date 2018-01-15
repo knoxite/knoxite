@@ -26,7 +26,7 @@ type Repository struct {
 
 // Const declarations
 const (
-	RepositoryVersion = 1
+	RepositoryVersion = 2
 )
 
 // Error declarations
