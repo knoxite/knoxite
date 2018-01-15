@@ -58,7 +58,7 @@ var (
 
 func init() {
 	storeCmd.Flags().StringVarP(&storeOpts.Description, "desc", "d", "", "a description or comment for this volume")
-	storeCmd.Flags().StringVarP(&storeOpts.Compression, "compression", "c", "", "compression algo to use: none (default), gzip")
+	storeCmd.Flags().StringVarP(&storeOpts.Compression, "compression", "c", "", "compression algo to use: none (default), gzip, lzma")
 	storeCmd.Flags().StringVarP(&storeOpts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
 	storeCmd.Flags().UintVarP(&storeOpts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
 	storeCmd.Flags().StringArrayVarP(&storeOpts.Excludes, "excludes", "x", []string{}, "list of excludes")
@@ -81,8 +81,8 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 
 	startTime := time.Now()
 	progress := snapshot.Add(wd, targets, opts.Excludes, *repository, chunkIndex,
-		strings.ToLower(opts.Compression) == strings.ToLower(CompressionText(knoxite.CompressionGZip)),
-		strings.ToLower(opts.Encryption) != strings.ToLower(EncryptionText(knoxite.EncryptionNone)),
+		CompressionTypeFromString(opts.Compression),
+		EncryptionTypeFromString(opts.Encryption),
 		uint(len(repository.Backend.Backends))-opts.FailureTolerance, opts.FailureTolerance)
 
 	fileProgressBar := &goprogressbar.ProgressBar{Width: 40}

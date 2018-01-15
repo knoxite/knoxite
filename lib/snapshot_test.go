@@ -31,12 +31,14 @@ func TestSnapshotCreate(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	tests := []struct {
-		compression bool
+		compression uint16
 		parityParts uint
 	}{
-		{false, 0},
-		{true, 0},
-		{false, 1},
+		{CompressionNone, 0},
+		{CompressionGZip, 0},
+		{CompressionLZMA, 0},
+		{CompressionNone, 1},
+		{CompressionGZip, 1},
 	}
 	for _, tt := range tests {
 		dir, err := ioutil.TempDir("", "knoxite")

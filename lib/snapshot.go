@@ -194,8 +194,15 @@ func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
 		return &snapshot, err
 	}
 
-	if repository.Version == 1 {
-		b, err = Uncompress(b)
+	compression := CompressionNone
+	switch repository.Version {
+	case 1:
+		compression = CompressionGZip
+	case 2:
+		compression = CompressionLZMA
+	}
+	if compression != CompressionNone {
+		b, err = Uncompress(b, uint16(compression))
 		if err != nil {
 			return &snapshot, err
 		}
@@ -211,9 +218,17 @@ func (snapshot *Snapshot) Save(repository *Repository) error {
 	if err != nil {
 		return err
 	}
+	b := buf.Bytes()
 
-	if repository.Version == 1 {
-		b, err = Compress(b)
+	compression := CompressionNone
+	switch repository.Version {
+	case 1:
+		compression = CompressionGZip
+	case 2:
+		compression = CompressionLZMA
+	}
+	if compression != CompressionNone {
+		b, err = Compress(b, uint16(compression))
 		if err != nil {
 			return err
 		}
