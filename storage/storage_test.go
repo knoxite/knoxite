@@ -9,7 +9,6 @@ package storage
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"flag"
 	mrand "math/rand"

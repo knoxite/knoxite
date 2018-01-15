@@ -60,13 +60,13 @@ func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 				return &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
 			}
 			archive := Archive{
-				Path:     path,
-				AbsPath:  path,
-				Mode:     fi.Mode(),
-				ModTime:  fi.ModTime(),
-				UID:      statT.uid(),
-				GID:      statT.gid(),
-				FileInfo: fi,
+				Path:    path,
+				Mode:    fi.Mode(),
+				ModTime: fi.ModTime().Unix(),
+				UID:     statT.uid(),
+				GID:     statT.gid(),
+				// AbsPath: path,
+				// FileInfo: fi,
 			}
 			if isSymLink(fi) {
 				symlink, lerr := os.Readlink(path)
@@ -80,11 +80,11 @@ func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 				archive.PointsTo = symlink
 			} else if fi.IsDir() {
 				archive.Type = Directory
-			} else {
+			} else if isRegularFile(fi) {
 				archive.Type = File
-				if isRegularFile(fi) {
-					archive.Size = uint64(fi.Size())
-				}
+				archive.Size = uint64(fi.Size())
+			} else {
+				return nil
 			}
 
 			c <- ArchiveResult{Archive: &archive, Error: nil}

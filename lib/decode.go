@@ -10,12 +10,11 @@ package knoxite
 import (
 	"bufio"
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/klauspost/reedsolomon"
 )
@@ -83,9 +82,9 @@ func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string) (prog
 	return prog, nil
 }
 
-func decodeChunk(repository Repository, chunk Chunk, b []byte) ([]byte, error) {
+func decodeChunk(repository Repository, archive Archive, chunk Chunk, b []byte) ([]byte, error) {
 	var err error
-	if chunk.Encrypted == EncryptionAES {
+	if archive.Encrypted == EncryptionAES {
 		b, err = Decrypt(b, repository.Password)
 		if err != nil {
 			return []byte{}, err
@@ -107,7 +106,7 @@ func decodeChunk(repository Repository, chunk Chunk, b []byte) ([]byte, error) {
 	return b, nil
 }
 
-func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
+func loadChunk(repository Repository, archive Archive, chunk Chunk) ([]byte, error) {
 	if chunk.ParityParts > 0 {
 		enc, err := reedsolomon.New(int(chunk.DataParts), int(chunk.ParityParts))
 		if err != nil {
@@ -146,7 +145,7 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 					continue
 				}
 				w.Flush()
-				return decodeChunk(repository, chunk, b.Bytes())
+				return decodeChunk(repository, archive, chunk, b.Bytes())
 			}
 		}
 
@@ -157,7 +156,7 @@ func loadChunk(repository Repository, chunk Chunk) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	return decodeChunk(repository, chunk, b)
+	return decodeChunk(repository, archive, chunk, b)
 }
 
 // DecodeArchive restores a single archive to path
@@ -203,7 +202,7 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 			}
 
 			chunk := arc.Chunks[idx]
-			b, errc := loadChunk(repository, chunk)
+			b, errc := loadChunk(repository, arc, chunk)
 			if errc != nil {
 				return errc
 			}
@@ -263,7 +262,7 @@ func DecodeArchiveData(repository Repository, arc Archive) ([]byte, Stats, error
 			if ok {
 				fmt.Println("Using cached chunk", chunk.Hash)
 			} else {
-				cd, err = loadChunk(repository, chunk)
+				cd, err = loadChunk(repository, arc, chunk)
 				if err != nil {
 					return b, stats, err
 				}
@@ -296,7 +295,7 @@ func readArchiveChunk(repository Repository, arc Archive, chunkNum uint) (*[]byt
 	mutex.Lock()
 	cd, ok := cache[chunk.Hash]
 	if !ok {
-		cd, err = loadChunk(repository, chunk)
+		cd, err = loadChunk(repository, arc, chunk)
 		if err != nil {
 			return &b, err
 		}

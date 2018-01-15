@@ -33,8 +33,10 @@ type Archive struct {
 	UID         uint32      `json:"uid"`                // owner
 	GID         uint32      `json:"gid"`                // group
 	Chunks      []Chunk     `json:"chunks,omitempty"`   // data chunks
-	AbsPath     string      `json:"-"`                  // Absolute path
-	FileInfo    os.FileInfo `json:"-"`                  // FileInfo struct
+	Encrypted   uint16      `json:"encrypted"`          // encryption type
+	Compressed  uint16      `json:"compressed"`         // compression type
+	// AbsPath     string      `json:"-"`                  // Absolute path
+	// FileInfo    os.FileInfo `json:"-"`                  // FileInfo struct
 }
 
 // ArchiveResult wraps Archive and an error

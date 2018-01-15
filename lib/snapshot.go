@@ -80,7 +80,7 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 }
 
 // Add adds a path to a Snapshot
-func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt bool, dataParts, parityParts uint) chan Progress {
+func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt uint16, dataParts, parityParts uint) chan Progress {
 	progress := make(chan Progress)
 	fwd := make(chan ArchiveResult)
 
@@ -109,9 +109,9 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 			snapshot.Unlock()
 			progress <- p
 
-			if isRegularFile(archive.FileInfo) {
+			if archive.Type == File {
 				dataParts = uint(math.Max(1, float64(dataParts)))
-				chunkchan, err := chunkFile(archive.AbsPath, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
+				chunkchan, err := chunkFile(archive.Path, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
 				if err != nil {
 					if os.IsNotExist(err) {
 						// if this file has already been deleted before we could backup it, we can gracefully ignore it and continue
@@ -121,6 +121,8 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 					progress <- p
 					break
 				}
+				archive.Encrypted = encrypt
+				archive.Compressed = compress
 
 				for cd := range chunkchan {
 					if cd.Error != nil {
@@ -130,7 +132,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 						return
 					}
 					chunk := cd.Chunk
-					// fmt.Printf("\tSplit %s (#%d, %d bytes), compression: %s, encryption: %s, sha256: %s\n", id.Path, cd.Num, cd.Size, CompressionText(cd.Compressed), EncryptionText(cd.Encrypted), cd.ShaSum)
+					// fmt.Printf("\tSplit %s (#%d, %d bytes), compression: %s, encryption: %s, hash: %s\n", id.Path, cd.Num, cd.Size, CompressionText(cd.Compressed), EncryptionText(cd.Encrypted), cd.Hash)
 
 					// store this chunk
 					n, err := repository.Backend.StoreChunk(chunk)
