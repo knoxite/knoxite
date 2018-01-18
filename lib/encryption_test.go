@@ -15,12 +15,17 @@ func TestEncryption(t *testing.T) {
 	testPassword := "this_is_a_password"
 	b := []byte("1234567890")
 
-	be, err := Encrypt(b, testPassword)
+	epipe, err := NewEncodingPipeline(CompressionNone, EncryptionAES, testPassword)
 	if err != nil {
 		t.Error(err)
 	}
+	be, err := epipe.Process(b)
 
-	bd, err := Decrypt(be, testPassword)
+	dpipe, err := NewDecodingPipeline(CompressionNone, EncryptionAES, testPassword)
+	if err != nil {
+		t.Error(err)
+	}
+	bd, err := dpipe.Process(be)
 	if err != nil {
 		t.Error(err)
 	}
@@ -31,13 +36,12 @@ func TestEncryption(t *testing.T) {
 }
 
 func TestEmptyPassword(t *testing.T) {
-	b := []byte("1234567890")
-	_, err := Encrypt(b, "")
+	_, err := NewEncodingPipeline(CompressionNone, EncryptionAES, "")
 	if err != ErrInvalidPassword {
 		t.Errorf("Expected %v, got %v", ErrInvalidPassword, err)
 	}
 
-	_, err = Decrypt(b, "")
+	_, err = NewDecodingPipeline(CompressionNone, EncryptionAES, "")
 	if err != ErrInvalidPassword {
 		t.Errorf("Expected %v, got %v", ErrInvalidPassword, err)
 	}
