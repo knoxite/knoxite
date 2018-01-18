@@ -26,13 +26,20 @@ const (
 	CompressionZlib
 )
 
-// Compress data
-func Compress(b []byte, compressionType uint16) ([]byte, error) {
+// Compressor is a pipeline processor that compresses data
+type Compressor struct {
+	Method uint16
+}
+
+// Process compresses the data
+func (c Compressor) Process(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	var w io.WriteCloser
 	var err error
 
-	switch compressionType {
+	switch c.Method {
+	case CompressionNone:
+		return data, nil
 	case CompressionGZip:
 		w = gzip.NewWriter(&buf)
 	case CompressionLZMA:
@@ -41,23 +48,29 @@ func Compress(b []byte, compressionType uint16) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	w.Write(b)
+	w.Write(data)
 	w.Close()
 
-	b = buf.Bytes()
-	return b, nil
+	return buf.Bytes(), nil
 }
 
-// Uncompress data
-func Uncompress(b []byte, compressionType uint16) ([]byte, error) {
+// Decompressor is a pipeline processor that decompresses data
+type Decompressor struct {
+	Method uint16
+}
+
+// Process decompresses the data
+func (c Decompressor) Process(data []byte) ([]byte, error) {
 	var zr io.ReadCloser
 	var err error
 
-	switch compressionType {
+	switch c.Method {
+	case CompressionNone:
+		return data, nil
 	case CompressionGZip:
-		zr, err = gzip.NewReader(bytes.NewReader(b))
+		zr, err = gzip.NewReader(bytes.NewReader(data))
 	case CompressionLZMA:
-		zri, erri := xz.NewReader(bytes.NewReader(b))
+		zri, erri := xz.NewReader(bytes.NewReader(data))
 		zr = ioutil.NopCloser(zri)
 		err = erri
 	}
