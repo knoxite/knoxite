@@ -8,7 +8,6 @@
 package knoxite
 
 import (
-	"encoding/json"
 	"errors"
 )
 
@@ -20,33 +19,35 @@ type Repository struct {
 	Paths   []string  `json:"storage"`
 	// Owner   string    `json:"owner"`
 
-	Backend  BackendManager `json:"-"`
-	Password string         `json:"-"`
+	backend  BackendManager
+	password string
 }
 
 // Const declarations
 const (
-	RepositoryVersion = 2
+	RepositoryVersion = 3
 )
 
 // Error declarations
 var (
-	ErrOpenRepositoryFailed = errors.New("Wrong password or corrupted repository")
-	ErrVolumeNotFound       = errors.New("Volume not found")
-	ErrSnapshotNotFound     = errors.New("Snapshot not found")
+	ErrRepositoryIncompatible = errors.New("The repository is not compatible with this version of Knoxite")
+	ErrOpenRepositoryFailed   = errors.New("Wrong password or corrupted repository")
+	ErrVolumeNotFound         = errors.New("Volume not found")
+	ErrSnapshotNotFound       = errors.New("Snapshot not found")
 )
 
 // NewRepository returns a new repository
 func NewRepository(path, password string) (Repository, error) {
 	repository := Repository{
 		Version:  RepositoryVersion,
-		Password: password,
+		password: password,
 	}
+
 	backend, err := BackendFromURL(path)
 	if err != nil {
 		return repository, err
 	}
-	repository.Backend.AddBackend(&backend)
+	repository.backend.AddBackend(&backend)
 
 	err = repository.init()
 	return repository, err
@@ -55,25 +56,28 @@ func NewRepository(path, password string) (Repository, error) {
 // OpenRepository opens an existing repository
 func OpenRepository(path, password string) (Repository, error) {
 	repository := Repository{
-		Password: password,
+		password: password,
 	}
+
 	backend, err := BackendFromURL(path)
 	if err != nil {
 		return repository, err
 	}
-
 	b, err := backend.LoadRepository()
 	if err != nil {
 		return repository, err
 	}
 
-	b, err = Decrypt(b, password)
-	if err == nil {
-		err = json.Unmarshal(b, &repository)
+	pipe, err := NewDecodingPipeline(CompressionNone, EncryptionAES, password)
+	if err != nil {
+		return repository, err
 	}
-	// If decrypt _or_ unmarshal failed, abort
+	err = pipe.Decode(b, &repository)
 	if err != nil {
 		return repository, ErrOpenRepositoryFailed
+	}
+	if repository.Version < RepositoryVersion {
+		return repository, ErrRepositoryIncompatible
 	}
 
 	for _, url := range repository.Paths {
@@ -81,7 +85,7 @@ func OpenRepository(path, password string) (Repository, error) {
 		if berr != nil {
 			return repository, berr
 		}
-		repository.Backend.AddBackend(&backend)
+		repository.backend.AddBackend(&backend)
 	}
 
 	return repository, err
@@ -153,28 +157,32 @@ func (r *Repository) IsEmpty() bool {
 	return true
 }
 
-// Init creates a new repository
-func (r *Repository) init() error {
-	err := r.Backend.InitRepository()
-	if err == nil {
-		err = r.Save()
-	}
-
-	return err
+// BackendManager returns the repository's BackendManager
+func (r *Repository) BackendManager() *BackendManager {
+	return &r.backend
 }
 
-// Save writes a repository's metadata
-func (r *Repository) Save() error {
-	r.Paths = r.Backend.Locations()
-
-	b, err := json.Marshal(*r)
+// Init creates a new repository
+func (r *Repository) init() error {
+	err := r.backend.InitRepository()
 	if err != nil {
 		return err
 	}
 
-	b, err = Encrypt(b, r.Password)
-	if err == nil {
-		err = r.Backend.SaveRepository(b)
+	return r.Save()
+}
+
+// Save writes a repository's metadata
+func (r *Repository) Save() error {
+	r.Paths = r.backend.Locations()
+
+	pipe, err := NewEncodingPipeline(CompressionNone, EncryptionAES, r.password)
+	if err != nil {
+		return err
 	}
-	return err
+	b, err := pipe.Encode(r)
+	if err != nil {
+		return err
+	}
+	return r.backend.SaveRepository(b)
 }

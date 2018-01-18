@@ -69,7 +69,7 @@ func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string) (prog
 	go func() {
 		for _, arc := range snapshot.Archives {
 			path := filepath.Join(dst, arc.Path)
-			err := DecodeArchive(prog, repository, arc, path)
+			err := DecodeArchive(prog, repository, *arc, path)
 			if err != nil {
 				p := newProgressError(err)
 				prog <- p
@@ -83,19 +83,13 @@ func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string) (prog
 }
 
 func decodeChunk(repository Repository, archive Archive, chunk Chunk, b []byte) ([]byte, error) {
-	var err error
-	if archive.Encrypted == EncryptionAES {
-		b, err = Decrypt(b, repository.Password)
-		if err != nil {
-			return []byte{}, err
-		}
+	pipe, err := NewDecodingPipeline(archive.Compressed, archive.Encrypted, repository.password)
+	if err != nil {
+		return []byte{}, err
 	}
-
-	if archive.Compressed != CompressionNone {
-		b, err = Uncompress(b, archive.Compressed)
-		if err != nil {
-			return []byte{}, err
-		}
+	b, err = pipe.Process(b)
+	if err != nil {
+		return []byte{}, err
 	}
 
 	hashsum := Hash(b, HashHighway256)
@@ -119,7 +113,7 @@ func loadChunk(repository Repository, archive Archive, chunk Chunk) ([]byte, err
 		// try to load all parts until we can successfully combine/reconstruct the chunk
 		for i := 0; i < int(chunk.DataParts+chunk.ParityParts); i++ {
 			var cerr error
-			pars[i], cerr = repository.Backend.LoadChunk(chunk, uint(i))
+			pars[i], cerr = repository.backend.LoadChunk(chunk, uint(i))
 			if cerr != nil {
 				pars[i] = nil
 				parsMissing++
@@ -152,7 +146,7 @@ func loadChunk(repository Repository, archive Archive, chunk Chunk) ([]byte, err
 		return []byte{}, &DataReconstructionError{chunk, parsFound, chunk.DataParts - parsFound}
 	}
 
-	b, err := repository.Backend.LoadChunk(chunk, 0)
+	b, err := repository.backend.LoadChunk(chunk, 0)
 	if err != nil {
 		return []byte{}, err
 	}

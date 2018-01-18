@@ -8,7 +8,6 @@
 package knoxite
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
@@ -32,28 +31,16 @@ func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 	index := ChunkIndex{
 		Chunks: make(map[string]*ChunkIndexItem),
 	}
-	b, err := repository.Backend.LoadChunkIndex()
+	b, err := repository.backend.LoadChunkIndex()
 	if err == nil {
-		b, err = Decrypt(b, repository.Password)
+		pipe, err := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
 		if err != nil {
 			return index, err
 		}
-
-		compression := CompressionNone
-		switch repository.Version {
-		case 1:
-			compression = CompressionGZip
-		case 2:
-			compression = CompressionLZMA
+		err = pipe.Decode(b, &index)
+		if err != nil {
+			return index, err
 		}
-		if compression != CompressionNone {
-			b, err = Uncompress(b, uint16(compression))
-			if err != nil {
-				return index, err
-			}
-		}
-
-		err = json.Unmarshal(b, &index)
 	} else {
 		if !repository.IsEmpty() {
 			fmt.Println("Chunk-Index is empty, re-indexing all snapshots...")
@@ -72,30 +59,15 @@ func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 
 // Save writes a chunk-index
 func (index *ChunkIndex) Save(repository *Repository) error {
-	b, err := json.Marshal(*index)
+	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
 	if err != nil {
 		return err
 	}
-
-	compression := CompressionNone
-	switch repository.Version {
-	case 1:
-		compression = CompressionGZip
-	case 2:
-		compression = CompressionLZMA
+	b, err := pipe.Encode(index)
+	if err != nil {
+		return err
 	}
-	if compression != CompressionNone {
-		b, err = Compress(b, uint16(compression))
-		if err != nil {
-			return err
-		}
-	}
-
-	b, err = Encrypt(b, repository.Password)
-	if err == nil {
-		err = repository.Backend.SaveChunkIndex(b)
-	}
-	return err
+	return repository.backend.SaveChunkIndex(b)
 }
 
 // Pack deletes unreferenced chunks and removes them from the index
@@ -103,12 +75,12 @@ func (index *ChunkIndex) Pack(repository *Repository) (freedSize uint64, err err
 	chunks := make(map[string]*ChunkIndexItem)
 
 	for _, chunk := range index.Chunks {
-		//	fmt.Printf("Chunk %s referenced in Snapshots %+v\n", chunk.Hash, chunk.Snapshots)
+		// fmt.Printf("Chunk %s referenced in Snapshots %+v\n", chunk.Hash, chunk.Snapshots)
 		if len(chunk.Snapshots) == 0 {
 			fmt.Printf("Chunk %s is no longer referenced by any snapshot. Deleting!\n", chunk.Hash)
 
 			for i := uint(0); i < chunk.DataParts+chunk.ParityParts; i++ {
-				err = repository.Backend.DeleteChunk(chunk.Hash, i, chunk.DataParts)
+				err = repository.backend.DeleteChunk(chunk.Hash, i, chunk.DataParts)
 				if err != nil {
 					return
 				}
@@ -132,7 +104,7 @@ func (index *ChunkIndex) reindex(repository *Repository) error {
 			}
 
 			for _, archive := range snapshot.Archives {
-				index.AddArchive(&archive, snapshot.ID)
+				index.AddArchive(archive, snapshot.ID)
 			}
 		}
 	}

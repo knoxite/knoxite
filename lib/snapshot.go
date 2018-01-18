@@ -8,8 +8,6 @@
 package knoxite
 
 import (
-	"bytes"
-	"encoding/gob"
 	"math"
 	"os"
 	"path/filepath"
@@ -25,11 +23,11 @@ import (
 type Snapshot struct {
 	mut sync.Mutex
 
-	ID          string             `json:"id"`
-	Date        time.Time          `json:"date"`
-	Description string             `json:"description"`
-	Stats       Stats              `json:"stats"`
-	Archives    map[string]Archive `json:"items"`
+	ID          string              `json:"id"`
+	Date        time.Time           `json:"date"`
+	Description string              `json:"description"`
+	Stats       Stats               `json:"stats"`
+	Archives    map[string]*Archive `json:"items"`
 }
 
 // NewSnapshot creates a new snapshot
@@ -37,7 +35,7 @@ func NewSnapshot(description string) (*Snapshot, error) {
 	snapshot := Snapshot{
 		Date:        time.Now(),
 		Description: description,
-		Archives:    make(map[string]Archive),
+		Archives:    make(map[string]*Archive),
 	}
 
 	u, err := uuid.NewV4()
@@ -121,7 +119,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 
 			if archive.Type == File {
 				dataParts = uint(math.Max(1, float64(dataParts)))
-				chunkchan, err := chunkFile(archive.Path, compress, encrypt, repository.Password, int(dataParts), int(parityParts))
+				chunkchan, err := chunkFile(archive.Path, compress, encrypt, repository.password, int(dataParts), int(parityParts))
 				if err != nil {
 					if os.IsNotExist(err) {
 						// if this file has already been deleted before we could backup it, we can gracefully ignore it and continue
@@ -145,7 +143,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 					// fmt.Printf("\tSplit %s (#%d, %d bytes), compression: %s, encryption: %s, hash: %s\n", id.Path, cd.Num, cd.Size, CompressionText(cd.Compressed), EncryptionText(cd.Encrypted), cd.Hash)
 
 					// store this chunk
-					n, err := repository.Backend.StoreChunk(chunk)
+					n, err := repository.backend.StoreChunk(chunk)
 					if err != nil {
 						p = newProgressError(err)
 						progress <- p
@@ -195,68 +193,35 @@ func (snapshot *Snapshot) Clone() (*Snapshot, error) {
 
 // openSnapshot opens an existing snapshot
 func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
-	snapshot := Snapshot{}
-	b, err := repository.Backend.LoadSnapshot(id)
+	snapshot := Snapshot{
+		Archives: make(map[string]*Archive),
+	}
+	b, err := repository.backend.LoadSnapshot(id)
 	if err != nil {
 		return &snapshot, err
 	}
-
-	b, err = Decrypt(b, repository.Password)
+	pipe, err := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
 	if err != nil {
 		return &snapshot, err
 	}
-
-	compression := CompressionNone
-	switch repository.Version {
-	case 1:
-		compression = CompressionGZip
-	case 2:
-		compression = CompressionLZMA
-	}
-	if compression != CompressionNone {
-		b, err = Uncompress(b, uint16(compression))
-		if err != nil {
-			return &snapshot, err
-		}
-	}
-
-	buf := bytes.NewBuffer(b)
-	err = gob.NewDecoder(buf).Decode(&snapshot)
+	err = pipe.Decode(b, &snapshot)
 	return &snapshot, err
 }
 
 // Save writes a snapshot's metadata
 func (snapshot *Snapshot) Save(repository *Repository) error {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(snapshot)
+	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
 	if err != nil {
 		return err
 	}
-	b := buf.Bytes()
-
-	compression := CompressionNone
-	switch repository.Version {
-	case 1:
-		compression = CompressionGZip
-	case 2:
-		compression = CompressionLZMA
+	b, err := pipe.Encode(snapshot)
+	if err != nil {
+		return err
 	}
-	if compression != CompressionNone {
-		b, err = Compress(b, uint16(compression))
-		if err != nil {
-			return err
-		}
-	}
-
-	b, err = Encrypt(b, repository.Password)
-	if err == nil {
-		err = repository.Backend.SaveSnapshot(snapshot.ID, b)
-	}
-	return err
+	return repository.backend.SaveSnapshot(snapshot.ID, b)
 }
 
 // AddArchive adds an archive to a snapshot
 func (snapshot *Snapshot) AddArchive(archive *Archive) {
-	snapshot.Archives[archive.Path] = *archive
+	snapshot.Archives[archive.Path] = archive
 }

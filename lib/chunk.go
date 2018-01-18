@@ -44,26 +44,16 @@ type inputChunk struct {
 }
 
 func processChunk(id int, compress, encrypt uint16, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- ChunkResult, wg *sync.WaitGroup) {
+	pipe, _ := NewEncodingPipeline(compress, encrypt, password)
+
 	for j := range jobs {
 		// fmt.Println("\tWorker", id, "processing job", j.Num, len(j.Data))
 
-		var err error
-		b := j.Data
-		if compress != CompressionNone {
-			b, err = Compress(b, compress)
-			if err != nil {
-				chunks <- ChunkResult{Error: err}
-				wg.Done()
-				continue
-			}
-		}
-		if encrypt != EncryptionNone {
-			b, err = Encrypt(b, password)
-			if err != nil {
-				chunks <- ChunkResult{Error: err}
-				wg.Done()
-				continue
-			}
+		b, err := pipe.Process(j.Data)
+		if err != nil {
+			chunks <- ChunkResult{Error: err}
+			wg.Done()
+			continue
 		}
 
 		hashsum := Hash(b, HashHighway256)
@@ -78,6 +68,7 @@ func processChunk(id int, compress, encrypt uint16, password string, dataParts, 
 			Hash:          hashsum,
 			Num:           j.Num,
 		}
+
 		if parityParts > 0 {
 			pars, err := redundantData(b, dataParts, parityParts)
 			if err != nil {

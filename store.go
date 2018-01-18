@@ -75,7 +75,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 		return gerr
 	}
 
-	if uint(len(repository.Backend.Backends))-opts.FailureTolerance <= 0 {
+	if uint(len(repository.BackendManager().Backends))-opts.FailureTolerance <= 0 {
 		return ErrRedundancyAmount
 	}
 
@@ -83,7 +83,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	progress := snapshot.Add(wd, targets, opts.Excludes, *repository, chunkIndex,
 		CompressionTypeFromString(opts.Compression),
 		EncryptionTypeFromString(opts.Encryption),
-		uint(len(repository.Backend.Backends))-opts.FailureTolerance, opts.FailureTolerance)
+		uint(len(repository.BackendManager().Backends))-opts.FailureTolerance, opts.FailureTolerance)
 
 	fileProgressBar := &goprogressbar.ProgressBar{Width: 40}
 	overallProgressBar := &goprogressbar.ProgressBar{

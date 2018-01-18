@@ -170,7 +170,7 @@ func updateIndex(repository *knoxite.Repository, snapshot *knoxite.Snapshot) {
 			path = path[1:]
 		}
 		fmt.Println("Adding to index:", path)
-		node(path, arc, repository)
+		node(path, *arc, repository)
 	}
 }
 

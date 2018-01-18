@@ -98,7 +98,7 @@ func executeRepoInit() error {
 		return fmt.Errorf("Creating repository at %s failed: %v", globalOpts.Repo, err)
 	}
 
-	fmt.Printf("Created new repository at %s\n", (*r.Backend.Backends[0]).Location())
+	fmt.Printf("Created new repository at %s\n", (*r.BackendManager().Backends[0]).Location())
 	return nil
 }
 
@@ -119,7 +119,7 @@ func executeRepoAdd(url string) error {
 	if err != nil {
 		return err
 	}
-	r.Backend.AddBackend(&backend)
+	r.BackendManager().AddBackend(&backend)
 
 	err = r.Save()
 	if err != nil {
@@ -177,7 +177,7 @@ func executeRepoInfo() error {
 		[]int64{-48, 15},
 		"No backends found.")
 
-	for _, be := range r.Backend.Backends {
+	for _, be := range r.BackendManager().Backends {
 		space, _ := (*be).AvailableSpace()
 		tab.AppendRow([]interface{}{
 			(*be).Location(),
