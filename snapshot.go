@@ -121,6 +121,6 @@ func executeSnapshotList(volID string) error {
 	}
 
 	tab.SetSummary([]interface{}{"", "", knoxite.SizeToString(totalSize), knoxite.SizeToString(totalStorageSize), ""})
-	tab.Print()
+	_ = tab.Print()
 	return nil
 }

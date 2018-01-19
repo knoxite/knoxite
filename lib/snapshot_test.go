@@ -54,7 +54,7 @@ func TestSnapshotCreate(t *testing.T) {
 		}
 		defer os.RemoveAll(dir)
 
-		snapshotOriginal := &Snapshot{}
+		var snapshotOriginal *Snapshot
 		{
 			r, err := NewRepository(dir, testPassword)
 			if err != nil {

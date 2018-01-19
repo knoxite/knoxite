@@ -129,7 +129,7 @@ func chunkFile(filename string, compress, encrypt uint16, password string, dataP
 			i++
 			jobs <- j
 		}
-		file.Close()
+		_ = file.Close()
 	}()
 
 	go func() {

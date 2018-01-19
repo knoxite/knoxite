@@ -67,7 +67,7 @@ func executeLs(snapshotID string) error {
 				archive.Path})
 		}
 
-		tab.Print()
+		_ = tab.Print()
 	}
 
 	return err

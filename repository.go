@@ -184,7 +184,7 @@ func executeRepoInfo() error {
 			knoxite.SizeToString(space)})
 	}
 
-	tab.Print()
+	_ = tab.Print()
 	return nil
 }
 

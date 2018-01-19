@@ -33,13 +33,13 @@ func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 	}
 	b, err := repository.backend.LoadChunkIndex()
 	if err == nil {
-		pipe, err := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
-		if err != nil {
-			return index, err
+		pipe, errp := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
+		if errp != nil {
+			return index, errp
 		}
-		err = pipe.Decode(b, &index)
-		if err != nil {
-			return index, err
+		errp = pipe.Decode(b, &index)
+		if errp != nil {
+			return index, errp
 		}
 	} else {
 		if !repository.IsEmpty() {

@@ -90,7 +90,7 @@ func newBackendFromProtocol(url url.URL) (Backend, error) {
 
 // BackendFromURL returns the matching backend for path
 func BackendFromURL(path string) (Backend, error) {
-	if strings.Index(path, "://") < 0 {
+	if !strings.Contains(path, "://") {
 		path = "file://" + path
 	}
 

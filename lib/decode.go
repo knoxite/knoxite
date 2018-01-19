@@ -138,7 +138,7 @@ func loadChunk(repository Repository, archive Archive, chunk Chunk) ([]byte, err
 					// reconstruction failed, let's try it with another parity part
 					continue
 				}
-				w.Flush()
+				_ = w.Flush()
 				return decodeChunk(repository, archive, chunk, b.Bytes())
 			}
 		}
@@ -340,7 +340,7 @@ func ReadArchive(repository Repository, arc Archive, offset int, size int) (*[]b
 
 		// cache the next block NOW
 		go func() {
-			readArchiveChunk(repository, arc, neededPart)
+			_, _ = readArchiveChunk(repository, arc, neededPart)
 		}()
 	}
 

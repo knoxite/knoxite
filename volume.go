@@ -100,6 +100,6 @@ func executeVolumeList() error {
 		tab.AppendRow([]interface{}{volume.ID, volume.Name, volume.Description})
 	}
 
-	tab.Print()
+	_ = tab.Print()
 	return nil
 }

@@ -47,7 +47,7 @@ func (backend *BackendManager) Locations() []string {
 // LoadChunk loads a Chunk from backends
 func (backend *BackendManager) LoadChunk(chunk Chunk, part uint) ([]byte, error) {
 	for _, be := range backend.Backends {
-		b, err := (*be).LoadChunk(chunk.Hash, uint(part), chunk.DataParts)
+		b, err := (*be).LoadChunk(chunk.Hash, part, chunk.DataParts)
 		if err == nil {
 			return b, err
 		}
