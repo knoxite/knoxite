@@ -99,7 +99,7 @@ func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 }
 
 func isSpecialPath(path string) bool {
-	return path == "."
+	return path == "." || path == ".."
 }
 
 func isSymLink(fi os.FileInfo) bool {
