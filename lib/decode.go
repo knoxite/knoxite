@@ -159,12 +159,18 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 
 	if arc.Type == Directory {
 		//fmt.Printf("Creating directory %s\n", path)
-		os.MkdirAll(path, arc.Mode)
+		err := os.MkdirAll(path, arc.Mode)
+		if err != nil {
+			return err
+		}
 		p.TotalStatistics.Dirs++
 		progress <- p
 	} else if arc.Type == SymLink {
 		//fmt.Printf("Creating symlink %s -> %s\n", path, arc.PointsTo)
-		os.Symlink(arc.PointsTo, path)
+		err := os.Symlink(arc.PointsTo, path)
+		if err != nil {
+			return err
+		}
 		p.TotalStatistics.SymLinks++
 		progress <- p
 	} else if arc.Type == File {
@@ -212,8 +218,14 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 			// fmt.Printf("Chunk OK: %d bytes, hash: %s\n", size, chunk.DecryptedHash)
 		}
 
-		f.Sync()
-		f.Close()
+		err = f.Sync()
+		if err != nil {
+			return err
+		}
+		err = f.Close()
+		if err != nil {
+			return err
+		}
 
 		// Restore modification time
 		err = os.Chtimes(path, time.Unix(arc.ModTime, 0), time.Unix(arc.ModTime, 0))

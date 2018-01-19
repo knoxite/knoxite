@@ -12,6 +12,7 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"compress/zlib"
+	"fmt"
 	"io"
 	"io/ioutil"
 
@@ -57,8 +58,18 @@ func (c Compressor) Process(data []byte) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	w.Write(data)
-	w.Close()
+
+	n, err := w.Write(data)
+	if err != nil {
+		return []byte{}, err
+	}
+	if n != len(data) {
+		return []byte{}, fmt.Errorf("Could not write all data to compressor")
+	}
+	err = w.Close()
+	if err != nil {
+		return []byte{}, err
+	}
 
 	return buf.Bytes(), nil
 }

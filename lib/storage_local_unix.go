@@ -15,7 +15,10 @@ import "syscall"
 func (backend *StorageLocal) AvailableSpace() (uint64, error) {
 	//FIXME: make this cross-platform compatible
 	var stat syscall.Statfs_t
-	syscall.Statfs(backend.Path, &stat)
+	err := syscall.Statfs(backend.Path, &stat)
+	if err != nil {
+		return 0, err
+	}
 
 	// Available blocks * size per block = available space in bytes
 	return stat.Bavail * uint64(stat.Bsize), nil

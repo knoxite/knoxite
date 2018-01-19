@@ -20,6 +20,9 @@ func TestEncryption(t *testing.T) {
 		t.Error(err)
 	}
 	be, err := epipe.Process(b)
+	if err != nil {
+		t.Error(err)
+	}
 
 	dpipe, err := NewDecodingPipeline(CompressionNone, EncryptionAES, testPassword)
 	if err != nil {
