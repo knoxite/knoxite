@@ -1,3 +1,10 @@
+/*
+ * knoxite
+ *     Copyright (c) 2018, Christian Muehlhaeuser <muesli@gmail.com>
+ *
+ *   For license see LICENSE
+ */
+
 package knoxite
 
 import (
