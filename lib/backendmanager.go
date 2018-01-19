@@ -67,14 +67,17 @@ func (backend *BackendManager) StoreChunk(chunk Chunk) (size uint64, err error) 
 
 		be := backend.Backends[backend.lastUsedBackend]
 		//	for _, be := range backend.Backends {
-		_, err = (*be).StoreChunk(chunk.Hash, uint(i), chunk.DataParts, data)
+		n, err := (*be).StoreChunk(chunk.Hash, uint(i), chunk.DataParts, data)
 		if err != nil {
 			return 0, err
+		}
+		if n > size {
+			size = n
 		}
 		//	}
 	}
 
-	return uint64(chunk.Size), nil
+	return size, nil
 }
 
 // DeleteChunk deletes a single Chunk
