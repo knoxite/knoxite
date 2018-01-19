@@ -9,10 +9,13 @@ package knoxite
 
 import (
 	"bytes"
+	"compress/flate"
 	"compress/gzip"
+	"compress/zlib"
 	"io"
 	"io/ioutil"
 
+	"github.com/DataDog/zstd"
 	"github.com/ulikunitz/xz"
 )
 
@@ -40,10 +43,16 @@ func (c Compressor) Process(data []byte) ([]byte, error) {
 	switch c.Method {
 	case CompressionNone:
 		return data, nil
+	case CompressionFlate:
+		w, err = flate.NewWriter(&buf, flate.DefaultCompression)
 	case CompressionGZip:
 		w = gzip.NewWriter(&buf)
 	case CompressionLZMA:
 		w, err = xz.NewWriter(&buf)
+	case CompressionZlib:
+		w = zlib.NewWriter(&buf)
+	case CompressionZstd:
+		w = zstd.NewWriter(&buf)
 	}
 	if err != nil {
 		return []byte{}, err
@@ -67,12 +76,18 @@ func (c Decompressor) Process(data []byte) ([]byte, error) {
 	switch c.Method {
 	case CompressionNone:
 		return data, nil
+	case CompressionFlate:
+		zr = flate.NewReader(bytes.NewReader(data))
 	case CompressionGZip:
 		zr, err = gzip.NewReader(bytes.NewReader(data))
 	case CompressionLZMA:
 		zri, erri := xz.NewReader(bytes.NewReader(data))
 		zr = ioutil.NopCloser(zri)
 		err = erri
+	case CompressionZlib:
+		zr, err = zlib.NewReader(bytes.NewReader(data))
+	case CompressionZstd:
+		zr = zstd.NewReader(bytes.NewReader(data))
 	}
 	if err != nil {
 		return []byte{}, err
