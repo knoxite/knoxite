@@ -21,9 +21,9 @@ const (
 	CompressionNone = iota
 	CompressionGZip
 	CompressionLZMA
-	CompressionLZW
 	CompressionFlate
 	CompressionZlib
+	CompressionZstd
 )
 
 // Compressor is a pipeline processor that compresses data

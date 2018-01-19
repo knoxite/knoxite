@@ -25,7 +25,9 @@ import (
 
 // Error declarations
 var (
-	ErrRedundancyAmount = errors.New("failure tolerance can't be equal or higher as the number of storage backends")
+	ErrRedundancyAmount   = errors.New("failure tolerance can't be equal or higher as the number of storage backends")
+	ErrEncryptionUnknown  = errors.New("unknown encryption format")
+	ErrCompressionUnknown = errors.New("unknown compression format")
 )
 
 // StoreOptions holds all the options that can be set for the 'store' command
@@ -58,7 +60,7 @@ var (
 
 func init() {
 	storeCmd.Flags().StringVarP(&storeOpts.Description, "desc", "d", "", "a description or comment for this volume")
-	storeCmd.Flags().StringVarP(&storeOpts.Compression, "compression", "c", "", "compression algo to use: none (default), gzip, lzma")
+	storeCmd.Flags().StringVarP(&storeOpts.Compression, "compression", "c", "", "compression algo to use: none (default), flate, gzip, lzma, zlib, zstd")
 	storeCmd.Flags().StringVarP(&storeOpts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
 	storeCmd.Flags().UintVarP(&storeOpts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
 	storeCmd.Flags().StringArrayVarP(&storeOpts.Excludes, "excludes", "x", []string{}, "list of excludes")
@@ -78,11 +80,18 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	if uint(len(repository.BackendManager().Backends))-opts.FailureTolerance <= 0 {
 		return ErrRedundancyAmount
 	}
+	compression, err := CompressionTypeFromString(opts.Compression)
+	if err != nil {
+		return err
+	}
+	encryption, err := EncryptionTypeFromString(opts.Encryption)
+	if err != nil {
+		return err
+	}
 
 	startTime := time.Now()
 	progress := snapshot.Add(wd, targets, opts.Excludes, *repository, chunkIndex,
-		CompressionTypeFromString(opts.Compression),
-		EncryptionTypeFromString(opts.Encryption),
+		compression, encryption,
 		uint(len(repository.BackendManager().Backends))-opts.FailureTolerance, opts.FailureTolerance)
 
 	fileProgressBar := &goprogressbar.ProgressBar{Width: 40}
@@ -205,15 +214,26 @@ func executeStore(volumeID string, args []string, opts StoreOptions) error {
 }
 
 // CompressionTypeFromString returns the compression type from a user-specified string
-func CompressionTypeFromString(s string) uint16 {
+func CompressionTypeFromString(s string) (uint16, error) {
 	switch strings.ToLower(s) {
+	case "":
+		// default is none
+		fallthrough
+	case "none":
+		return knoxite.CompressionNone, nil
+	case "flate":
+		return knoxite.CompressionFlate, nil
 	case "gzip":
-		return knoxite.CompressionGZip
+		return knoxite.CompressionGZip, nil
 	case "lzma":
-		return knoxite.CompressionLZMA
+		return knoxite.CompressionLZMA, nil
+	case "zlib":
+		return knoxite.CompressionZlib, nil
+	case "zstd":
+		return knoxite.CompressionZstd, nil
 	}
 
-	return knoxite.CompressionNone
+	return 0, ErrCompressionUnknown
 }
 
 // CompressionText returns a user-friendly string indicating the compression algo that was used
@@ -221,27 +241,34 @@ func CompressionText(enum int) string {
 	switch enum {
 	case knoxite.CompressionNone:
 		return "none"
-	case knoxite.CompressionGZip:
-		return "GZip"
-	case knoxite.CompressionLZW:
-		return "LZW"
 	case knoxite.CompressionFlate:
 		return "Flate"
+	case knoxite.CompressionGZip:
+		return "GZip"
+	case knoxite.CompressionLZMA:
+		return "LZMA"
 	case knoxite.CompressionZlib:
 		return "zlib"
+	case knoxite.CompressionZstd:
+		return "zstd"
 	}
 
 	return "unknown"
 }
 
 // EncryptionTypeFromString returns the encryption type from a user-specified string
-func EncryptionTypeFromString(s string) uint16 {
+func EncryptionTypeFromString(s string) (uint16, error) {
 	switch strings.ToLower(s) {
+	case "":
+		// default is AES
+		fallthrough
+	case "aes":
+		return knoxite.EncryptionAES, nil
 	case "none":
-		return knoxite.EncryptionNone
+		return knoxite.EncryptionNone, nil
 	}
 
-	return knoxite.EncryptionAES
+	return 0, ErrEncryptionUnknown
 }
 
 // EncryptionText returns a user-friendly string indicating the encryption algo that was used
