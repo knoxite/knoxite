@@ -9,6 +9,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/knoxite/knoxite/lib"
 
@@ -35,24 +36,23 @@ func init() {
 
 func executeCat(snapshotID string, file string) error {
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
-	if err == nil {
-		_, snapshot, ferr := repository.FindSnapshot(snapshotID)
-		if ferr != nil {
-			return ferr
-		}
-
-		if archive, ok := snapshot.Archives[file]; ok {
-			b, _, err := knoxite.DecodeArchiveData(repository, *archive)
-			if err != nil {
-				return err
-			}
-
-			fmt.Print(string(b))
-		} else {
-			return fmt.Errorf("No such file or directory")
-		}
-
+	if err != nil {
+		return err
+	}
+	_, snapshot, ferr := repository.FindSnapshot(snapshotID)
+	if ferr != nil {
+		return ferr
 	}
 
-	return err
+	if archive, ok := snapshot.Archives[file]; ok {
+		b, _, erra := knoxite.DecodeArchiveData(repository, *archive)
+		if erra != nil {
+			return erra
+		}
+
+		_, err = os.Stdout.Write(b)
+		return err
+	}
+
+	return fmt.Errorf("%s: No such file or directory", file)
 }
