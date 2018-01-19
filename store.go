@@ -19,6 +19,7 @@ import (
 	"github.com/klauspost/shutdown2"
 	"github.com/muesli/goprogressbar"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	knoxite "github.com/knoxite/knoxite/lib"
 )
@@ -58,13 +59,16 @@ var (
 	}
 )
 
-func init() {
-	storeCmd.Flags().StringVarP(&storeOpts.Description, "desc", "d", "", "a description or comment for this volume")
-	storeCmd.Flags().StringVarP(&storeOpts.Compression, "compression", "c", "", "compression algo to use: none (default), flate, gzip, lzma, zlib, zstd")
-	storeCmd.Flags().StringVarP(&storeOpts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
-	storeCmd.Flags().UintVarP(&storeOpts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
-	storeCmd.Flags().StringArrayVarP(&storeOpts.Excludes, "excludes", "x", []string{}, "list of excludes")
+func initStoreFlags(f func() *pflag.FlagSet) {
+	f().StringVarP(&storeOpts.Description, "desc", "d", "", "a description or comment for this volume")
+	f().StringVarP(&storeOpts.Compression, "compression", "c", "", "compression algo to use: none (default), flate, gzip, lzma, zlib, zstd")
+	f().StringVarP(&storeOpts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
+	f().UintVarP(&storeOpts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
+	f().StringArrayVarP(&storeOpts.Excludes, "excludes", "x", []string{}, "list of excludes")
+}
 
+func init() {
+	initStoreFlags(storeCmd.Flags)
 	RootCmd.AddCommand(storeCmd)
 }
 

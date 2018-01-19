@@ -37,11 +37,7 @@ var (
 )
 
 func init() {
-	cloneCmd.Flags().StringVarP(&storeOpts.Description, "desc", "d", "", "a description or comment for this volume")
-	cloneCmd.Flags().StringVarP(&storeOpts.Compression, "compression", "c", "", "compression algo to use: none (default), gzip")
-	cloneCmd.Flags().StringVarP(&storeOpts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
-	cloneCmd.Flags().UintVarP(&storeOpts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
-
+	initStoreFlags(cloneCmd.Flags)
 	RootCmd.AddCommand(cloneCmd)
 }
 
@@ -53,8 +49,6 @@ func executeClone(snapshotID string, args []string, opts StoreOptions) error {
 		}
 		targets = append(targets, target)
 	}
-
-	// filter here? exclude/include?
 
 	// acquire a shutdown lock. we don't want these next calls to be interrupted
 	lock := shutdown.Lock()
