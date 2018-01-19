@@ -11,6 +11,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"syscall"
 
 	"github.com/klauspost/shutdown2"
@@ -213,9 +215,17 @@ func newRepository(path, password string) (knoxite.Repository, error) {
 }
 
 func readPassword(prompt string) (string, error) {
-	fmt.Print(prompt + " ")
+	var tty io.WriteCloser
+	tty, err := os.OpenFile("/dev/tty", os.O_WRONLY, 0)
+	if err != nil {
+		tty = os.Stdout
+	} else {
+		defer tty.Close()
+	}
+
+	fmt.Fprint(tty, prompt+" ")
 	buf, err := terminal.ReadPassword(int(syscall.Stdin))
-	fmt.Println()
+	fmt.Fprintln(tty)
 
 	return string(buf), err
 }
