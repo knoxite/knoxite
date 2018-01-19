@@ -23,7 +23,6 @@ const (
 // MUST BE encrypted
 type Archive struct {
 	Path        string      `json:"path"`               // Where in filesystem does this belong to
-	Type        uint8       `json:"type"`               // Is this a File, Directory or SymLink
 	PointsTo    string      `json:"pointsto,omitempty"` // If this is a SymLink, where does it point to
 	Mode        os.FileMode `json:"mode"`               // file mode bits
 	ModTime     int64       `json:"modtime"`            // modification time
@@ -34,8 +33,7 @@ type Archive struct {
 	Chunks      []Chunk     `json:"chunks,omitempty"`   // data chunks
 	Encrypted   uint16      `json:"encrypted"`          // encryption type
 	Compressed  uint16      `json:"compressed"`         // compression type
-	// AbsPath     string      `json:"-"`                  // Absolute path
-	// FileInfo    os.FileInfo `json:"-"`                  // FileInfo struct
+	Type        uint8       `json:"type"`               // Is this a File, Directory or SymLink
 }
 
 // ArchiveResult wraps Archive and an error
