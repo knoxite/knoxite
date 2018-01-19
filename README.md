@@ -1,7 +1,7 @@
 knoxite
 =======
 
-knoxite is a data storage, security & backup system.
+knoxite is a secure data storage & backup system.
 
 Join the discussion in #knoxite (irc.freenode.net) or our [Gitter room](https://gitter.im/knoxite/chat)!
 
