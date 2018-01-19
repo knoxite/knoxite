@@ -26,10 +26,10 @@ var (
 		Long:  `The clone command clones an existing snapshot and adds a file or directory`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				return fmt.Errorf("store needs to know which snapshot to clone")
+				return fmt.Errorf("clone needs to know which snapshot to clone")
 			}
 			if len(args) < 2 {
-				return fmt.Errorf("store needs to know which files and/or directoreies to work on")
+				return fmt.Errorf("clone needs to know which files and/or directories to work on")
 			}
 			return executeClone(args[0], args[1:], cloneOpts)
 		},
