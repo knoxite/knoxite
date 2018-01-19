@@ -8,7 +8,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -23,18 +22,6 @@ import (
 	_ "github.com/knoxite/knoxite/storage/dropbox"
 	_ "github.com/knoxite/knoxite/storage/ftp"
 	_ "github.com/knoxite/knoxite/storage/http"
-)
-
-// Translations
-const (
-	TWrongNumArgs        = "Wrong number of arguments, usage: %s"
-	TUnknownCommand      = "Unknown command, usage: %s"
-	TSpecifyRepoLocation = "Please specify repository location (-r)"
-)
-
-// Error declarations
-var (
-	ErrMissingRepoLocation = errors.New(TSpecifyRepoLocation)
 )
 
 // GlobalOptions holds all those options that can be set for every command
