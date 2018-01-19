@@ -240,7 +240,7 @@ func (backend *StorageHTTP) SaveRepository(data []byte) error {
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
 	// this step is very important
-	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", "repository.knox")
+	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", "repository.knoxite")
 	if err != nil {
 		fmt.Println("error writing to buffer")
 		return err

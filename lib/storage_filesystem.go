@@ -15,7 +15,7 @@ import (
 
 const (
 	// RepoFilename is the default filename for the repository data
-	RepoFilename = "repository.knox"
+	RepoFilename = "repository.knoxite"
 	// ChunkIndexFilename is the default filename for the chunk-index
 	ChunkIndexFilename = "index"
 	chunksDirname      = "chunks"

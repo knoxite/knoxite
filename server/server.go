@@ -110,7 +110,7 @@ func uploadRepo(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 	fmt.Fprintf(w, "%v", handler.Header)
-	f, err := os.OpenFile(filepath.Join(path, "repository.knox"), os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(filepath.Join(path, "repository.knoxite"), os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -119,7 +119,7 @@ func uploadRepo(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 	io.Copy(f, file)
 
-	fmt.Println("Stored repository", filepath.Join(path, "repository.knox"))
+	fmt.Println("Stored repository", filepath.Join(path, "repository.knoxite"))
 }
 
 // downloadRepo logic
@@ -132,7 +132,7 @@ func downloadRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.ServeFile(w, r, filepath.Join(path, "repository.knox"))
+	http.ServeFile(w, r, filepath.Join(path, "repository.knoxite"))
 }
 
 func repository(w http.ResponseWriter, r *http.Request) {
