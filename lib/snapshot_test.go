@@ -41,8 +41,11 @@ func TestSnapshotCreate(t *testing.T) {
 		parityParts uint
 	}{
 		{CompressionNone, 0},
+		{CompressionFlate, 0},
 		{CompressionGZip, 0},
 		{CompressionLZMA, 0},
+		{CompressionZlib, 0},
+		{CompressionZstd, 0},
 		{CompressionNone, 1},
 		{CompressionGZip, 1},
 	}
