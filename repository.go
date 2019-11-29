@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"os"
 	"syscall"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
+	"github.com/muesli/crunchy"
 
 	knoxite "github.com/knoxite/knoxite/lib"
 )
@@ -234,6 +236,23 @@ func readPasswordTwice(prompt, promptConfirm string) (string, error) {
 	pw, err := readPassword(prompt)
 	if err != nil {
 		return pw, err
+	}
+
+	crunchErr := crunchy.NewValidator().Check(pw)
+	if crunchErr != nil {
+		fmt.Printf("Password is considered unsafe: %v\n", crunchErr)
+		fmt.Printf("Are you sure you want to use this password (y/N)?: ")
+		var buf string
+		_, err = fmt.Scan(&buf)
+		if err != nil {
+			return pw, err
+		}
+
+		buf = strings.TrimSpace(buf)
+		buf = strings.ToLower(buf)
+		if buf != "y" {
+			return pw, crunchErr
+		}
 	}
 
 	pwconfirm, err := readPassword(promptConfirm)
