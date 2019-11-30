@@ -22,6 +22,7 @@ import (
 	// _ "github.com/knoxite/knoxite/storage/dropbox"
 	_ "github.com/knoxite/knoxite/storage/ftp"
 	_ "github.com/knoxite/knoxite/storage/http"
+	_ "github.com/knoxite/knoxite/storage/sftp"
 )
 
 // GlobalOptions holds all those options that can be set for every command
