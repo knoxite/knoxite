@@ -41,7 +41,6 @@ func init() {
 }
 
 func (*StorageSFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
-
 	_, port, err := net.SplitHostPort(u.Host)
 	if err != nil || len(port) == 0 {
 		port = "22"
