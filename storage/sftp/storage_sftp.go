@@ -12,9 +12,13 @@ import (
 	"io/ioutil"
 	"net"
 	"net/url"
+	"os"
+	"os/user"
+	"path/filepath"
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	agent "golang.org/x/crypto/ssh/agent"
 	kh "golang.org/x/crypto/ssh/knownhosts"
 
 	knoxite "github.com/knoxite/knoxite/lib"
@@ -49,10 +53,20 @@ func (*StorageSFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 	auth := []ssh.AuthMethod{}
 	if isSet {
 		auth = append(auth, ssh.Password(password))
+	} else {
+		socket := os.Getenv("SSH_AUTH_SOCK")
+		agent_conn, err := net.Dial("unix", socket)
+		if err != nil {
 
+		} else {
+			agentClient := agent.NewClient(agent_conn)
+			auth = append(auth, ssh.PublicKeysCallback(agentClient.Signers))
+		}
 	}
 
-	hostKeyCallback, err := kh.New("~/.ssh/known_hosts")
+	usr, _ := user.Current()
+
+	hostKeyCallback, err := kh.New(filepath.Join(usr.HomeDir, ".ssh/known_hosts"))
 	if err != nil {
 		// If no hostkey can be found, ignore it for now...
 		hostKeyCallback = ssh.InsecureIgnoreHostKey()
