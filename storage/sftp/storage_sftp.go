@@ -15,6 +15,7 @@ import (
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	kh "golang.org/x/crypto/ssh/knownhosts"
 
 	knoxite "github.com/knoxite/knoxite/lib"
 )
@@ -48,12 +49,19 @@ func (*StorageSFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 	auth := []ssh.AuthMethod{}
 	if isSet {
 		auth = append(auth, ssh.Password(password))
+
+	}
+
+	hostKeyCallback, err := kh.New("~/.ssh/known_hosts")
+	if err != nil {
+		// If no hostkey can be found, ignore it for now...
+		hostKeyCallback = ssh.InsecureIgnoreHostKey()
 	}
 
 	config := &ssh.ClientConfig{
 		User:            username,
 		Auth:            auth,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: hostKeyCallback,
 	}
 
 	conn, err := ssh.Dial("tcp", u.Hostname()+":"+u.Port(), config)
@@ -89,7 +97,6 @@ func (backend *StorageSFTP) Protocols() []string {
 func (backend *StorageSFTP) AvailableSpace() (uint64, error) {
 	stat, err := backend.sftp.StatVFS(backend.url.Path)
 	return stat.FreeSpace(), err
-
 }
 
 func (backend *StorageSFTP) Close() error {
@@ -114,7 +121,6 @@ func (backend *StorageSFTP) DeleteFile(path string) error {
 
 func (backend *StorageSFTP) DeletePath(path string) error {
 	return backend.sftp.RemoveDirectory(path)
-
 }
 
 func (backend *StorageSFTP) ReadFile(path string) ([]byte, error) {
@@ -126,10 +132,11 @@ func (backend *StorageSFTP) ReadFile(path string) ([]byte, error) {
 
 	return ioutil.ReadAll(file)
 }
+
 func (backend *StorageSFTP) WriteFile(path string, data []byte) (size uint64, err error) {
 	file, err := backend.sftp.Create(path)
-	file.Write(data)
-	return uint64(len(data)), err
+	length, err := file.Write(data)
+	return uint64(length), err
 }
 
 func (backend *StorageSFTP) Stat(path string) (uint64, error) {
