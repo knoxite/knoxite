@@ -1,7 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2017, Christian Muehlhaeuser <muesli@gmail.com>
- *     Copyright (c) 2016, Nicolas Martin <penguwingithub@gmail.com>
+ *     Copyright (c) 2019, Fabian Siegel <fabians1999@gmail.com>
  *
  *   For license see LICENSE
  */
