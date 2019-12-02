@@ -32,10 +32,6 @@ type StorageSFTP struct {
 	knoxite.StorageFilesystem
 }
 
-var (
-	ErrInvalidAuthentication = errors.New("Wrong Username or Password")
-)
-
 func init() {
 	knoxite.RegisterBackendFactory(&StorageSFTP{})
 }
@@ -56,7 +52,7 @@ func (*StorageSFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 		socket := os.Getenv("SSH_AUTH_SOCK")
 		agent_conn, err := net.Dial("unix", socket)
 		if err != nil {
-
+			return &StorageSFTP{}, knoxite.ErrInvalidPassword
 		} else {
 			agentClient := agent.NewClient(agent_conn)
 			auth = append(auth, ssh.PublicKeysCallback(agentClient.Signers))
