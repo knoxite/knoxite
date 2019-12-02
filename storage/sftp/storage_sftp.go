@@ -8,7 +8,6 @@
 package sftp
 
 import (
-	"errors"
 	"io/ioutil"
 	"net"
 	"net/url"
@@ -25,10 +24,9 @@ import (
 )
 
 type StorageSFTP struct {
-	url   url.URL
-	ssh   *ssh.Client
-	sftp  *sftp.Client
-	login bool
+	url  url.URL
+	ssh  *ssh.Client
+	sftp *sftp.Client
 	knoxite.StorageFilesystem
 }
 
@@ -75,19 +73,18 @@ func (*StorageSFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 
 	conn, err := ssh.Dial("tcp", u.Hostname()+":"+u.Port(), config)
 	if err != nil {
-		panic("Failed to dial: " + err.Error())
+		return &StorageSFTP{}, err
 	}
 
 	client, err := sftp.NewClient(conn)
 	if err != nil {
-		panic("Failed to create client: " + err.Error())
+		return &StorageSFTP{}, err
 	}
 
 	storage := StorageSFTP{
-		url:   u,
-		sftp:  client,
-		ssh:   conn,
-		login: true,
+		url:  u,
+		sftp: client,
+		ssh:  conn,
 	}
 
 	storagesftp, err := knoxite.NewStorageFilesystem(u.Path, &storage)
