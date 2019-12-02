@@ -141,6 +141,9 @@ func (backend *StorageSFTP) ReadFile(path string) ([]byte, error) {
 
 func (backend *StorageSFTP) WriteFile(path string, data []byte) (size uint64, err error) {
 	file, err := backend.sftp.Create(path)
+	if err != nil {
+		return 0, err
+	}
 	length, err := file.Write(data)
 	return uint64(length), err
 }
