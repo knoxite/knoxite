@@ -8,10 +8,18 @@ os:
   - osx
 
 go:
-  - 1.7
-  - 1.8
-  - 1.9
+  - 1.11.x
+  - 1.12.x
+  - 1.13.x
   - tip
+
+matrix:
+  allow_failures:
+    - go: tip
+
+env:
+  global:
+    GO111MODULE=on
 
 before_install:
 - ./admin/setup_minio_test_environment.sh
