@@ -130,6 +130,10 @@ $ ./knoxite -r /tmp/knoxite mount [snapshot ID] /mnt
 
 ### Backup. No more excuses.
 
+## Optional environment variables
+Optionally you can set the `KNOXITE_REPOSITORY` and `KNOXITE_PASSWORD` environment
+variables to provide default settings for when no options have been passed to `knoxite`.
+
 ## Development
 
 API docs can be found [here](http://godoc.org/github.com/knoxite/knoxite).
