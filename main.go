@@ -54,6 +54,9 @@ func main() {
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Repo, "repo", "r", "", "Repository directory to backup to/restore from (default: current working dir)")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Password, "password", "p", "", "Password to use for data encryption")
 
+	globalOpts.Repo = os.Getenv("KNOXITE_REPOSITORY")
+	globalOpts.Password = os.Getenv("KNOXITE_PASSWORD")
+
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
