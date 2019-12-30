@@ -77,7 +77,7 @@ func (backend *StorageDropbox) AvailableSpace() (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return space.Allocation.Allocated, nil
+	return space.Allocation.Allocated - space.Allocation.Used, nil
 }
 
 // CreatePath creates a dir including all its parent dirs, when required
