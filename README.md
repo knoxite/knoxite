@@ -99,6 +99,13 @@ Perms       User   Group          Size  ModTime              Name
 ...
 ```
 
+### Show the content of a snapshotted file
+With the following command you can also print out the files content to stdout:
+```
+$ ./knoxite -r /tmp/knoxite cat [snapshot ID] document.txt
+This is the sample text stored in document.txt
+```
+
 ### Restoring a snapshot
 To restore the latest snapshot to /tmp/myhome, run:
 
