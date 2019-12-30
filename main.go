@@ -14,7 +14,7 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/klauspost/shutdown2"
+	shutdown "github.com/klauspost/shutdown2"
 	"github.com/spf13/cobra"
 
 	_ "github.com/knoxite/knoxite/storage/amazons3"
@@ -22,6 +22,7 @@ import (
 	_ "github.com/knoxite/knoxite/storage/dropbox"
 	_ "github.com/knoxite/knoxite/storage/ftp"
 	_ "github.com/knoxite/knoxite/storage/http"
+	_ "github.com/knoxite/knoxite/storage/mega"
 	_ "github.com/knoxite/knoxite/storage/sftp"
 )
 
