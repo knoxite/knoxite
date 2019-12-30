@@ -10,23 +10,19 @@ package dropbox
 
 import (
 	"bytes"
-	"encoding/base64"
-	"errors"
 	"io/ioutil"
 	"net/url"
-	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/stacktic/dropbox"
+	"github.com/tj/go-dropbox"
+	"github.com/tj/go-dropy"
 
 	knoxite "github.com/knoxite/knoxite/lib"
 )
 
 // StorageDropbox stores data on a remote Dropbox
 type StorageDropbox struct {
-	url url.URL
-	db  *dropbox.Dropbox
+	url   url.URL
+	dropy *dropy.Client
 	knoxite.StorageFilesystem
 }
 
@@ -36,9 +32,14 @@ func init() {
 
 // NewBackend returns a StorageDropbox backend
 func (*StorageDropbox) NewBackend(u url.URL) (knoxite.Backend, error) {
+	pw, pwexist := u.User.Password()
+	if !pwexist {
+		return &StorageDropbox{}, knoxite.ErrInvalidPassword
+	}
+
 	backend := StorageDropbox{
-		url: u,
-		db:  dropbox.NewDropbox(),
+		url:   u,
+		dropy: dropy.New(dropbox.New(dropbox.NewConfig(pw))),
 	}
 
 	storageDB, err := knoxite.NewStorageFilesystem(u.Path, &backend)
@@ -46,19 +47,6 @@ func (*StorageDropbox) NewBackend(u url.URL) (knoxite.Backend, error) {
 		return &StorageDropbox{}, err
 	}
 	backend.StorageFilesystem = storageDB
-
-	ak, _ := base64.StdEncoding.DecodeString("aXF1bGs0a25vajIydGtt")
-	as, _ := base64.StdEncoding.DecodeString("N3htbmlhcDV0cmE5NTE5")
-	backend.db.SetAppInfo(string(ak), string(as))
-
-	if backend.url.User == nil || len(backend.url.User.Username()) == 0 {
-		if err := backend.db.Auth(); err != nil {
-			return &StorageDropbox{}, err
-		}
-		backend.url.User = url.User(backend.db.AccessToken())
-	} else {
-		backend.db.SetAccessToken(backend.url.User.Username())
-	}
 
 	return &backend, nil
 }
@@ -85,61 +73,43 @@ func (backend *StorageDropbox) Description() string {
 
 // AvailableSpace returns the free space on this backend
 func (backend *StorageDropbox) AvailableSpace() (uint64, error) {
-	account, err := backend.db.GetAccountInfo()
+	space, err := backend.dropy.Client.Users.GetSpaceUsage()
 	if err != nil {
 		return 0, err
 	}
-
-	return uint64(account.QuotaInfo.Quota - account.QuotaInfo.Shared - account.QuotaInfo.Normal), nil
+	return space.Allocation.Allocated, nil
 }
 
 // CreatePath creates a dir including all its parent dirs, when required
 func (backend *StorageDropbox) CreatePath(path string) error {
-	slicedPath := strings.Split(path, string(filepath.Separator))
-	for i := range slicedPath {
-		if i == 0 {
-			// don't try to create root-dir
-			continue
-		}
-		if _, err := backend.db.CreateFolder(filepath.Join(slicedPath[:i+1]...)); err != nil {
-			// We only want to return an error when creating the last directory
-			// in this path failed. Parent dirs _may_ already exist
-			if i+1 == len(slicedPath) {
-				return err
-			}
-		}
-	}
-	return nil
+	return backend.dropy.Mkdir(path)
 }
 
 // Stat returns the size of a file
 func (backend *StorageDropbox) Stat(path string) (uint64, error) {
-	entry, err := backend.db.Metadata(path, false, false, "", "", 1)
-	if entry.IsDeleted {
-		return 0, &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
+	fileinfo, err := backend.dropy.Stat(path)
+	if err != nil {
+		return 0, err
 	}
-	return uint64(entry.Bytes), err
+	return uint64(fileinfo.Size()), nil
 }
 
 // ReadFile reads a file from dropbox
 func (backend *StorageDropbox) ReadFile(path string) ([]byte, error) {
-	obj, _, err := backend.db.Download(path, "", 0)
+	file, err := backend.dropy.Download(path)
 	if err != nil {
 		return nil, err
 	}
-	defer obj.Close()
-
-	return ioutil.ReadAll(obj)
+	defer file.Close()
+	return ioutil.ReadAll(file)
 }
 
 // WriteFile write files on dropbox
 func (backend *StorageDropbox) WriteFile(path string, data []byte) (size uint64, err error) {
-	_, err = backend.db.UploadByChunk(ioutil.NopCloser(bytes.NewReader(data)), len(data), path, true, "")
-	return uint64(len(data)), err
+	return uint64(len(data)), backend.dropy.Upload(path, bytes.NewReader(data))
 }
 
 // DeleteFile deletes a file from dropbox
 func (backend *StorageDropbox) DeleteFile(path string) error {
-	_, err := backend.db.Delete(path)
-	return err
+	return backend.dropy.Delete(path)
 }
