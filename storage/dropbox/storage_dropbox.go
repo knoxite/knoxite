@@ -32,14 +32,15 @@ func init() {
 
 // NewBackend returns a StorageDropbox backend
 func (*StorageDropbox) NewBackend(u url.URL) (knoxite.Backend, error) {
-	pw, pwexist := u.User.Password()
-	if !pwexist {
-		return &StorageDropbox{}, knoxite.ErrInvalidPassword
+	user := u.User.Username()
+	if user == "" {
+		return &StorageDropbox{}, knoxite.ErrInvalidUsername
+
 	}
 
 	backend := StorageDropbox{
 		url:   u,
-		dropy: dropy.New(dropbox.New(dropbox.NewConfig(pw))),
+		dropy: dropy.New(dropbox.New(dropbox.NewConfig(user))),
 	}
 
 	storageDB, err := knoxite.NewStorageFilesystem(u.Path, &backend)
