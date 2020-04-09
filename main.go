@@ -24,6 +24,7 @@ import (
 	_ "github.com/knoxite/knoxite/storage/http"
 	_ "github.com/knoxite/knoxite/storage/mega"
 	_ "github.com/knoxite/knoxite/storage/sftp"
+	_ "github.com/knoxite/knoxite/storage/webdav"
 )
 
 // GlobalOptions holds all those options that can be set for every command

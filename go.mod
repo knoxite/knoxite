@@ -28,6 +28,7 @@ require (
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
+	github.com/studio-b12/gowebdav v0.0.0-20200303150724-9380631c29a1
 	github.com/t3rm1n4l/go-mega v0.0.0-20200117211730-79a813bb328d
 	github.com/tj/go-dropbox v0.0.0-20171107035848-42dd2be3662d
 	github.com/tj/go-dropy v0.0.0-20151223190506-225699a12156
