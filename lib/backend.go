@@ -10,6 +10,7 @@ package knoxite
 import (
 	"errors"
 	"net/url"
+	"path/filepath"
 	"strings"
 )
 
@@ -91,6 +92,13 @@ func newBackendFromProtocol(url url.URL) (Backend, error) {
 // BackendFromURL returns the matching backend for path
 func BackendFromURL(path string) (Backend, error) {
 	if !strings.Contains(path, "://") {
+		if !filepath.IsAbs(path) {
+			var err error
+			path, err = filepath.Abs(path)
+			if err != nil {
+				return nil, err
+			}
+		}
 		path = "file://" + path
 	}
 
