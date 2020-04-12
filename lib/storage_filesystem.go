@@ -78,7 +78,11 @@ func (backend StorageFilesystem) StoreChunk(shasum string, part, totalParts uint
 		return 0, nil
 	}
 
-	_ = (*backend.storage).CreatePath(path)
+	err = (*backend.storage).CreatePath(path)
+	if err != nil {
+		return 0, err
+	}
+
 	return (*backend.storage).WriteFile(fileName, data)
 }
 
