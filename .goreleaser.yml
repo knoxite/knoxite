@@ -1,0 +1,89 @@
+env:
+  - GO111MODULE=on
+before:
+  hooks:
+  - go mod download
+builds:
+  -
+    id: "knoxite"
+    binary: knoxite
+    ldflags: -s -w -X main.Version={{ .Version }} -X main.CommitSHA={{ .Commit }}
+    goos:
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - 386
+      - arm64
+      - arm
+    goarm:
+      - 6
+      - 7
+  -
+    id: "darwin"
+    binary: "knoxite"
+    ldflags: -s -w -X main.Version={{ .Version }} -X main.CommitSHA={{ .Commit }}
+    goos:
+      - darwin
+    goarch:
+      - amd64
+
+archives:
+  - id: default
+    builds:
+      - knoxite
+    format_overrides:
+      - goos: windows
+        format: zip
+    replacements:
+      windows: Windows
+      386: i386
+      amd64: x86_64
+  - id: darwin
+    builds:
+      - darwin
+    replacements:
+      darwin: Darwin
+      amd64: x86_64
+
+nfpms:
+  -
+    builds:
+    - knoxite
+
+    vendor: knoxite
+    homepage: "https://knoxite.com/"
+    maintainer: "Christian Muehlhaeuser <muesli@gmail.com>"
+    description: "An open-source data storage & backup system"
+    license: AGPL
+    formats:
+      - deb
+      - rpm
+    bindir: /usr/bin
+
+brews:
+  - ids:
+    - darwin
+    github:
+      owner: knoxite
+      name: homebrew-tap
+    commit_author:
+      name: "Christian Muehlhaeuser"
+      email: "muesli@gmail.com"
+    homepage: "https://knoxite.com/"
+    description: "An open-source data storage & backup system"
+    # skip_upload: true
+
+signs:
+  - artifacts: checksum
+
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
