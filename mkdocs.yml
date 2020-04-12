@@ -1,5 +1,0 @@
-site_name: Knoxite Documentation
-theme: readthedocs
-docs_dir: docs
-pages:
-  - Installation: index.md
