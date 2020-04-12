@@ -29,7 +29,7 @@ func hashFile(path string) (string, error) {
 		return "", err
 	}
 
-	hasher.Write(s)
+	_, _ = hasher.Write(s)
 	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
@@ -223,7 +223,7 @@ func TestSnapshotFind(t *testing.T) {
 
 	r, _ := NewRepository(dir, testPassword)
 	vol, _ := NewVolume("test", "")
-	r.AddVolume(vol)
+	_ = r.AddVolume(vol)
 
 	_, _, err = r.FindSnapshot("invalidID")
 	if err != ErrSnapshotNotFound {
@@ -231,8 +231,8 @@ func TestSnapshotFind(t *testing.T) {
 	}
 
 	snapshot, _ := NewSnapshot("test_snapshot")
-	snapshot.Save(&r)
-	vol.AddSnapshot(snapshot.ID)
+	_ = snapshot.Save(&r)
+	_ = vol.AddSnapshot(snapshot.ID)
 
 	_, s, err := r.FindSnapshot("latest")
 	if err != nil || s == nil {

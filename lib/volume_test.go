@@ -85,7 +85,7 @@ func TestVolumeFind(t *testing.T) {
 	}
 
 	vol, _ := NewVolume("test", "")
-	r.AddVolume(vol)
+	_ = r.AddVolume(vol)
 
 	v, err := r.FindVolume("latest")
 	if err != nil || v == nil {
@@ -105,15 +105,15 @@ func TestSnapshotRemove(t *testing.T) {
 
 	r, _ := NewRepository(dir, testPassword)
 	vol, _ := NewVolume("test", "")
-	r.AddVolume(vol)
+	_ = r.AddVolume(vol)
 
 	snapshot, _ := NewSnapshot("test_snapshot")
-	snapshot.Save(&r)
-	vol.AddSnapshot(snapshot.ID)
+	_ = snapshot.Save(&r)
+	_ = vol.AddSnapshot(snapshot.ID)
 
 	snapshot2, _ := NewSnapshot("test_snapshot_too")
-	snapshot2.Save(&r)
-	vol.AddSnapshot(snapshot2.ID)
+	_ = snapshot2.Save(&r)
+	_ = vol.AddSnapshot(snapshot2.ID)
 
 	err = vol.RemoveSnapshot(snapshot.ID)
 	if err != nil {

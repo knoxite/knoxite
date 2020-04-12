@@ -25,7 +25,7 @@ func TestChunkIndexReindex(t *testing.T) {
 
 	r, _ := NewRepository(dir, testPassword)
 	vol, _ := NewVolume("test", "")
-	r.AddVolume(vol)
+	_ = r.AddVolume(vol)
 
 	snapshot, _ := NewSnapshot("test_snapshot")
 	index, _ := OpenChunkIndex(&r)
@@ -37,10 +37,10 @@ func TestChunkIndexReindex(t *testing.T) {
 		}
 	}
 
-	snapshot.Save(&r)
-	vol.AddSnapshot(snapshot.ID)
-	index.Save(&r)
-	r.Save()
+	_ = snapshot.Save(&r)
+	_ = vol.AddSnapshot(snapshot.ID)
+	_ = index.Save(&r)
+	_ = r.Save()
 
 	newindex, err := OpenChunkIndex(&r)
 	if err != nil {
@@ -64,7 +64,7 @@ func TestChunkIndexPack(t *testing.T) {
 
 	r, _ := NewRepository(dir, testPassword)
 	vol, _ := NewVolume("test", "")
-	r.AddVolume(vol)
+	_ = r.AddVolume(vol)
 
 	snapshot, _ := NewSnapshot("test_snapshot")
 	index, err := OpenChunkIndex(&r)
@@ -85,8 +85,8 @@ func TestChunkIndexPack(t *testing.T) {
 		}
 	}
 
-	snapshot.Save(&r)
-	vol.AddSnapshot(snapshot.ID)
+	_ = snapshot.Save(&r)
+	_ = vol.AddSnapshot(snapshot.ID)
 
 	err = vol.RemoveSnapshot(snapshot.ID)
 	if err != nil {

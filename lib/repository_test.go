@@ -61,14 +61,14 @@ func TestRepositoryIsEmpty(t *testing.T) {
 	}
 
 	vol, _ := NewVolume("test", "")
-	r.AddVolume(vol)
+	_ = r.AddVolume(vol)
 	if !r.IsEmpty() {
 		t.Error("Repository should be empty")
 	}
 
 	snapshot, _ := NewSnapshot("test_snapshot")
-	snapshot.Save(&r)
-	vol.AddSnapshot(snapshot.ID)
+	_ = snapshot.Save(&r)
+	_ = vol.AddSnapshot(snapshot.ID)
 	if r.IsEmpty() {
 		t.Error("Repository should not be empty")
 	}
