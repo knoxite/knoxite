@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	bazil.org/fuse v0.0.0-20191225233854-3a99aca11732
+	github.com/Azure/azure-storage-file-go v0.7.0
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-ini/ini v1.51.1 // indirect
