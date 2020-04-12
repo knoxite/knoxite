@@ -1,6 +1,11 @@
 knoxite
 =======
 
+[![Build Status](https://travis-ci.org/knoxite/knoxite.svg?branch=master)](https://travis-ci.org/knoxite/knoxite)
+[![Coverage Status](https://coveralls.io/repos/github/knoxite/knoxite/badge.svg?branch=master)](https://coveralls.io/github/knoxite/knoxite?branch=master)
+[![Go ReportCard](http://goreportcard.com/badge/knoxite/knoxite)](http://goreportcard.com/report/knoxite/knoxite)
+[![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://pkg.go.dev/github.com/knoxite/knoxite?tab=doc)
+
 knoxite is a secure data storage & backup system.
 
 Join the discussion in #knoxite (irc.freenode.net) or our [Gitter room](https://gitter.im/knoxite/chat)!
@@ -140,11 +145,3 @@ $ ./knoxite -r /tmp/knoxite mount [snapshot ID] /mnt
 ## Optional environment variables
 Optionally you can set the `KNOXITE_REPOSITORY` and `KNOXITE_PASSWORD` environment
 variables to provide default settings for when no options have been passed to `knoxite`.
-
-## Development
-
-API docs can be found [here](http://godoc.org/github.com/knoxite/knoxite).
-
-[![Build Status](https://travis-ci.org/knoxite/knoxite.svg?branch=master)](https://travis-ci.org/knoxite/knoxite)
-[![Coverage Status](https://coveralls.io/repos/github/knoxite/knoxite/badge.svg?branch=master)](https://coveralls.io/github/knoxite/knoxite?branch=master)
-[![Go ReportCard](http://goreportcard.com/badge/knoxite/knoxite)](http://goreportcard.com/report/knoxite/knoxite)
