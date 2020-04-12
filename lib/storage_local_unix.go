@@ -21,5 +21,6 @@ func (backend *StorageLocal) AvailableSpace() (uint64, error) {
 	}
 
 	// Available blocks * size per block = available space in bytes
-	return stat.Bavail * uint64(stat.Bsize), nil
+	// we convert both types to a uint64 as their type varies on different OS
+	return uint64(stat.Bavail) * uint64(stat.Bsize), nil
 }
