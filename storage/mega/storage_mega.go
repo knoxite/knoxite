@@ -57,8 +57,8 @@ func (*StorageMega) NewBackend(u url.URL) (knoxite.Backend, error) {
 	if err != nil {
 		return &StorageMega{}, err
 	}
-
 	backend.StorageFilesystem = knfs
+
 	return &backend, nil
 }
 

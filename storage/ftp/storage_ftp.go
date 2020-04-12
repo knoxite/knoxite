@@ -72,6 +72,7 @@ func (*StorageFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 		ftp:   con,
 		login: loggedIn,
 	}
+
 	storageftp, err := knoxite.NewStorageFilesystem(u.Path, &storage)
 	storage.StorageFilesystem = storageftp
 	if err != nil {
