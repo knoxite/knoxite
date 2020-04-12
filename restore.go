@@ -13,6 +13,7 @@ import (
 
 	"github.com/muesli/goprogressbar"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	knoxite "github.com/knoxite/knoxite/lib"
 )
@@ -22,7 +23,13 @@ var (
 	ErrTargetMissing = errors.New("please specify a directory to restore to")
 )
 
+type RestoreOptions struct {
+	Excludes []string
+}
+
 var (
+	restoreOpts = RestoreOptions{}
+
 	restoreCmd = &cobra.Command{
 		Use:   "restore <snapshot> <destination>",
 		Short: "restore a snapshot",
@@ -34,16 +41,21 @@ var (
 			if len(args) < 2 {
 				return ErrTargetMissing
 			}
-			return executeRestore(args[0], args[1])
+			return executeRestore(args[0], args[1], restoreOpts)
 		},
 	}
 )
 
+func initRestoreFlags(f func() *pflag.FlagSet) {
+	f().StringArrayVarP(&restoreOpts.Excludes, "excludes", "x", []string{}, "list of excludes")
+}
+
 func init() {
+	initRestoreFlags(restoreCmd.Flags)
 	RootCmd.AddCommand(restoreCmd)
 }
 
-func executeRestore(snapshotID, target string) error {
+func executeRestore(snapshotID, target string, opts RestoreOptions) error {
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err == nil {
 		_, snapshot, ferr := repository.FindSnapshot(snapshotID)
@@ -51,7 +63,7 @@ func executeRestore(snapshotID, target string) error {
 			return ferr
 		}
 
-		progress, derr := knoxite.DecodeSnapshot(repository, snapshot, target)
+		progress, derr := knoxite.DecodeSnapshot(repository, snapshot, target, opts.Excludes)
 		if derr != nil {
 			return derr
 		}
