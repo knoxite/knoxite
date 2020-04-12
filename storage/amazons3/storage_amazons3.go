@@ -38,7 +38,7 @@ func init() {
 
 // NewBackend returns a StorageAmazonS3 backend
 func (*StorageAmazonS3) NewBackend(URL url.URL) (knoxite.Backend, error) {
-	ssl := true
+	var ssl bool
 	switch URL.Scheme {
 	case "s3":
 		ssl = false
