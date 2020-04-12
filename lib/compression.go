@@ -16,7 +16,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/DataDog/zstd"
+	"github.com/klauspost/compress/zstd"
 	"github.com/ulikunitz/xz"
 )
 
@@ -53,7 +53,7 @@ func (c Compressor) Process(data []byte) ([]byte, error) {
 	case CompressionZlib:
 		w = zlib.NewWriter(&buf)
 	case CompressionZstd:
-		w = zstd.NewWriter(&buf)
+		w, err = zstd.NewWriter(&buf)
 	}
 	if err != nil {
 		return []byte{}, err
@@ -98,7 +98,9 @@ func (c Decompressor) Process(data []byte) ([]byte, error) {
 	case CompressionZlib:
 		zr, err = zlib.NewReader(bytes.NewReader(data))
 	case CompressionZstd:
-		zr = zstd.NewReader(bytes.NewReader(data))
+		zri, erri := zstd.NewReader(bytes.NewReader(data))
+		zr = ioutil.NopCloser(zri)
+		err = erri
 	}
 	if err != nil {
 		return []byte{}, err
