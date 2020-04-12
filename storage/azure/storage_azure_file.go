@@ -52,7 +52,12 @@ func (*StorageAzureFile) NewBackend(u url.URL) (knoxite.Backend, error) {
 	share := pp[1]
 	folder := "/" + strings.Join(pp[2:], "/")
 
-	sURL, err := url.Parse(fmt.Sprintf("https://%s.%s/%s", u.User.Username(), u.Hostname(), share))
+	// adds Storage account name to endpoint if not provided
+	hostname := u.Hostname()
+	if !strings.HasPrefix(hostname, u.User.Username()+".") {
+		hostname = u.User.Username() + "." + u.Hostname()
+	}
+	sURL, err := url.Parse(fmt.Sprintf("https://%s/%s", hostname, share))
 	if err != nil {
 		return &StorageAzureFile{}, knoxite.ErrInvalidRepositoryURL
 	}
