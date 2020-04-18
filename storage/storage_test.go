@@ -24,7 +24,6 @@ import (
 	"github.com/knoxite/knoxite/storage/dropbox"
 	"github.com/knoxite/knoxite/storage/ftp"
 	"github.com/knoxite/knoxite/storage/sftp"
-	_ "github.com/knoxite/knoxite/storage/sftp"
 )
 
 type testBackend struct {
@@ -175,7 +174,6 @@ func TestMain(m *testing.M) {
 				if err != nil {
 					panic(err)
 				}
-
 			},
 		})
 	}
