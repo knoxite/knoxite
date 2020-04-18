@@ -18,11 +18,12 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     OS="macOS"
 fi
 
-curl -L "https://github.com/drakkan/sftpgo/releases/download/0.9.6/sftpgo_0.9.6_${OS}_x86_64.tar.xz" --output sftpgo_tar
-tar -xf sftpgo_tar
+curl -L "https://github.com/drakkan/sftpgo/releases/download/0.9.6/sftpgo_0.9.6_${OS}_x86_64.tar.xz" --output /tmp/sftpgo_tar 
+tar -xf /tmp/sftpgo_tar sftpgo
 
 sudo mkdir -p $SFTP_DIR
 sudo chmod 777 $SFTP_DIR
 ./sftpgo portable -u $SFTP_USER -p $SFTP_PASSWORD -s $SFTP_PORT -d $SFTP_DIR -g "*" &
 sudo mkdir -p $HOME/.ssh
+while [ ! -f "id_ecdsa.pub" ]; do sleep 1; done # We need to wait until the host key is generated
 echo "[localhost]:$SFTP_PORT $(cat id_ecdsa.pub)" >> $HOME/.ssh/known_hosts
