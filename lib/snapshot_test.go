@@ -156,7 +156,7 @@ func TestSnapshotCreate(t *testing.T) {
 			}
 			defer os.RemoveAll(targetdir)
 
-			progress, err := DecodeSnapshot(r, snapshot, targetdir)
+			progress, err := DecodeSnapshot(r, snapshot, targetdir, []string{})
 			if err != nil {
 				t.Errorf("Failed restoring snapshot: %s", err)
 				return

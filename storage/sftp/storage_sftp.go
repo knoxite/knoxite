@@ -126,7 +126,21 @@ func (backend *StorageSFTP) DeleteFile(path string) error {
 }
 
 func (backend *StorageSFTP) DeletePath(path string) error {
-	return backend.sftp.RemoveDirectory(path)
+	files, err := backend.sftp.ReadDir(path)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			err = backend.DeletePath(backend.sftp.Join(path, file.Name()))
+		} else {
+			err = backend.DeleteFile(backend.sftp.Join(path, file.Name()))
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return backend.sftp.Remove(path)
 }
 
 func (backend *StorageSFTP) ReadFile(path string) ([]byte, error) {
