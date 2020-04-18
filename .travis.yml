@@ -24,6 +24,7 @@ env:
 before_install:
   - ./admin/setup_minio_test_environment.sh
   - ./admin/setup_pureftpd_test_environment.sh
+  - ./admin/setup_sftpgo_test_environment.sh
   - if [[ $TRAVIS_GO_VERSION == 1.13* ]]; then go get github.com/axw/gocov/gocov github.com/modocache/gover github.com/mattn/goveralls; fi
 
 script:

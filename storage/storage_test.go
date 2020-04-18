@@ -23,6 +23,8 @@ import (
 	"github.com/knoxite/knoxite/storage/backblaze"
 	"github.com/knoxite/knoxite/storage/dropbox"
 	"github.com/knoxite/knoxite/storage/ftp"
+	"github.com/knoxite/knoxite/storage/sftp"
+	_ "github.com/knoxite/knoxite/storage/sftp"
 )
 
 type testBackend struct {
@@ -143,6 +145,37 @@ func TestMain(m *testing.M) {
 				if err != nil {
 					panic(err)
 				}
+			},
+		})
+	}
+
+	sftpurl := os.Getenv("KNOXITE_SFTP_URL")
+	if len(sftpurl) > 0 {
+		testBackends = append(testBackends, &testBackend{
+			url:         sftpurl,
+			protocols:   []string{"sftp"},
+			description: "SSH/SFTP Storage",
+			tearDown: func(tb *testBackend) {
+				b, err := knoxite.BackendFromURL(tb.url)
+				if err != nil {
+					panic(err)
+				}
+
+				u, err := url.Parse(tb.url)
+				if err != nil {
+					panic(err)
+				}
+
+				db := b.(*sftp.StorageSFTP)
+				err = db.DeletePath(u.Path)
+				if err != nil {
+					panic(err)
+				}
+				err = db.CreatePath(u.Path)
+				if err != nil {
+					panic(err)
+				}
+
 			},
 		})
 	}
