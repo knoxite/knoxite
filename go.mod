@@ -3,7 +3,9 @@ module github.com/knoxite/knoxite
 go 1.13
 
 require (
-	bazil.org/fuse v0.0.0-20200416020106-1af1d1f56f46
+	bazil.org/fuse v0.0.0-20200419173433-3ba628eaf417
+	cloud.google.com/go v0.56.0 // indirect
+	cloud.google.com/go/storage v1.6.0
 	github.com/Azure/azure-storage-file-go v0.7.0
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/dustin/go-humanize v1.0.0
@@ -35,6 +37,7 @@ require (
 	github.com/ungerik/go-dry v0.0.0-20180411133923-654ae31114c8 // indirect
 	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+	google.golang.org/api v0.21.0
 	gopkg.in/ini.v1 v1.51.1 // indirect
 	gopkg.in/kothar/go-backblaze.v0 v0.0.0-20191215213626-7594ed38700f
 )
