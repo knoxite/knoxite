@@ -22,6 +22,7 @@ import (
 	_ "github.com/knoxite/knoxite/storage/backblaze"
 	_ "github.com/knoxite/knoxite/storage/dropbox"
 	_ "github.com/knoxite/knoxite/storage/ftp"
+	_ "github.com/knoxite/knoxite/storage/googlecloud"
 	_ "github.com/knoxite/knoxite/storage/http"
 	_ "github.com/knoxite/knoxite/storage/mega"
 	_ "github.com/knoxite/knoxite/storage/sftp"
