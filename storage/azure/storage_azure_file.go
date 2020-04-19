@@ -19,7 +19,7 @@ import (
 	knoxite "github.com/knoxite/knoxite/lib"
 )
 
-// StorageAzureFile stores data on a remote Azure File Storage
+// StorageAzureFile stores data on an Azure File Storage
 type StorageAzureFile struct {
 	knoxite.StorageFilesystem
 	url        url.URL
@@ -114,7 +114,6 @@ func (backend *StorageAzureFile) AvailableSpace() (uint64, error) {
 }
 
 // CreatePath creates a dir including all its parent dirs, when required
-// is left empty because WriteFile automatically creates the path when uploading a file
 func (backend *StorageAzureFile) CreatePath(p string) error {
 	p = strings.TrimPrefix(p, "/")
 	p = strings.TrimSuffix(p, "/")
@@ -141,7 +140,7 @@ func (backend *StorageAzureFile) Stat(p string) (uint64, error) {
 	u := backend.endpoint
 	u.Path = path.Join(u.Path, p)
 
-	//we assume the share & file do already exist
+	// we assume the share & file do already exist
 	fileUrl := azfile.NewFileURL(u, azfile.NewPipeline(&backend.credential, azfile.PipelineOptions{}))
 	props, err := fileUrl.GetProperties(context.Background())
 	if err != nil {
@@ -163,8 +162,7 @@ func (backend *StorageAzureFile) ReadFile(p string) ([]byte, error) {
 
 	bytes := make([]byte, size)
 	fileUrl := azfile.NewFileURL(u, azfile.NewPipeline(&backend.credential, azfile.PipelineOptions{}))
-	//ToDo check https://godoc.org/github.com/Azure/azure-storage-file-go/azfile#example-DownloadAzureFileToFile parallelism...
-	//ToDo use custom context
+
 	_, err = azfile.DownloadAzureFileToBuffer(context.Background(), fileUrl, bytes, azfile.DownloadFromAzureFileOptions{Parallelism: 1})
 	if err != nil {
 		return nil, err
@@ -173,12 +171,12 @@ func (backend *StorageAzureFile) ReadFile(p string) ([]byte, error) {
 	return bytes, nil
 }
 
-// WriteFile write files on Azure file storage
+// WriteFile writes a file on Azure file storage
 func (backend *StorageAzureFile) WriteFile(p string, data []byte) (size uint64, err error) {
 	u := backend.endpoint
 	u.Path = path.Join(u.Path, p)
 
-	//we assume the share & file do already exist
+	// we assume the share & file do already exist
 	fileUrl := azfile.NewFileURL(u, azfile.NewPipeline(&backend.credential, azfile.PipelineOptions{}))
 
 	err = azfile.UploadBufferToAzureFile(context.Background(), data, fileUrl, azfile.UploadToAzureFileOptions{
@@ -197,7 +195,7 @@ func (backend *StorageAzureFile) DeleteFile(p string) error {
 	u := backend.endpoint
 	u.Path = path.Join(u.Path, p)
 
-	//we assume the share & file do already exist
+	// we assume the share & file do already exist
 	_, err := azfile.NewFileURL(u, azfile.NewPipeline(&backend.credential, azfile.PipelineOptions{})).Delete(context.Background())
 	if err != nil {
 		return err
