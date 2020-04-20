@@ -32,7 +32,7 @@ jobs:
       env:
         KNOXITE_AMAZONS3_URL: ${{ secrets.KNOXITE_AMAZONS3_URL }}
       run: |
-        ./admin/setup_minio_test_environment.sh
+        ./admin/setup_s3_test_environment.sh
         go test -v -tags "ci backend" ./storage
       if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest'
 
@@ -40,7 +40,7 @@ jobs:
       env:
         KNOXITE_SFTP_URL: ${{ secrets.KNOXITE_SFTP_URL }}
       run: |
-        ./admin/setup_sftpgo_test_environment.sh
+        ./admin/setup_sftp_test_environment.sh
         go test -v -tags "ci backend" ./storage
       if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest'
 
