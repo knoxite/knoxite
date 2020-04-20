@@ -1,5 +1,5 @@
-bazil.org/fuse v0.0.0-20200419173433-3ba628eaf417 h1:Cz/BF75sR7HJJ5ll0M8aT6yfjcGaEr1yYPoMsWCZ/OQ=
-bazil.org/fuse v0.0.0-20200419173433-3ba628eaf417/go.mod h1:FbcW6z/2VytnFDhZfumh8Ss8zxHE6qpMP5sHTRe0EaM=
+bazil.org/fuse v0.0.0-20191225233854-3a99aca11732 h1:gaB1+kZCJDExjlrdy37gIwxV0M7v81EzIFKQZ5o5YV0=
+bazil.org/fuse v0.0.0-20191225233854-3a99aca11732/go.mod h1:FbcW6z/2VytnFDhZfumh8Ss8zxHE6qpMP5sHTRe0EaM=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.38.0 h1:ROfEUZz+Gh5pa62DJWXSaonyu3StP6EA6lPEXPI6mCo=

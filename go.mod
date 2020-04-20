@@ -3,7 +3,7 @@ module github.com/knoxite/knoxite
 go 1.13
 
 require (
-	bazil.org/fuse v0.0.0-20200419173433-3ba628eaf417
+	bazil.org/fuse v0.0.0-20191225233854-3a99aca11732
 	cloud.google.com/go v0.56.0 // indirect
 	cloud.google.com/go/storage v1.6.0
 	github.com/Azure/azure-storage-file-go v0.7.0
