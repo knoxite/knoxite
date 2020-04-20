@@ -21,3 +21,6 @@ curl https://dl.minio.io/server/minio/release/$OS-amd64/minio --output minio_tes
 chmod +x ./minio_test
 mkdir s3test
 ./minio_test server ./s3test &
+
+# wait for minio to boot up
+sleep 5
