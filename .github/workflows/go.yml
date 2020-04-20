@@ -28,11 +28,19 @@ jobs:
     - name: Test
       run: go test -v -tags ci ./...
 
-    - name: Storage Backend Tests
+    - name: Storage S3 Backend Tests
       env:
         KNOXITE_AMAZONS3_URL: ${{ secrets.KNOXITE_AMAZONS3_URL }}
       run: |
         ./admin/setup_minio_test_environment.sh
+        go test -v -tags "ci backend" ./storage
+      if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest'
+
+    - name: Storage SFTP Backend Tests
+      env:
+        KNOXITE_SFTP_URL: ${{ secrets.KNOXITE_SFTP_URL }}
+      run: |
+        ./admin/setup_sftpgo_test_environment.sh
         go test -v -tags "ci backend" ./storage
       if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest'
 
