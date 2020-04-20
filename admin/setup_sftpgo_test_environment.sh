@@ -6,11 +6,11 @@
 #   For license see LICENSE
 #
 
-
-export SFTP_PASSWORD=test
-export SFTP_USER=test
-export SFTP_PORT=3000
-export SFTP_DIR="$HOME"/sftpgo
+SFTPGO_VERSION="0.9.6"
+SFTP_USER=test
+SFTP_PASSWORD=test
+SFTP_PORT=3000
+SFTP_DIR="$HOME"/sftpgo
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
     OS="linux"
@@ -18,12 +18,17 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     OS="macOS"
 fi
 
-curl -L "https://github.com/drakkan/sftpgo/releases/download/0.9.6/sftpgo_0.9.6_${OS}_x86_64.tar.xz" --output /tmp/sftpgo_tar 
+# download sftpgo
+curl -L "https://github.com/drakkan/sftpgo/releases/download/${SFTPGO_VERSION}/sftpgo_${SFTPGO_VERSION}_${OS}_x86_64.tar.xz" --output /tmp/sftpgo_tar
 tar -xf /tmp/sftpgo_tar sftpgo
 
-mkdir -p $SFTP_DIR
-chmod 777 $SFTP_DIR
-./sftpgo portable -u $SFTP_USER -p $SFTP_PASSWORD -s $SFTP_PORT -d $SFTP_DIR -g "*" &
+# create dirs
+mkdir -p "$SFTP_DIR"
 mkdir -p "$HOME"/.ssh
-while [ ! -f "id_ecdsa.pub" ]; do sleep 1; done # We need to wait until the host key is generated
+
+# start SFTP server
+./sftpgo portable -u "$SFTP_USER" -p "$SFTP_PASSWORD" -s $SFTP_PORT -d "$SFTP_DIR" -g "*" &
+
+# wait for it to generate a host key
+while [ ! -f "id_ecdsa.pub" ]; do sleep 1; done
 echo "[localhost]:$SFTP_PORT $(cat id_ecdsa.pub)" >> "$HOME"/.ssh/known_hosts
