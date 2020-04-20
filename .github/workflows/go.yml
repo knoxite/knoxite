@@ -44,6 +44,14 @@ jobs:
         go test -v -tags "ci backend" ./storage
       if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest'
 
+    - name: Storage FTP Backend Tests
+      env:
+        KNOXITE_FTP_URL: ${{ secrets.KNOXITE_FTP_URL }}
+      run: |
+        ./admin/setup_ftp_test_environment.sh
+        go test -v -tags "ci backend" ./storage
+      if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest'
+
     - name: Coverage
       env:
         COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
