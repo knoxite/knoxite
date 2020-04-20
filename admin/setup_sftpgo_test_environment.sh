@@ -10,7 +10,7 @@
 export SFTP_PASSWORD=test
 export SFTP_USER=test
 export SFTP_PORT=3000
-export SFTP_DIR=~/sftpgo
+export SFTP_DIR="$HOME"/sftpgo
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
     OS="linux"
@@ -21,9 +21,9 @@ fi
 curl -L "https://github.com/drakkan/sftpgo/releases/download/0.9.6/sftpgo_0.9.6_${OS}_x86_64.tar.xz" --output /tmp/sftpgo_tar 
 tar -xf /tmp/sftpgo_tar sftpgo
 
-sudo mkdir -p $SFTP_DIR
-sudo chmod 777 $SFTP_DIR
+mkdir -p $SFTP_DIR
+chmod 777 $SFTP_DIR
 ./sftpgo portable -u $SFTP_USER -p $SFTP_PASSWORD -s $SFTP_PORT -d $SFTP_DIR -g "*" &
-sudo mkdir -p $HOME/.ssh
+mkdir -p "$HOME"/.ssh
 while [ ! -f "id_ecdsa.pub" ]; do sleep 1; done # We need to wait until the host key is generated
-echo "[localhost]:$SFTP_PORT $(cat id_ecdsa.pub)" >> $HOME/.ssh/known_hosts
+echo "[localhost]:$SFTP_PORT $(cat id_ecdsa.pub)" >> "$HOME"/.ssh/known_hosts
