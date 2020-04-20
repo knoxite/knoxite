@@ -25,7 +25,7 @@ func TestProgressTransferSpeed(t *testing.T) {
 	s := p.TransferSpeed()
 
 	// time.Sleep only approximates the duration, apply some threshold
-	if s < 920 || s > 1024 {
+	if s < 900 || s > 1024 {
 		t.Errorf("Expected %d, got %d", 1024, s)
 	}
 }
