@@ -29,6 +29,8 @@ jobs:
       run: go test -v -tags ci ./...
 
     - name: Storage Backend Tests
+      env:
+        KNOXITE_AMAZONS3_URL: ${{ secrets.KNOXITE_AMAZONS3_URL }}
       run: |
         ./admin/setup_minio_test_environment.sh
         go test -v -tags "ci backend" ./storage
