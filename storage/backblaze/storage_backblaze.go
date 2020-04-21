@@ -133,12 +133,11 @@ func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint
 
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	i, err := backend.Bucket.UploadFile(fileName, metadata, buf)
+	file, err := backend.Bucket.UploadFile(fileName, metadata, buf)
 	if err != nil {
 		return 0, err
 	}
-	file := backblaze.File(*i)
-	return uint64(file.ContentLength), err
+	return uint64(file.ContentLength), nil
 }
 
 // DeleteChunk deletes a single Chunk
