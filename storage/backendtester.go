@@ -108,6 +108,16 @@ func (b *BackendTest) SaveRepositoryTest(t *testing.T) {
 	}
 }
 
+func (b *BackendTest) AvailableSpaceTest(t *testing.T) {
+	space, err := b.Backend.AvailableSpace()
+	if err != nil && err != knoxite.ErrAvailableSpaceUnknown {
+		t.Errorf("%s: expected available space information, got %s", b.Description, err)
+	}
+	if err == nil && space <= 0 {
+		t.Errorf("%s: expected available space information, got %d", b.Description, space)
+	}
+}
+
 func (b *BackendTest) SaveSnapshotTest(t *testing.T) {
 	rnddata := make([]byte, 256)
 	rand.Read(rnddata)
