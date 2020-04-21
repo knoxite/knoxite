@@ -17,6 +17,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	knoxite "github.com/knoxite/knoxite/lib"
 )
@@ -25,8 +26,9 @@ type BackendTest struct {
 	URL         string
 	Protocols   []string
 	Description string
-	Backend     knoxite.Backend
-	TearDown    func(tb *BackendTest)
+
+	Backend  knoxite.Backend
+	TearDown func(tb *BackendTest)
 }
 
 func RandomSuffix() string {
@@ -96,6 +98,9 @@ func (b *BackendTest) SaveRepositoryTest(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s: %s", b.Description, err)
 	}
+
+	// wait for file versioning of certain backends to update
+	time.Sleep(3 * time.Second)
 
 	data, err := b.Backend.LoadRepository()
 	if err != nil {
