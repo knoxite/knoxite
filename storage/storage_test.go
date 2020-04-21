@@ -127,11 +127,6 @@ func TestMain(m *testing.M) {
 				if err != nil {
 					panic(err)
 				}
-
-				err = db.CreatePath(u.Path)
-				if err != nil {
-					panic(err)
-				}
 			},
 		})
 	}
@@ -150,10 +145,6 @@ func TestMain(m *testing.M) {
 
 				db := tb.backend.(*sftp.StorageSFTP)
 				err = db.DeletePath(u.Path)
-				if err != nil {
-					panic(err)
-				}
-				err = db.CreatePath(u.Path)
 				if err != nil {
 					panic(err)
 				}
