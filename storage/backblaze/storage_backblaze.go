@@ -46,7 +46,7 @@ func (*StorageBackblaze) NewBackend(URL url.URL) (knoxite.Backend, error) {
 
 	// Creating a new Client for accessing the B2 API
 	cl, err := backblaze.NewB2(backblaze.Credentials{
-		AccountID:      URL.User.Username(),
+		KeyID:          URL.User.Username(),
 		ApplicationKey: pw,
 	})
 	if err != nil {
