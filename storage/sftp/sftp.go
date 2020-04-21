@@ -103,6 +103,10 @@ func (backend *StorageSFTP) Protocols() []string {
 
 func (backend *StorageSFTP) AvailableSpace() (uint64, error) {
 	stat, err := backend.sftp.StatVFS(backend.url.Path)
+	if err != nil || stat == nil {
+		return 0, knoxite.ErrAvailableSpaceUnknown
+	}
+
 	return stat.FreeSpace(), err
 }
 
