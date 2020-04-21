@@ -33,7 +33,7 @@ jobs:
         KNOXITE_AMAZONS3_URL: ${{ secrets.KNOXITE_AMAZONS3_URL }}
       run: |
         ./admin/setup_s3_test_environment.sh
-        go test -v -tags "ci backend" ./storage
+        go test -v -count=1 -tags "ci backend" ./storage
       if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest'
 
     - name: Storage SFTP Backend Tests
@@ -41,7 +41,7 @@ jobs:
         KNOXITE_SFTP_URL: ${{ secrets.KNOXITE_SFTP_URL }}
       run: |
         ./admin/setup_sftp_test_environment.sh
-        go test -v -tags "ci backend" ./storage
+        go test -v -count=1 -tags "ci backend" ./storage
       if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest'
 
     - name: Storage FTP Backend Tests
@@ -49,7 +49,7 @@ jobs:
         KNOXITE_FTP_URL: ${{ secrets.KNOXITE_FTP_URL }}
       run: |
         ./admin/setup_ftp_test_environment.sh
-        go test -v -tags "ci backend" ./storage
+        go test -v -count=1 -tags "ci backend" ./storage
       if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest'
 
     - name: Coverage
