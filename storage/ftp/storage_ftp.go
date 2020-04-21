@@ -120,13 +120,7 @@ func (backend *StorageFTP) CreatePath(path string) error {
 			// don't try to create root-dir
 			continue
 		}
-		if err := backend.ftp.MakeDir(filepath.Join(slicedPath[:i+1]...)); err != nil {
-			// We only want to return an error when creating the last directory
-			// in this path failed. Parent dirs _may_ already exist
-			if i+1 == len(slicedPath) {
-				return err
-			}
-		}
+		_ = backend.ftp.MakeDir(filepath.Join(slicedPath[:i+1]...))
 	}
 
 	return nil
