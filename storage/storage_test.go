@@ -32,6 +32,7 @@ type testBackend struct {
 	url         string
 	protocols   []string
 	description string
+	backend     knoxite.Backend
 	tearDown    func(tb *testBackend)
 }
 
@@ -53,12 +54,7 @@ func TestMain(m *testing.M) {
 			protocols:   []string{"backblaze"},
 			description: "Backblaze Storage",
 			tearDown: func(tb *testBackend) {
-				b, err := knoxite.BackendFromURL(tb.url)
-				if err != nil {
-					panic(err)
-				}
-
-				db := b.(*backblaze.StorageBackblaze)
+				db := tb.backend.(*backblaze.StorageBackblaze)
 				list, err := db.Bucket.ListFileNames("", 128)
 				if err != nil {
 					panic(err)
@@ -89,13 +85,8 @@ func TestMain(m *testing.M) {
 			protocols:   []string{"dropbox"},
 			description: "Dropbox Storage",
 			tearDown: func(tb *testBackend) {
-				b, err := knoxite.BackendFromURL(tb.url)
-				if err != nil {
-					panic(err)
-				}
-
-				db := b.(*dropbox.StorageDropbox)
-				err = db.DeleteFile(db.Path)
+				db := tb.backend.(*dropbox.StorageDropbox)
+				err := db.DeleteFile(db.Path)
 				if err != nil {
 					panic(err)
 				}
@@ -126,17 +117,12 @@ func TestMain(m *testing.M) {
 			protocols:   []string{"ftp"},
 			description: "FTP Storage",
 			tearDown: func(tb *testBackend) {
-				b, err := knoxite.BackendFromURL(tb.url)
-				if err != nil {
-					panic(err)
-				}
-
 				u, err := url.Parse(tb.url)
 				if err != nil {
 					panic(err)
 				}
 
-				db := b.(*ftp.StorageFTP)
+				db := tb.backend.(*ftp.StorageFTP)
 				err = db.DeletePath(u.Path)
 				if err != nil {
 					panic(err)
@@ -157,17 +143,12 @@ func TestMain(m *testing.M) {
 			protocols:   []string{"sftp"},
 			description: "SSH/SFTP Storage",
 			tearDown: func(tb *testBackend) {
-				b, err := knoxite.BackendFromURL(tb.url)
-				if err != nil {
-					panic(err)
-				}
-
 				u, err := url.Parse(tb.url)
 				if err != nil {
 					panic(err)
 				}
 
-				db := b.(*sftp.StorageSFTP)
+				db := tb.backend.(*sftp.StorageSFTP)
 				err = db.DeletePath(u.Path)
 				if err != nil {
 					panic(err)
@@ -183,7 +164,20 @@ func TestMain(m *testing.M) {
 	if len(testBackends) == 0 {
 		panic("no backends enabled")
 	}
-	os.Exit(m.Run())
+	for _, tt := range testBackends {
+		var err error
+		tt.backend, err = knoxite.BackendFromURL(tt.url)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	r := m.Run()
+
+	for _, tt := range testBackends {
+		tt.tearDown(tt)
+	}
+	os.Exit(r)
 }
 
 func TestStorageNewBackend(t *testing.T) {
@@ -197,23 +191,20 @@ func TestStorageNewBackend(t *testing.T) {
 
 func TestStorageLocation(t *testing.T) {
 	for _, tt := range testBackends {
-		b, _ := knoxite.BackendFromURL(tt.url)
-
-		if b.Location() != tt.url {
-			t.Errorf("%s: Expected %v, got %v", tt.description, tt.url, b.Location())
+		if tt.backend.Location() != tt.url {
+			t.Errorf("%s: Expected %v, got %v", tt.description, tt.url, tt.backend.Location())
 		}
 	}
 }
 
 func TestStorageProtocols(t *testing.T) {
 	for _, tt := range testBackends {
-		b, _ := knoxite.BackendFromURL(tt.url)
-		if len(b.Protocols()) != len(tt.protocols) {
+		if len(tt.backend.Protocols()) != len(tt.protocols) {
 			t.Errorf("%s: Invalid amount of protocols", tt.description)
 		}
 
 		for i := 0; i < len(tt.protocols); i++ {
-			if b.Protocols()[i] != tt.protocols[i] {
+			if tt.backend.Protocols()[i] != tt.protocols[i] {
 				t.Errorf("%s: Invalid protocols", tt.description)
 			}
 		}
@@ -222,9 +213,7 @@ func TestStorageProtocols(t *testing.T) {
 
 func TestStorageDescription(t *testing.T) {
 	for _, tt := range testBackends {
-		b, _ := knoxite.BackendFromURL(tt.url)
-
-		if b.Description() != tt.description {
+		if tt.backend.Description() != tt.description {
 			t.Errorf("%s: Invalid Description", tt.description)
 		}
 	}
@@ -232,96 +221,35 @@ func TestStorageDescription(t *testing.T) {
 
 func TestStorageInitRepository(t *testing.T) {
 	for _, tt := range testBackends {
-		b, err := knoxite.BackendFromURL(tt.url)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-			continue
-		}
-
-		if err := b.InitRepository(); err != nil {
+		if err := tt.backend.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
-		defer tt.tearDown(tt)
 	}
 }
 
 func TestStorageSaveRepository(t *testing.T) {
 	for _, tt := range testBackends {
-		b, err := knoxite.BackendFromURL(tt.url)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-			continue
-		}
-
-		if err = b.InitRepository(); err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-		defer tt.tearDown(tt)
-
 		rnd := make([]byte, 256)
 		rand.Read(rnd)
 
-		err = b.SaveRepository(rnd)
+		err := tt.backend.SaveRepository(rnd)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		data, err := b.LoadRepository()
+		data, err := tt.backend.LoadRepository()
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
 		if !reflect.DeepEqual(data, rnd) {
-			t.Errorf("%s: Data missmatch", tt.description)
-		}
-	}
-}
-
-func TestStorageLoadRepository(t *testing.T) {
-	for _, tt := range testBackends {
-		b, err := knoxite.BackendFromURL(tt.url)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-			continue
-		}
-
-		if err = b.InitRepository(); err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-		defer tt.tearDown(tt)
-
-		rnd := make([]byte, 256)
-		rand.Read(rnd)
-
-		err = b.SaveRepository(rnd)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-
-		data, err := b.LoadRepository()
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-
-		if !reflect.DeepEqual(data, rnd) {
-			t.Errorf("%s: Data missmatch", tt.description)
+			t.Errorf("%s: Data mismatch %d %d", tt.description, len(data), len(rnd))
 		}
 	}
 }
 
 func TestStorageSaveSnapshot(t *testing.T) {
 	for _, tt := range testBackends {
-		b, err := knoxite.BackendFromURL(tt.url)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-			continue
-		}
-
-		if err = b.InitRepository(); err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-		defer tt.tearDown(tt)
-
 		rnddata := make([]byte, 256)
 		rand.Read(rnddata)
 
@@ -329,89 +257,42 @@ func TestStorageSaveSnapshot(t *testing.T) {
 		rand.Read(rndid)
 		id := hex.EncodeToString(rndid)
 
-		err = b.SaveSnapshot(id, rnddata)
+		err := tt.backend.SaveSnapshot(id, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		data, err := b.LoadSnapshot(id)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-
-		if !reflect.DeepEqual(data, rnddata) {
-			t.Errorf("%s: Data missmatch", tt.description)
-		}
-	}
-}
-
-func TestStorageLoadSnapshot(t *testing.T) {
-	for _, tt := range testBackends {
-		b, err := knoxite.BackendFromURL(tt.url)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-			continue
-		}
-
-		if err = b.InitRepository(); err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-		defer tt.tearDown(tt)
-
-		rnddata := make([]byte, 256)
-		rand.Read(rnddata)
-
-		rndid := make([]byte, 8)
-		rand.Read(rndid)
-		id := hex.EncodeToString(rndid)
-
-		err = b.SaveSnapshot(id, rnddata)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-
-		data, err := b.LoadSnapshot(id)
+		data, err := tt.backend.LoadSnapshot(id)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
 		if !reflect.DeepEqual(data, rnddata) {
-			t.Errorf("%s: Data missmatch", tt.description)
+			t.Errorf("%s: Data mismatch", tt.description)
 		}
 	}
 }
 
 func TestStorageStoreChunk(t *testing.T) {
 	for _, tt := range testBackends {
-		b, err := knoxite.BackendFromURL(tt.url)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-			continue
-		}
-
-		if err = b.InitRepository(); err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-		defer tt.tearDown(tt)
-
 		rnddata := make([]byte, 256)
 		rand.Read(rnddata)
 
-		totalParts := uint(mrand.Int())
+		totalParts := uint(mrand.Intn(256))
 		// get a random part number which is smaller than the totalParts number
 		part := uint(mrand.Intn(int(totalParts)))
 
 		hashsum := knoxite.Hash(rnddata, knoxite.HashHighway256)
-		size, err := b.StoreChunk(hashsum, part, totalParts, rnddata)
+		size, err := tt.backend.StoreChunk(hashsum, part, totalParts, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 		if size != uint64(len(rnddata)) {
-			t.Errorf("%s: Data length missmatch", tt.description)
+			t.Errorf("%s: Data length mismatch: %d != %d", tt.description, size, len(rnddata))
 		}
 
 		// Test to store the same chunk twice. Size should be 0
-		size, err = b.StoreChunk(hashsum, part, totalParts, rnddata)
+		size, err = tt.backend.StoreChunk(hashsum, part, totalParts, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
@@ -419,89 +300,37 @@ func TestStorageStoreChunk(t *testing.T) {
 			t.Errorf("%s: Already exisiting chunks should not be overwritten", tt.description)
 		}
 
-		data, err := b.LoadChunk(hashsum, part, totalParts)
+		data, err := tt.backend.LoadChunk(hashsum, part, totalParts)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 		if !reflect.DeepEqual(data, rnddata) {
-			t.Errorf("%s: Data missmatch", tt.description)
-		}
-	}
-}
-
-func TestStorageLoadChunk(t *testing.T) {
-	for _, tt := range testBackends {
-		b, err := knoxite.BackendFromURL(tt.url)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-			continue
-		}
-
-		if err = b.InitRepository(); err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-		defer tt.tearDown(tt)
-
-		rnddata := make([]byte, 256)
-		rand.Read(rnddata)
-
-		totalParts := uint(mrand.Int())
-		// get a random part number which is smaller than the totalParts number
-		part := uint(mrand.Intn(int(totalParts)))
-
-		hashsum := knoxite.Hash(rnddata, knoxite.HashHighway256)
-		_, err = b.StoreChunk(hashsum, part, totalParts, rnddata)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-
-		data, err := b.LoadChunk(hashsum, part, totalParts)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-		if !reflect.DeepEqual(data, rnddata) {
-			t.Errorf("%s: Data missmatch", tt.description)
+			t.Errorf("%s: Data mismatch", tt.description)
 		}
 	}
 }
 
 func TestStorageDeleteChunk(t *testing.T) {
 	for _, tt := range testBackends {
-		b, err := knoxite.BackendFromURL(tt.url)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-			continue
-		}
-
-		if err = b.InitRepository(); err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-		defer tt.tearDown(tt)
-
 		rnddata := make([]byte, 256)
 		rand.Read(rnddata)
 
-		totalParts := uint(mrand.Int())
+		totalParts := uint(mrand.Intn(256))
 		// get a random part number which is smaller than the totalParts number
 		part := uint(mrand.Intn(int(totalParts)))
 
 		hashsum := knoxite.Hash(rnddata, knoxite.HashHighway256)
-		_, err = b.StoreChunk(hashsum, part, totalParts, rnddata)
+		_, err := tt.backend.StoreChunk(hashsum, part, totalParts, rnddata)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		_, err = b.LoadChunk(hashsum, part, totalParts)
+		err = tt.backend.DeleteChunk(hashsum, part, totalParts)
 		if err != nil {
 			t.Errorf("%s: %s", tt.description, err)
 		}
 
-		err = b.DeleteChunk(hashsum, part, totalParts)
-		if err != nil {
-			t.Errorf("%s: %s", tt.description, err)
-		}
-
-		_, err = b.LoadChunk(hashsum, part, totalParts)
+		_, err = tt.backend.LoadChunk(hashsum, part, totalParts)
 		if err == nil {
 			t.Errorf("%s: Expected error, got nil", tt.description)
 		}
