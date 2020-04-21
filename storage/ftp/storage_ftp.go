@@ -15,7 +15,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -129,18 +128,8 @@ func (backend *StorageFTP) CreatePath(path string) error {
 
 // Stat returns the size of a file on ftp
 func (backend *StorageFTP) Stat(path string) (uint64, error) {
-	base, last := filepath.Split(path)
-	entries, err := backend.ftp.List(base)
-	if err != nil {
-		return 0, err
-	}
-	for _, v := range entries {
-		if v.Name == last {
-			return v.Size, nil
-		}
-	}
-
-	return 0, &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
+	size, err := backend.ftp.FileSize(path)
+	return uint64(size), err
 }
 
 // ReadFile reads a file from ftp
