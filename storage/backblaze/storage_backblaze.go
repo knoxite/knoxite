@@ -122,10 +122,10 @@ func (backend *StorageBackblaze) LoadChunk(shasum string, part, totalParts uint)
 func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
-	list, err := backend.Bucket.ListFileVersions(fileName, "", 1)
+	files, err := backend.findLatestFileVersion(fileName)
 	if err == nil {
-		for _, v := range list.Files {
-			if v.Size == len(data) {
+		if len(files) > 0 {
+			if files[0].Size == len(data) {
 				return 0, nil
 			}
 		}
@@ -145,15 +145,16 @@ func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint
 func (backend *StorageBackblaze) DeleteChunk(shasum string, part, totalParts uint) error {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
-	v, err := backend.Bucket.ListFileVersions(fileName, "", 1)
+	files, err := backend.findLatestFileVersion(fileName)
 	if err != nil {
 		return err
 	}
-	if len(v.Files) == 0 {
+
+	if len(files) == 0 {
 		return knoxite.ErrDeleteChunkFailed
 	}
 
-	_, err = backend.Bucket.DeleteFileVersion(fileName, v.Files[0].ID)
+	_, err = backend.Bucket.DeleteFileVersion(fileName, files[0].ID)
 	return err
 }
 
@@ -226,4 +227,23 @@ func (backend *StorageBackblaze) SaveRepository(data []byte) error {
 	metadata := make(map[string]string)
 	_, err := backend.Bucket.UploadFile(backend.repositoryFile, metadata, buf)
 	return err
+}
+
+func (backend *StorageBackblaze) findLatestFileVersion(fileName string) ([]backblaze.FileStatus, error) {
+	var files []backblaze.FileStatus
+
+	list, err := backend.Bucket.ListFileVersions(fileName, "", 1)
+	if err != nil {
+		return files, err
+	}
+
+	for _, v := range list.Files {
+		if v.Name != fileName {
+			continue
+		}
+
+		files = append(files, v)
+	}
+
+	return files, nil
 }
