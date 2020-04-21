@@ -7,7 +7,7 @@
  *   For license see LICENSE
  */
 
-package amazons3
+package s3
 
 import (
 	"crypto/rand"

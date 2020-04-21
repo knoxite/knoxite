@@ -1,12 +1,12 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2018, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
  *     Copyright (c) 2016, Stefan Luecke <glaxx@glaxx.net>
  *
  *   For license see LICENSE
  */
 
-package amazons3
+package s3
 
 import (
 	"bytes"

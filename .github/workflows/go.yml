@@ -33,7 +33,7 @@ jobs:
         KNOXITE_AMAZONS3_URL: ${{ secrets.KNOXITE_AMAZONS3_URL }}
       run: |
         ./admin/setup_s3_test_environment.sh
-        go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=amazons3.cov ./storage/amazons3
+        go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=s3.cov ./storage/s3
       if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest'
 
     - name: Storage SFTP Backend Tests

@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2017, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
  *
  *   For license see LICENSE
  */
@@ -17,7 +17,6 @@ import (
 	shutdown "github.com/klauspost/shutdown2"
 	"github.com/spf13/cobra"
 
-	_ "github.com/knoxite/knoxite/storage/amazons3"
 	_ "github.com/knoxite/knoxite/storage/azure"
 	_ "github.com/knoxite/knoxite/storage/backblaze"
 	_ "github.com/knoxite/knoxite/storage/dropbox"
@@ -25,6 +24,7 @@ import (
 	_ "github.com/knoxite/knoxite/storage/googlecloud"
 	_ "github.com/knoxite/knoxite/storage/http"
 	_ "github.com/knoxite/knoxite/storage/mega"
+	_ "github.com/knoxite/knoxite/storage/s3"
 	_ "github.com/knoxite/knoxite/storage/sftp"
 	_ "github.com/knoxite/knoxite/storage/webdav"
 )
