@@ -123,11 +123,9 @@ func (backend *StorageBackblaze) StoreChunk(shasum string, part, totalParts uint
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
 	files, err := backend.findLatestFileVersion(fileName)
-	if err == nil {
-		if len(files) > 0 {
-			if files[0].Size == len(data) {
-				return 0, nil
-			}
+	if err == nil && len(files) > 0 {
+		if files[0].Size == len(data) {
+			return 0, nil
 		}
 	}
 
@@ -148,7 +146,6 @@ func (backend *StorageBackblaze) DeleteChunk(shasum string, part, totalParts uin
 	if err != nil {
 		return err
 	}
-
 	if len(files) == 0 {
 		return knoxite.ErrDeleteChunkFailed
 	}
@@ -211,7 +208,15 @@ func (backend *StorageBackblaze) InitRepository() error {
 
 // LoadRepository reads the metadata for a repository
 func (backend *StorageBackblaze) LoadRepository() ([]byte, error) {
-	_, obj, err := backend.Bucket.DownloadFileByName(backend.repositoryFile)
+	files, err := backend.findLatestFileVersion(backend.repositoryFile)
+	if err != nil {
+		return nil, err
+	}
+	if len(files) == 0 {
+		return nil, knoxite.ErrLoadRepositoryFailed
+	}
+
+	_, obj, err := backend.backblaze.DownloadFileByID(files[0].ID)
 	if err != nil {
 		return nil, err
 	}

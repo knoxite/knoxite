@@ -17,7 +17,6 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	"time"
 
 	knoxite "github.com/knoxite/knoxite/lib"
 )
@@ -99,18 +98,9 @@ func (b *BackendTest) SaveRepositoryTest(t *testing.T) {
 		t.Errorf("%s: %s", b.Description, err)
 	}
 
-	var data []byte
-	for i := 0; i < 10; i++ {
-		data, err = b.Backend.LoadRepository()
-		if err != nil {
-			t.Errorf("%s: %s", b.Description, err)
-		}
-		if len(data) == len(rnd) {
-			break
-		}
-
-		// wait for file versioning of certain backends to catch up
-		time.Sleep(3 * time.Second)
+	data, err := b.Backend.LoadRepository()
+	if err != nil {
+		t.Errorf("%s: %s", b.Description, err)
 	}
 
 	if !reflect.DeepEqual(data, rnd) {
