@@ -1,7 +1,7 @@
 knoxite
 =======
 
-[![Build Status](https://travis-ci.org/knoxite/knoxite.svg?branch=master)](https://travis-ci.org/knoxite/knoxite)
+[![Build Status](https://github.com/knoxite/knoxite/workflows/build/badge.svg)](https://github.com/knoxite/knoxite/actions)
 [![Coverage Status](https://coveralls.io/repos/github/knoxite/knoxite/badge.svg?branch=master)](https://coveralls.io/github/knoxite/knoxite?branch=master)
 [![Go ReportCard](http://goreportcard.com/badge/knoxite/knoxite)](http://goreportcard.com/report/knoxite/knoxite)
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://pkg.go.dev/github.com/knoxite/knoxite?tab=doc)
