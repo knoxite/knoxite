@@ -133,9 +133,6 @@ func (backend *StorageFTP) Stat(path string) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if len(entries) == 0 {
-		return 0, &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
-	}
 	for _, v := range entries {
 		if v.Name == last {
 			return v.Size, nil
