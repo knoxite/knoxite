@@ -173,27 +173,40 @@ func (backend *StorageFTP) DeletePath(path string) error {
 		return err
 	}
 	for _, l := range list {
+		fpath := filepath.Join(path, l.Name)
+
 		if l.Type == ftp.EntryTypeFolder {
 			if len(l.Name) == 0 ||
 				strings.HasPrefix(l.Name, ".") ||
 				l.Name == "virtual" {
 				continue
 			}
-			backend.ftp.ChangeDir(l.Name)
-			err = backend.DeletePath(filepath.Join(path, l.Name))
+
+			err = backend.ftp.ChangeDir(l.Name)
 			if err != nil {
 				return err
 			}
-			backend.ftp.ChangeDirToParent()
+			err = backend.DeletePath(fpath)
+			if err != nil {
+				return err
+			}
+			err = backend.ftp.ChangeDirToParent()
+			if err != nil {
+				return err
+			}
+			err = backend.ftp.RemoveDir(fpath)
+			if err != nil {
+				return err
+			}
 		}
 
 		if l.Type == ftp.EntryTypeFile {
-			err = backend.ftp.Delete(filepath.Join(path, l.Name))
+			err = backend.ftp.Delete(fpath)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	return backend.ftp.RemoveDir(path)
+	return nil
 }
