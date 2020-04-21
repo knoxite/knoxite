@@ -180,6 +180,9 @@ func TestMain(m *testing.M) {
 		})
 	}
 
+	if len(testBackends) == 0 {
+		panic("no backends enabled")
+	}
 	os.Exit(m.Run())
 }
 
