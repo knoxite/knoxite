@@ -99,12 +99,18 @@ func (b *BackendTest) SaveRepositoryTest(t *testing.T) {
 		t.Errorf("%s: %s", b.Description, err)
 	}
 
-	// wait for file versioning of certain backends to update
-	time.Sleep(3 * time.Second)
+	var data []byte
+	for i := 0; i < 10; i++ {
+		data, err = b.Backend.LoadRepository()
+		if err != nil {
+			t.Errorf("%s: %s", b.Description, err)
+		}
+		if len(data) == len(rnd) {
+			break
+		}
 
-	data, err := b.Backend.LoadRepository()
-	if err != nil {
-		t.Errorf("%s: %s", b.Description, err)
+		// wait for file versioning of certain backends to catch up
+		time.Sleep(3 * time.Second)
 	}
 
 	if !reflect.DeepEqual(data, rnd) {
