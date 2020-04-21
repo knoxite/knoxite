@@ -46,18 +46,18 @@ func (*StorageWebDav) NewBackend(u url.URL) (knoxite.Backend, error) {
 	passwd, _ := userinfo.Password()
 
 	webdavClient := gowebdav.NewClient(u0.String(), username, passwd)
-	storage := StorageWebDav{
+	backend := StorageWebDav{
 		URL:    u,
 		Client: webdavClient,
 	}
 
-	storagedav, err := knoxite.NewStorageFilesystem("", &storage)
-	storage.StorageFilesystem = storagedav
+	fs, err := knoxite.NewStorageFilesystem("", &backend)
 	if err != nil {
 		return &StorageWebDav{}, err
 	}
+	backend.StorageFilesystem = fs
 
-	return &storage, nil
+	return &backend, nil
 
 }
 

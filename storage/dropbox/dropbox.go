@@ -19,61 +19,61 @@ import (
 	knoxite "github.com/knoxite/knoxite/lib"
 )
 
-// StorageDropbox stores data on a remote Dropbox
-type StorageDropbox struct {
+// DropboxStorage stores data on a remote Dropbox
+type DropboxStorage struct {
 	url   url.URL
 	dropy *dropy.Client
 	knoxite.StorageFilesystem
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&StorageDropbox{})
+	knoxite.RegisterBackendFactory(&DropboxStorage{})
 }
 
-// NewBackend returns a StorageDropbox backend
-func (*StorageDropbox) NewBackend(u url.URL) (knoxite.Backend, error) {
+// NewBackend returns a DropboxStorage backend
+func (*DropboxStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	user := u.User.Username()
 	if user == "" {
-		return &StorageDropbox{}, knoxite.ErrInvalidUsername
+		return &DropboxStorage{}, knoxite.ErrInvalidUsername
 
 	}
 
-	backend := StorageDropbox{
+	backend := DropboxStorage{
 		url:   u,
 		dropy: dropy.New(dropbox.New(dropbox.NewConfig(user))),
 	}
 
-	storageDB, err := knoxite.NewStorageFilesystem(u.Path, &backend)
+	fs, err := knoxite.NewStorageFilesystem(u.Path, &backend)
 	if err != nil {
-		return &StorageDropbox{}, err
+		return &DropboxStorage{}, err
 	}
-	backend.StorageFilesystem = storageDB
+	backend.StorageFilesystem = fs
 
 	return &backend, nil
 }
 
 // Location returns the type and location of the repository
-func (backend *StorageDropbox) Location() string {
+func (backend *DropboxStorage) Location() string {
 	return backend.url.String()
 }
 
 // Close the backend
-func (backend *StorageDropbox) Close() error {
+func (backend *DropboxStorage) Close() error {
 	return nil
 }
 
 // Protocols returns the Protocol Schemes supported by this backend
-func (backend *StorageDropbox) Protocols() []string {
+func (backend *DropboxStorage) Protocols() []string {
 	return []string{"dropbox"}
 }
 
 // Description returns a user-friendly description for this backend
-func (backend *StorageDropbox) Description() string {
+func (backend *DropboxStorage) Description() string {
 	return "Dropbox Storage"
 }
 
 // AvailableSpace returns the free space on this backend
-func (backend *StorageDropbox) AvailableSpace() (uint64, error) {
+func (backend *DropboxStorage) AvailableSpace() (uint64, error) {
 	space, err := backend.dropy.Client.Users.GetSpaceUsage()
 	if err != nil {
 		return 0, err
@@ -82,12 +82,12 @@ func (backend *StorageDropbox) AvailableSpace() (uint64, error) {
 }
 
 // CreatePath creates a dir including all its parent dirs, when required
-func (backend *StorageDropbox) CreatePath(path string) error {
+func (backend *DropboxStorage) CreatePath(path string) error {
 	return backend.dropy.Mkdir(path)
 }
 
 // Stat returns the size of a file
-func (backend *StorageDropbox) Stat(path string) (uint64, error) {
+func (backend *DropboxStorage) Stat(path string) (uint64, error) {
 	fileinfo, err := backend.dropy.Stat(path)
 	if err != nil {
 		return 0, err
@@ -96,7 +96,7 @@ func (backend *StorageDropbox) Stat(path string) (uint64, error) {
 }
 
 // ReadFile reads a file from dropbox
-func (backend *StorageDropbox) ReadFile(path string) ([]byte, error) {
+func (backend *DropboxStorage) ReadFile(path string) ([]byte, error) {
 	file, err := backend.dropy.Download(path)
 	if err != nil {
 		return nil, err
@@ -106,11 +106,11 @@ func (backend *StorageDropbox) ReadFile(path string) ([]byte, error) {
 }
 
 // WriteFile write files on dropbox
-func (backend *StorageDropbox) WriteFile(path string, data []byte) (size uint64, err error) {
+func (backend *DropboxStorage) WriteFile(path string, data []byte) (size uint64, err error) {
 	return uint64(len(data)), backend.dropy.Upload(path, bytes.NewReader(data))
 }
 
 // DeleteFile deletes a file from dropbox
-func (backend *StorageDropbox) DeleteFile(path string) error {
+func (backend *DropboxStorage) DeleteFile(path string) error {
 	return backend.dropy.Delete(path)
 }

@@ -19,8 +19,8 @@ import (
 	knoxite "github.com/knoxite/knoxite/lib"
 )
 
-// StorageAzureFile stores data on an Azure File Storage
-type StorageAzureFile struct {
+// AzureFileStorage stores data on an Azure File Storage
+type AzureFileStorage struct {
 	knoxite.StorageFilesystem
 	url        url.URL
 	endpoint   url.URL
@@ -28,24 +28,24 @@ type StorageAzureFile struct {
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&StorageAzureFile{})
+	knoxite.RegisterBackendFactory(&AzureFileStorage{})
 }
 
-// NewBackend returns a StorageAzureFile backend
+// NewBackend returns a AzureFileStorage backend
 // URL needs to be the Storage account file service URL endpoint (get it from the Azure portal)
-func (*StorageAzureFile) NewBackend(u url.URL) (knoxite.Backend, error) {
+func (*AzureFileStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	if u.User == nil || u.User.Username() == "" {
-		return &StorageAzureFile{}, knoxite.ErrInvalidUsername
+		return &AzureFileStorage{}, knoxite.ErrInvalidUsername
 	}
 	pw, pwexist := u.User.Password()
 	if !pwexist {
-		return &StorageAzureFile{}, knoxite.ErrInvalidPassword
+		return &AzureFileStorage{}, knoxite.ErrInvalidPassword
 	}
 
 	// user is the Azure accountName, password is the Azure accountKey
 	credential, err := azfile.NewSharedKeyCredential(u.User.Username(), pw)
 	if err != nil {
-		return &StorageAzureFile{}, err
+		return &AzureFileStorage{}, err
 	}
 
 	pp := strings.Split(u.Path, "/")
@@ -59,45 +59,46 @@ func (*StorageAzureFile) NewBackend(u url.URL) (knoxite.Backend, error) {
 	}
 	sURL, err := url.Parse(fmt.Sprintf("https://%s/%s", hostname, share))
 	if err != nil {
-		return &StorageAzureFile{}, knoxite.ErrInvalidRepositoryURL
+		return &AzureFileStorage{}, knoxite.ErrInvalidRepositoryURL
 	}
 
-	backend := StorageAzureFile{
+	backend := AzureFileStorage{
 		endpoint:   *sURL,
 		url:        u,
 		credential: *credential,
 	}
-	knfs, err := knoxite.NewStorageFilesystem(folder, &backend)
+
+	fs, err := knoxite.NewStorageFilesystem(folder, &backend)
 	if err != nil {
-		return &StorageAzureFile{}, err
+		return &AzureFileStorage{}, err
 	}
-	backend.StorageFilesystem = knfs
+	backend.StorageFilesystem = fs
 
 	return &backend, nil
 }
 
 // Location returns the type and location of the repository
-func (backend *StorageAzureFile) Location() string {
+func (backend *AzureFileStorage) Location() string {
 	return backend.url.String()
 }
 
 // Close the backend
-func (backend *StorageAzureFile) Close() error {
+func (backend *AzureFileStorage) Close() error {
 	return nil
 }
 
 // Protocols returns the Protocol Schemes supported by this backend
-func (backend *StorageAzureFile) Protocols() []string {
+func (backend *AzureFileStorage) Protocols() []string {
 	return []string{"azurefile"}
 }
 
 // Description returns a user-friendly description for this backend
-func (backend *StorageAzureFile) Description() string {
+func (backend *AzureFileStorage) Description() string {
 	return "Azure file storage"
 }
 
 // AvailableSpace returns the free space on this backend
-func (backend *StorageAzureFile) AvailableSpace() (uint64, error) {
+func (backend *AzureFileStorage) AvailableSpace() (uint64, error) {
 	shareUrl := azfile.NewShareURL(backend.endpoint, azfile.NewPipeline(&backend.credential, azfile.PipelineOptions{}))
 	props, err := shareUrl.GetProperties(context.Background())
 	if err != nil {
@@ -114,7 +115,7 @@ func (backend *StorageAzureFile) AvailableSpace() (uint64, error) {
 }
 
 // CreatePath creates a dir including all its parent dirs, when required
-func (backend *StorageAzureFile) CreatePath(p string) error {
+func (backend *AzureFileStorage) CreatePath(p string) error {
 	p = strings.TrimPrefix(p, "/")
 	p = strings.TrimSuffix(p, "/")
 	slicedPath := strings.Split(p, "/")
@@ -136,7 +137,7 @@ func (backend *StorageAzureFile) CreatePath(p string) error {
 }
 
 // Stat returns the size of a file
-func (backend *StorageAzureFile) Stat(p string) (uint64, error) {
+func (backend *AzureFileStorage) Stat(p string) (uint64, error) {
 	u := backend.endpoint
 	u.Path = path.Join(u.Path, p)
 
@@ -151,7 +152,7 @@ func (backend *StorageAzureFile) Stat(p string) (uint64, error) {
 }
 
 // ReadFile reads a file from Azure file storage
-func (backend *StorageAzureFile) ReadFile(p string) ([]byte, error) {
+func (backend *AzureFileStorage) ReadFile(p string) ([]byte, error) {
 	u := backend.endpoint
 	u.Path = path.Join(u.Path, p)
 
@@ -172,7 +173,7 @@ func (backend *StorageAzureFile) ReadFile(p string) ([]byte, error) {
 }
 
 // WriteFile writes a file on Azure file storage
-func (backend *StorageAzureFile) WriteFile(p string, data []byte) (size uint64, err error) {
+func (backend *AzureFileStorage) WriteFile(p string, data []byte) (size uint64, err error) {
 	u := backend.endpoint
 	u.Path = path.Join(u.Path, p)
 
@@ -191,7 +192,7 @@ func (backend *StorageAzureFile) WriteFile(p string, data []byte) (size uint64, 
 }
 
 // DeleteFile deletes a file from Azure file storage
-func (backend *StorageAzureFile) DeleteFile(p string) error {
+func (backend *AzureFileStorage) DeleteFile(p string) error {
 	u := backend.endpoint
 	u.Path = path.Join(u.Path, p)
 

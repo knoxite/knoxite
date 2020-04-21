@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 		Protocols:   []string{"backblaze"},
 		Description: "Backblaze Storage",
 		TearDown: func(tb *storage.BackendTest) {
-			db := tb.Backend.(*StorageBackblaze)
+			db := tb.Backend.(*BackblazeStorage)
 			list, err := db.Bucket.ListFileNames("", 128)
 			if err != nil {
 				panic(err)

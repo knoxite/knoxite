@@ -20,70 +20,70 @@ import (
 	knoxite "github.com/knoxite/knoxite/lib"
 )
 
-// StorageMega stores data on a remote Mega
-type StorageMega struct {
+// MegaStorage stores data on a remote Mega
+type MegaStorage struct {
 	url  url.URL
 	mega *mega.Mega
 	knoxite.StorageFilesystem
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&StorageMega{})
+	knoxite.RegisterBackendFactory(&MegaStorage{})
 }
 
-// NewBackend returns a StorageMega backend
-func (*StorageMega) NewBackend(u url.URL) (knoxite.Backend, error) {
-	backend := StorageMega{
+// NewBackend returns a MegaStorage backend
+func (*MegaStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
+	backend := MegaStorage{
 		url:  u,
 		mega: mega.New(),
 	}
 
 	// checking for username and password
 	if u.User == nil || u.User.Username() == "" {
-		return &StorageMega{}, knoxite.ErrInvalidUsername
+		return &MegaStorage{}, knoxite.ErrInvalidUsername
 	}
 	pw, pwexist := u.User.Password()
 	if !pwexist {
-		return &StorageMega{}, knoxite.ErrInvalidPassword
+		return &MegaStorage{}, knoxite.ErrInvalidPassword
 	}
 
 	err := backend.mega.Login(u.User.Username(), pw)
 	// log into the mega client for accessing the API
 	if err != nil {
-		return &StorageMega{}, err
+		return &MegaStorage{}, err
 	}
 
-	knfs, err := knoxite.NewStorageFilesystem(u.Path, &backend)
+	fs, err := knoxite.NewStorageFilesystem(u.Path, &backend)
 	if err != nil {
-		return &StorageMega{}, err
+		return &MegaStorage{}, err
 	}
-	backend.StorageFilesystem = knfs
+	backend.StorageFilesystem = fs
 
 	return &backend, nil
 }
 
 // Location returns the type and location of the repository
-func (backend *StorageMega) Location() string {
+func (backend *MegaStorage) Location() string {
 	return backend.url.String()
 }
 
 // Close the backend
-func (backend *StorageMega) Close() error {
+func (backend *MegaStorage) Close() error {
 	return nil
 }
 
 // Protocols returns the Protocol Schemes supported by this backend
-func (backend *StorageMega) Protocols() []string {
+func (backend *MegaStorage) Protocols() []string {
 	return []string{"mega"}
 }
 
 // Description returns a user-friendly description for this backend
-func (backend *StorageMega) Description() string {
+func (backend *MegaStorage) Description() string {
 	return "mega.nz storage"
 }
 
 // AvailableSpace returns the free space on this backend
-func (backend *StorageMega) AvailableSpace() (uint64, error) {
+func (backend *MegaStorage) AvailableSpace() (uint64, error) {
 	quota, err := backend.mega.GetQuota()
 	if err != nil {
 		return 0, knoxite.ErrAvailableSpaceUnknown
@@ -93,7 +93,7 @@ func (backend *StorageMega) AvailableSpace() (uint64, error) {
 }
 
 // CreatePath creates a dir including all its parent dirs, when required
-func (backend *StorageMega) CreatePath(path string) error {
+func (backend *MegaStorage) CreatePath(path string) error {
 	path = strings.TrimPrefix(path, "/")
 	path = strings.TrimSuffix(path, "/")
 	slicedPath := strings.Split(path, "/")
@@ -117,7 +117,7 @@ func (backend *StorageMega) CreatePath(path string) error {
 }
 
 // Stat returns the size of a file
-func (backend *StorageMega) Stat(path string) (uint64, error) {
+func (backend *MegaStorage) Stat(path string) (uint64, error) {
 	node, err := backend.getNodeFromPath(path)
 	if err != nil {
 		return 0, err
@@ -127,7 +127,7 @@ func (backend *StorageMega) Stat(path string) (uint64, error) {
 }
 
 // ReadFile reads a file from mega
-func (backend *StorageMega) ReadFile(path string) ([]byte, error) {
+func (backend *MegaStorage) ReadFile(path string) ([]byte, error) {
 	nodeToRead, err := backend.getNodeFromPath(path)
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (backend *StorageMega) ReadFile(path string) ([]byte, error) {
 }
 
 // WriteFile write files on mega
-func (backend *StorageMega) WriteFile(path string, data []byte) (size uint64, err error) {
+func (backend *MegaStorage) WriteFile(path string, data []byte) (size uint64, err error) {
 	dir, file := filepath.Split(path)
 
 	_, err = backend.getNodeFromPath(path)
@@ -189,7 +189,7 @@ func (backend *StorageMega) WriteFile(path string, data []byte) (size uint64, er
 }
 
 // DeleteFile deletes a file from mega
-func (backend *StorageMega) DeleteFile(path string) error {
+func (backend *MegaStorage) DeleteFile(path string) error {
 	fileToDelete, err := backend.getNodeFromPath(path)
 	if err != nil {
 		return err
@@ -204,7 +204,7 @@ func (backend *StorageMega) DeleteFile(path string) error {
 }
 
 // getNodeFromPath() returns the last node in a path on mega. It may be a file or a directory node.
-func (backend *StorageMega) getNodeFromPath(path string) (mega.Node, error) {
+func (backend *MegaStorage) getNodeFromPath(path string) (mega.Node, error) {
 	path = strings.TrimPrefix(path, "/")
 	path = strings.TrimSuffix(path, "/")
 	slicedPath := strings.Split(path, "/")

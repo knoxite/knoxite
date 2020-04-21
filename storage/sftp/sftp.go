@@ -82,19 +82,19 @@ func (*StorageSFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 		return &StorageSFTP{}, err
 	}
 
-	storage := StorageSFTP{
+	backend := StorageSFTP{
 		url:  u,
 		sftp: client,
 		ssh:  conn,
 	}
 
-	storagesftp, err := knoxite.NewStorageFilesystem(u.Path, &storage)
-	storage.StorageFilesystem = storagesftp
+	fs, err := knoxite.NewStorageFilesystem(u.Path, &backend)
 	if err != nil {
 		return &StorageSFTP{}, err
 	}
+	backend.StorageFilesystem = fs
 
-	return &storage, nil
+	return &backend, nil
 }
 
 func (backend *StorageSFTP) Protocols() []string {

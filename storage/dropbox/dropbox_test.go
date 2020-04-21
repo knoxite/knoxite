@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 		Protocols:   []string{"dropbox"},
 		Description: "Dropbox Storage",
 		TearDown: func(tb *storage.BackendTest) {
-			db := tb.Backend.(*StorageDropbox)
+			db := tb.Backend.(*DropboxStorage)
 			err := db.DeleteFile(db.Path)
 			if err != nil {
 				panic(err)

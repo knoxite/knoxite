@@ -20,49 +20,49 @@ import (
 	knoxite "github.com/knoxite/knoxite/lib"
 )
 
-// StorageHTTP stores data on a remote HTTP server
-type StorageHTTP struct {
+// HTTPStorage stores data on a remote HTTP server
+type HTTPStorage struct {
 	URL url.URL
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&StorageHTTP{})
+	knoxite.RegisterBackendFactory(&HTTPStorage{})
 }
 
-// NewBackend returns a StorageHTTP backend
-func (*StorageHTTP) NewBackend(u url.URL) (knoxite.Backend, error) {
-	return &StorageHTTP{
+// NewBackend returns a HTTPStorage backend
+func (*HTTPStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
+	return &HTTPStorage{
 		URL: u,
 	}, nil
 }
 
 // Location returns the type and location of the repository
-func (backend *StorageHTTP) Location() string {
+func (backend *HTTPStorage) Location() string {
 	return backend.URL.String()
 }
 
 // Close the backend
-func (backend *StorageHTTP) Close() error {
+func (backend *HTTPStorage) Close() error {
 	return nil
 }
 
 // Protocols returns the Protocol Schemes supported by this backend
-func (backend *StorageHTTP) Protocols() []string {
+func (backend *HTTPStorage) Protocols() []string {
 	return []string{"http", "https"}
 }
 
 // Description returns a user-friendly description for this backend
-func (backend *StorageHTTP) Description() string {
+func (backend *HTTPStorage) Description() string {
 	return "HTTP(S) Storage"
 }
 
 // AvailableSpace returns the free space on this backend
-func (backend *StorageHTTP) AvailableSpace() (uint64, error) {
+func (backend *HTTPStorage) AvailableSpace() (uint64, error) {
 	return uint64(0), knoxite.ErrAvailableSpaceUnknown
 }
 
 // LoadChunk loads a Chunk from network
-func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
+func (backend *HTTPStorage) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
 	//	fmt.Printf("Fetching from: %s.\n", backend.URL+"/download/"+chunk.ShaSum)
 	res, err := http.Get(backend.URL.String() + "/download/" + shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10))
 	if err != nil {
@@ -78,7 +78,7 @@ func (backend *StorageHTTP) LoadChunk(shasum string, part, totalParts uint) ([]b
 }
 
 // StoreChunk stores a single Chunk on network
-func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
+func (backend *HTTPStorage) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -116,13 +116,13 @@ func (backend *StorageHTTP) StoreChunk(shasum string, part, totalParts uint, dat
 }
 
 // DeleteChunk deletes a single Chunk
-func (backend *StorageHTTP) DeleteChunk(shasum string, parts, totalParts uint) error {
+func (backend *HTTPStorage) DeleteChunk(shasum string, parts, totalParts uint) error {
 	// FIXME: implement this
 	return knoxite.ErrDeleteChunkFailed
 }
 
 // LoadSnapshot loads a snapshot
-func (backend *StorageHTTP) LoadSnapshot(id string) ([]byte, error) {
+func (backend *HTTPStorage) LoadSnapshot(id string) ([]byte, error) {
 	//	fmt.Printf("Fetching snapshot from: %s.\n", backend.URL+"/snapshot/"+id)
 	res, err := http.Get(backend.URL.String() + "/snapshot/" + id)
 	if err != nil {
@@ -134,7 +134,7 @@ func (backend *StorageHTTP) LoadSnapshot(id string) ([]byte, error) {
 }
 
 // SaveSnapshot stores a snapshot
-func (backend *StorageHTTP) SaveSnapshot(id string, data []byte) error {
+func (backend *HTTPStorage) SaveSnapshot(id string, data []byte) error {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -170,7 +170,7 @@ func (backend *StorageHTTP) SaveSnapshot(id string, data []byte) error {
 }
 
 // LoadChunkIndex reads the chunk-index
-func (backend *StorageHTTP) LoadChunkIndex() ([]byte, error) {
+func (backend *HTTPStorage) LoadChunkIndex() ([]byte, error) {
 	//	fmt.Printf("Fetching chunk-index from: %s.\n", backend.URL+"/chunkindex")
 	res, err := http.Get(backend.URL.String() + "/chunkindex")
 	if err != nil {
@@ -182,7 +182,7 @@ func (backend *StorageHTTP) LoadChunkIndex() ([]byte, error) {
 }
 
 // SaveChunkIndex stores the chunk-index
-func (backend *StorageHTTP) SaveChunkIndex(data []byte) error {
+func (backend *HTTPStorage) SaveChunkIndex(data []byte) error {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -218,12 +218,12 @@ func (backend *StorageHTTP) SaveChunkIndex(data []byte) error {
 }
 
 // InitRepository creates a new repository
-func (backend *StorageHTTP) InitRepository() error {
+func (backend *HTTPStorage) InitRepository() error {
 	return nil
 }
 
 // LoadRepository reads the metadata for a repository
-func (backend *StorageHTTP) LoadRepository() ([]byte, error) {
+func (backend *HTTPStorage) LoadRepository() ([]byte, error) {
 	//	fmt.Printf("Fetching repository from: %s.\n", backend.URL+"/repository")
 	res, err := http.Get(backend.URL.String() + "/repository")
 	if err != nil {
@@ -235,7 +235,7 @@ func (backend *StorageHTTP) LoadRepository() ([]byte, error) {
 }
 
 // SaveRepository stores the metadata for a repository
-func (backend *StorageHTTP) SaveRepository(data []byte) error {
+func (backend *HTTPStorage) SaveRepository(data []byte) error {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
