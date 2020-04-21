@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2019, Fabian Siegel <fabians1999@gmail.com>
+ *                   2020, Christian Muehlhaeuser <muesli@gmail.com>
  *
  *   For license see LICENSE
  */
@@ -24,7 +25,7 @@ import (
 	knoxite "github.com/knoxite/knoxite/lib"
 )
 
-type StorageSFTP struct {
+type SFTPStorage struct {
 	url  url.URL
 	ssh  *ssh.Client
 	sftp *sftp.Client
@@ -32,10 +33,10 @@ type StorageSFTP struct {
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&StorageSFTP{})
+	knoxite.RegisterBackendFactory(&SFTPStorage{})
 }
 
-func (*StorageSFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
+func (*SFTPStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	_, port, err := net.SplitHostPort(u.Host)
 	if err != nil || len(port) == 0 {
 		port = "22"
@@ -51,7 +52,7 @@ func (*StorageSFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 		socket := os.Getenv("SSH_AUTH_SOCK")
 		agent_conn, err := net.Dial("unix", socket)
 		if err != nil {
-			return &StorageSFTP{}, knoxite.ErrInvalidPassword
+			return &SFTPStorage{}, knoxite.ErrInvalidPassword
 		} else {
 			agentClient := agent.NewClient(agent_conn)
 			auth = append(auth, ssh.PublicKeysCallback(agentClient.Signers))
@@ -74,15 +75,15 @@ func (*StorageSFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 
 	conn, err := ssh.Dial("tcp", u.Hostname()+":"+u.Port(), config)
 	if err != nil {
-		return &StorageSFTP{}, err
+		return &SFTPStorage{}, err
 	}
 
 	client, err := sftp.NewClient(conn)
 	if err != nil {
-		return &StorageSFTP{}, err
+		return &SFTPStorage{}, err
 	}
 
-	backend := StorageSFTP{
+	backend := SFTPStorage{
 		url:  u,
 		sftp: client,
 		ssh:  conn,
@@ -90,18 +91,18 @@ func (*StorageSFTP) NewBackend(u url.URL) (knoxite.Backend, error) {
 
 	fs, err := knoxite.NewStorageFilesystem(u.Path, &backend)
 	if err != nil {
-		return &StorageSFTP{}, err
+		return &SFTPStorage{}, err
 	}
 	backend.StorageFilesystem = fs
 
 	return &backend, nil
 }
 
-func (backend *StorageSFTP) Protocols() []string {
+func (backend *SFTPStorage) Protocols() []string {
 	return []string{"sftp"}
 }
 
-func (backend *StorageSFTP) AvailableSpace() (uint64, error) {
+func (backend *SFTPStorage) AvailableSpace() (uint64, error) {
 	stat, err := backend.sftp.StatVFS(backend.url.Path)
 	if err != nil || stat == nil {
 		return 0, knoxite.ErrAvailableSpaceUnknown
@@ -110,27 +111,27 @@ func (backend *StorageSFTP) AvailableSpace() (uint64, error) {
 	return stat.FreeSpace(), err
 }
 
-func (backend *StorageSFTP) Close() error {
+func (backend *SFTPStorage) Close() error {
 	return backend.sftp.Close()
 }
 
-func (backend *StorageSFTP) Description() string {
+func (backend *SFTPStorage) Description() string {
 	return "SSH/SFTP Storage"
 }
 
-func (backend *StorageSFTP) Location() string {
+func (backend *SFTPStorage) Location() string {
 	return backend.url.String()
 }
 
-func (backend *StorageSFTP) CreatePath(path string) error {
+func (backend *SFTPStorage) CreatePath(path string) error {
 	return backend.sftp.MkdirAll(path)
 }
 
-func (backend *StorageSFTP) DeleteFile(path string) error {
+func (backend *SFTPStorage) DeleteFile(path string) error {
 	return backend.sftp.Remove(path)
 }
 
-func (backend *StorageSFTP) DeletePath(path string) error {
+func (backend *SFTPStorage) DeletePath(path string) error {
 	fmt.Println("Deleting path", path)
 	files, err := backend.sftp.ReadDir(path)
 	if err != nil {
@@ -155,7 +156,7 @@ func (backend *StorageSFTP) DeletePath(path string) error {
 	return nil
 }
 
-func (backend *StorageSFTP) ReadFile(path string) ([]byte, error) {
+func (backend *SFTPStorage) ReadFile(path string) ([]byte, error) {
 	file, err := backend.sftp.Open(path)
 	if err != nil {
 		return nil, err
@@ -165,7 +166,7 @@ func (backend *StorageSFTP) ReadFile(path string) ([]byte, error) {
 	return ioutil.ReadAll(file)
 }
 
-func (backend *StorageSFTP) WriteFile(path string, data []byte) (size uint64, err error) {
+func (backend *SFTPStorage) WriteFile(path string, data []byte) (size uint64, err error) {
 	file, err := backend.sftp.Create(path)
 	if err != nil {
 		return 0, err
@@ -174,7 +175,7 @@ func (backend *StorageSFTP) WriteFile(path string, data []byte) (size uint64, er
 	return uint64(length), err
 }
 
-func (backend *StorageSFTP) Stat(path string) (uint64, error) {
+func (backend *SFTPStorage) Stat(path string) (uint64, error) {
 	stat, err := backend.sftp.Stat(path)
 	if err != nil {
 		return 0, err

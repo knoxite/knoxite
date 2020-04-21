@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 				panic(err)
 			}
 
-			db := tb.Backend.(*StorageSFTP)
+			db := tb.Backend.(*SFTPStorage)
 			err = db.DeletePath(u.Path)
 			if err != nil {
 				panic(err)
