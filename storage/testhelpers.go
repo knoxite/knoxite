@@ -19,16 +19,16 @@ import (
 	knoxite "github.com/knoxite/knoxite/lib"
 )
 
-type TestBackend struct {
+type BackendTest struct {
 	URL         string
 	Protocols   []string
 	Description string
 	Backend     knoxite.Backend
-	TearDown    func(tb *TestBackend)
+	TearDown    func(tb *BackendTest)
 }
 
-func StorageNewBackendTest(t *testing.T, testBackends []*TestBackend) {
-	for _, tt := range testBackends {
+func StorageNewBackendTest(t *testing.T, backendTests []*BackendTest) {
+	for _, tt := range backendTests {
 		_, err := knoxite.BackendFromURL(tt.URL)
 		if err != nil {
 			t.Errorf("%s: %s", tt.Description, err)
@@ -36,16 +36,16 @@ func StorageNewBackendTest(t *testing.T, testBackends []*TestBackend) {
 	}
 }
 
-func StorageLocationTest(t *testing.T, testBackends []*TestBackend) {
-	for _, tt := range testBackends {
+func StorageLocationTest(t *testing.T, backendTests []*BackendTest) {
+	for _, tt := range backendTests {
 		if tt.Backend.Location() != tt.URL {
 			t.Errorf("%s: Expected %v, got %v", tt.Description, tt.URL, tt.Backend.Location())
 		}
 	}
 }
 
-func StorageProtocolsTest(t *testing.T, testBackends []*TestBackend) {
-	for _, tt := range testBackends {
+func StorageProtocolsTest(t *testing.T, backendTests []*BackendTest) {
+	for _, tt := range backendTests {
 		if len(tt.Backend.Protocols()) != len(tt.Protocols) {
 			t.Errorf("%s: Invalid amount of protocols", tt.Description)
 		}
@@ -58,24 +58,24 @@ func StorageProtocolsTest(t *testing.T, testBackends []*TestBackend) {
 	}
 }
 
-func StorageDescriptionTest(t *testing.T, testBackends []*TestBackend) {
-	for _, tt := range testBackends {
+func StorageDescriptionTest(t *testing.T, backendTests []*BackendTest) {
+	for _, tt := range backendTests {
 		if tt.Backend.Description() != tt.Description {
 			t.Errorf("%s: Invalid Description", tt.Description)
 		}
 	}
 }
 
-func StorageInitRepositoryTest(t *testing.T, testBackends []*TestBackend) {
-	for _, tt := range testBackends {
+func StorageInitRepositoryTest(t *testing.T, backendTests []*BackendTest) {
+	for _, tt := range backendTests {
 		if err := tt.Backend.InitRepository(); err != nil {
 			t.Errorf("%s: %s", tt.Description, err)
 		}
 	}
 }
 
-func StorageSaveRepositoryTest(t *testing.T, testBackends []*TestBackend) {
-	for _, tt := range testBackends {
+func StorageSaveRepositoryTest(t *testing.T, backendTests []*BackendTest) {
+	for _, tt := range backendTests {
 		rnd := make([]byte, 256)
 		rand.Read(rnd)
 
@@ -95,8 +95,8 @@ func StorageSaveRepositoryTest(t *testing.T, testBackends []*TestBackend) {
 	}
 }
 
-func StorageSaveSnapshotTest(t *testing.T, testBackends []*TestBackend) {
-	for _, tt := range testBackends {
+func StorageSaveSnapshotTest(t *testing.T, backendTests []*BackendTest) {
+	for _, tt := range backendTests {
 		rnddata := make([]byte, 256)
 		rand.Read(rnddata)
 
@@ -120,8 +120,8 @@ func StorageSaveSnapshotTest(t *testing.T, testBackends []*TestBackend) {
 	}
 }
 
-func StorageStoreChunkTest(t *testing.T, testBackends []*TestBackend) {
-	for _, tt := range testBackends {
+func StorageStoreChunkTest(t *testing.T, backendTests []*BackendTest) {
+	for _, tt := range backendTests {
 		rnddata := make([]byte, 256)
 		rand.Read(rnddata)
 
@@ -157,8 +157,8 @@ func StorageStoreChunkTest(t *testing.T, testBackends []*TestBackend) {
 	}
 }
 
-func StorageDeleteChunkTest(t *testing.T, testBackends []*TestBackend) {
-	for _, tt := range testBackends {
+func StorageDeleteChunkTest(t *testing.T, backendTests []*BackendTest) {
+	for _, tt := range backendTests {
 		rnddata := make([]byte, 256)
 		rand.Read(rnddata)
 

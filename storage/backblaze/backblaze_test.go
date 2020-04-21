@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	testBackends []*storage.TestBackend
+	backendTests []*storage.BackendTest
 )
 
 func TestMain(m *testing.M) {
@@ -33,11 +33,11 @@ func TestMain(m *testing.M) {
 
 	backblazeurl := os.Getenv("KNOXITE_BACKBLAZE_URL")
 	if len(backblazeurl) > 0 {
-		testBackends = append(testBackends, &storage.TestBackend{
+		backendTests = append(backendTests, &storage.BackendTest{
 			URL:         backblazeurl + hex.EncodeToString(rnd),
 			Protocols:   []string{"backblaze"},
 			Description: "Backblaze Storage",
-			TearDown: func(tb *storage.TestBackend) {
+			TearDown: func(tb *storage.BackendTest) {
 				db := tb.Backend.(*StorageBackblaze)
 				list, err := db.Bucket.ListFileNames("", 128)
 				if err != nil {
@@ -62,10 +62,10 @@ func TestMain(m *testing.M) {
 		})
 	}
 
-	if len(testBackends) == 0 {
+	if len(backendTests) == 0 {
 		panic("no backends enabled")
 	}
-	for _, tt := range testBackends {
+	for _, tt := range backendTests {
 		var err error
 		tt.Backend, err = knoxite.BackendFromURL(tt.URL)
 		if err != nil {
@@ -74,7 +74,7 @@ func TestMain(m *testing.M) {
 	}
 
 	r := m.Run()
-	for _, tt := range testBackends {
+	for _, tt := range backendTests {
 		tt.TearDown(tt)
 	}
 
@@ -82,37 +82,37 @@ func TestMain(m *testing.M) {
 }
 
 func TestStorageNewBackend(t *testing.T) {
-	storage.StorageNewBackendTest(t, testBackends)
+	storage.StorageNewBackendTest(t, backendTests)
 }
 
 func TestStorageLocation(t *testing.T) {
-	storage.StorageLocationTest(t, testBackends)
+	storage.StorageLocationTest(t, backendTests)
 }
 
 func TestStorageProtocols(t *testing.T) {
-	storage.StorageProtocolsTest(t, testBackends)
+	storage.StorageProtocolsTest(t, backendTests)
 }
 
 func TestStorageDescription(t *testing.T) {
-	storage.StorageDescriptionTest(t, testBackends)
+	storage.StorageDescriptionTest(t, backendTests)
 }
 
 func TestStorageInitRepository(t *testing.T) {
-	storage.StorageInitRepositoryTest(t, testBackends)
+	storage.StorageInitRepositoryTest(t, backendTests)
 }
 
 func TestStorageSaveRepository(t *testing.T) {
-	storage.StorageSaveRepositoryTest(t, testBackends)
+	storage.StorageSaveRepositoryTest(t, backendTests)
 }
 
 func TestStorageSaveSnapshot(t *testing.T) {
-	storage.StorageSaveSnapshotTest(t, testBackends)
+	storage.StorageSaveSnapshotTest(t, backendTests)
 }
 
 func TestStorageStoreChunk(t *testing.T) {
-	storage.StorageStoreChunkTest(t, testBackends)
+	storage.StorageStoreChunkTest(t, backendTests)
 }
 
 func TestStorageDeleteChunk(t *testing.T) {
-	storage.StorageDeleteChunkTest(t, testBackends)
+	storage.StorageDeleteChunkTest(t, backendTests)
 }
