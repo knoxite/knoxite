@@ -16,7 +16,7 @@ import (
 
 	"github.com/Azure/azure-storage-file-go/azfile"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 // AzureFileStorage stores data on an Azure File Storage

@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2017, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
  *
  *   For license see LICENSE
  */
@@ -11,10 +11,10 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/klauspost/shutdown2"
+	shutdown "github.com/klauspost/shutdown2"
 	"github.com/spf13/cobra"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 var (

@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2018, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
  *
  *   For license see LICENSE
  */
@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 
 	"github.com/spf13/cobra"
 )

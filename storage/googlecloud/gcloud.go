@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2020, Matthias Hartmann <mahartma@mahartma.com>
+ *                   2020, Christian Muehlhaeuser <muesli@gmail.com>
  *
  *   For license see LICENSE
  */
@@ -18,7 +19,7 @@ import (
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/option"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 // GoogleCloudStorage stores data in a Google Cloud Storage bucket

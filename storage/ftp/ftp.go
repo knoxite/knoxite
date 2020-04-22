@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2017, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
  *     Copyright (c) 2016, Nicolas Martin <penguwingithub@gmail.com>
  *
  *   For license see LICENSE
@@ -21,7 +21,7 @@ import (
 
 	"github.com/jlaffaye/ftp"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 // FTPStorage stores data on a remote FTP

@@ -17,7 +17,7 @@ import (
 
 	"github.com/t3rm1n4l/go-mega"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 // MegaStorage stores data on a remote Mega
