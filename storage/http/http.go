@@ -26,7 +26,7 @@ type HTTPStorage struct {
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&HTTPStorage{})
+	knoxite.RegisterStorageBackend(&HTTPStorage{})
 }
 
 // NewBackend returns a HTTPStorage backend

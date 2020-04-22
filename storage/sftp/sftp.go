@@ -33,7 +33,7 @@ type SFTPStorage struct {
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&SFTPStorage{})
+	knoxite.RegisterStorageBackend(&SFTPStorage{})
 }
 
 func (*SFTPStorage) NewBackend(u url.URL) (knoxite.Backend, error) {

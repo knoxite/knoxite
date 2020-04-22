@@ -28,7 +28,7 @@ type AzureFileStorage struct {
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&AzureFileStorage{})
+	knoxite.RegisterStorageBackend(&AzureFileStorage{})
 }
 
 // NewBackend returns a AzureFileStorage backend

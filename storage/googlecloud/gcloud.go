@@ -30,7 +30,7 @@ type GoogleCloudStorage struct {
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&GoogleCloudStorage{})
+	knoxite.RegisterStorageBackend(&GoogleCloudStorage{})
 }
 
 // NewBackend returns a GoogleCloudStorage backend

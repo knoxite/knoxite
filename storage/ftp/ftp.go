@@ -38,7 +38,7 @@ var (
 )
 
 func init() {
-	knoxite.RegisterBackendFactory(&FTPStorage{})
+	knoxite.RegisterStorageBackend(&FTPStorage{})
 }
 
 // NewBackend establishes an FTP connection and returns a FTPStorage backend

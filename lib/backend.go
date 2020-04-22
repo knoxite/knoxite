@@ -72,8 +72,8 @@ var (
 	backends = []BackendFactory{}
 )
 
-// RegisterBackendFactory needs to be called by storage backends to register themselves
-func RegisterBackendFactory(factory BackendFactory) {
+// RegisterStorageBackend needs to be called by storage backends to register themselves
+func RegisterStorageBackend(factory BackendFactory) {
 	backends = append(backends, factory)
 }
 

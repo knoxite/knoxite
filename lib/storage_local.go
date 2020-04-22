@@ -19,7 +19,7 @@ type StorageLocal struct {
 }
 
 func init() {
-	RegisterBackendFactory(&StorageLocal{})
+	RegisterStorageBackend(&StorageLocal{})
 }
 
 // NewBackend returns a StorageLocal backend

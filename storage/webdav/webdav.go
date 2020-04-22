@@ -30,7 +30,7 @@ var (
 )
 
 func init() {
-	knoxite.RegisterBackendFactory(&WebDAVStorage{})
+	knoxite.RegisterStorageBackend(&WebDAVStorage{})
 }
 
 // NewBackend returns a WebDAVStorage backend

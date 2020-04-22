@@ -30,7 +30,7 @@ type BackblazeStorage struct {
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&BackblazeStorage{})
+	knoxite.RegisterStorageBackend(&BackblazeStorage{})
 }
 
 // NewBackend returns a BackblazeStorage backend

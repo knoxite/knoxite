@@ -20,7 +20,7 @@ type GoogleDriveStorage struct {
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&GoogleDriveStorage{})
+	knoxite.RegisterStorageBackend(&GoogleDriveStorage{})
 }
 
 // NewBackend returns a GoogleDriveStorage backend

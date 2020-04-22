@@ -28,7 +28,7 @@ type MegaStorage struct {
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&MegaStorage{})
+	knoxite.RegisterStorageBackend(&MegaStorage{})
 }
 
 // NewBackend returns a MegaStorage backend

@@ -33,7 +33,7 @@ type S3Storage struct {
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&S3Storage{})
+	knoxite.RegisterStorageBackend(&S3Storage{})
 }
 
 // NewBackend returns a S3Storage backend

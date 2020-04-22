@@ -27,7 +27,7 @@ type DropboxStorage struct {
 }
 
 func init() {
-	knoxite.RegisterBackendFactory(&DropboxStorage{})
+	knoxite.RegisterStorageBackend(&DropboxStorage{})
 }
 
 // NewBackend returns a DropboxStorage backend
