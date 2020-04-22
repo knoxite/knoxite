@@ -14,7 +14,7 @@ import (
 
 	"github.com/studio-b12/gowebdav"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 // WebDAVStorage stores data on a WebDav Server

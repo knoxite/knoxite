@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2017, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
  *     Copyright (c) 2016, Nicolas Martin <penguwingithub@gmail.com>
  *
  *   For license see LICENSE
@@ -11,7 +11,7 @@ package googledrive
 import (
 	"net/url"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 // GoogleDriveStorage stores data on a remote Google Drive

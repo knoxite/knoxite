@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"testing"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 type BackendTest struct {

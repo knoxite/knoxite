@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2018, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
  *
  *   For license see LICENSE
  */
@@ -16,7 +16,7 @@ import (
 	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 const timeFormat = "2006-01-02 15:04:05"

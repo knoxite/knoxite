@@ -19,7 +19,7 @@ import (
 
 	"github.com/minio/minio-go"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 // S3Storage stores data on a remote AmazonS3

@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2017, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
  *
  *   For license see LICENSE
  */
@@ -17,7 +17,7 @@ import (
 	"net/url"
 	"strconv"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 // HTTPStorage stores data on a remote HTTP server

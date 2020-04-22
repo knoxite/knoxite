@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2018, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
  *
  *   For license see LICENSE
  */
@@ -16,12 +16,12 @@ import (
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
-	"github.com/klauspost/shutdown2"
+	shutdown "github.com/klauspost/shutdown2"
 	"github.com/muesli/goprogressbar"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 // Error declarations

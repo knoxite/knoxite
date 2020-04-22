@@ -19,10 +19,10 @@ import (
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
-	agent "golang.org/x/crypto/ssh/agent"
+	"golang.org/x/crypto/ssh/agent"
 	kh "golang.org/x/crypto/ssh/knownhosts"
 
-	knoxite "github.com/knoxite/knoxite/lib"
+	"github.com/knoxite/knoxite"
 )
 
 type SFTPStorage struct {
