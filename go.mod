@@ -12,9 +12,9 @@ require (
 	github.com/go-ini/ini v1.51.1 // indirect
 	github.com/google/readahead v0.0.0-20161222183148-eaceba169032 // indirect
 	github.com/jlaffaye/ftp v0.0.0-20200331144919-d4caf6ffcab8
-	github.com/klauspost/compress v1.10.4
+	github.com/klauspost/compress v1.10.5
 	github.com/klauspost/cpuid v1.2.2 // indirect
-	github.com/klauspost/reedsolomon v1.9.3
+	github.com/klauspost/reedsolomon v1.9.4
 	github.com/klauspost/shutdown2 v1.1.0
 	github.com/minio/highwayhash v1.0.0
 	github.com/minio/minio-go v6.0.14+incompatible
@@ -37,7 +37,7 @@ require (
 	github.com/ungerik/go-dry v0.0.0-20180411133923-654ae31114c8 // indirect
 	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
-	google.golang.org/api v0.21.0
+	google.golang.org/api v0.22.0
 	gopkg.in/ini.v1 v1.51.1 // indirect
 	gopkg.in/kothar/go-backblaze.v0 v0.0.0-20191215213626-7594ed38700f
 )
