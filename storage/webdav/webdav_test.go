@@ -5,6 +5,7 @@ package webdav
 /*
  * knoxite
  *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2020, Fabian Siegel <fabians1999@gmail.com>
  *
  *   For license see LICENSE
  */
