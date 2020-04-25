@@ -9,7 +9,7 @@
 GO_WEBDAV_VERSION="v3.0.0"
 WEBDAV_DIR="$HOME/webdav"
 WEBDAV_SUBDIR="backups"
-CONFIG_LOCATION_IN="admin/WEBDAV_CONFIG_IN"
+CONFIG_LOCATION_IN="admin/webdav/config"
 CONFIG_LOCATION="/tmp/webdav-cfg.yaml"
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
