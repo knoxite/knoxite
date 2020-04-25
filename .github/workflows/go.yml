@@ -51,6 +51,14 @@ jobs:
           go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=ftp.cov ./storage/ftp
         if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest' && github.event_name == 'push'
 
+      - name: Storage WebDav Backend Tests
+        env:
+          KNOXITE_WEBDAV_URL: ${{ secrets.KNOXITE_WEBDAV_URL }}
+        run: |
+          ./admin/setup_webdav_test_environment.sh
+          go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=webdav.cov ./storage/webdav
+        if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest' && github.event_name == 'push'
+
       - name: Storage Dropbox Backend Tests
         env:
           KNOXITE_DROPBOX_URL: ${{ secrets.KNOXITE_DROPBOX_URL }}
