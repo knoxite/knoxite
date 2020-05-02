@@ -27,13 +27,7 @@ Make sure you have a working Go environment. Follow the [Go install instructions
 
 To install knoxite, simply run:
 
-    go get github.com/knoxite/knoxite
-
-To compile it from source:
-
-    cd $GOPATH/src/github.com/knoxite/knoxite
-    go get -u -v
-    go build && go test -v
+    go get github.com/knoxite/knoxite/cmd/...
 
 Run knoxite --help to see a full list of options.
 
@@ -43,7 +37,7 @@ Run knoxite --help to see a full list of options.
 First of all we need to initialize an empty directory (in this case /tmp/knoxite) as a repository:
 
 ```
-$ ./knoxite -r /tmp/knoxite repo init
+$ knoxite -r /tmp/knoxite repo init
 Enter password:
 Created new repository at /tmp/knoxite
 ```
@@ -55,7 +49,7 @@ warned: if you lose this password, you won't be able to access any of your data.
 Each repository can contain several volumes, which store our data organized in snapshots. So let's create one:
 
 ```
-$ ./knoxite -r /tmp/knoxite volume init "Backups" -d "My system backups"
+$ knoxite -r /tmp/knoxite volume init "Backups" -d "My system backups"
 Volume 66e03034 (Name: Backups, Description: My system backups) created
 ```
 
@@ -63,7 +57,7 @@ Volume 66e03034 (Name: Backups, Description: My system backups) created
 Now you can get a list of all volumes stored in this repository:
 
 ```
-$ ./knoxite -r /tmp/knoxite volume list
+$ knoxite -r /tmp/knoxite volume list
 ID        Name                              Description
 ----------------------------------------------------------------------------------------------
 66e03034  Backups                           My system backups
@@ -73,7 +67,7 @@ ID        Name                              Description
 Run the following command to create a new snapshot and store your home directory in the newly created volume:
 
 ```
-$ ./knoxite -r /tmp/knoxite store [volume ID] $HOME -d "Backup of all my data"
+$ knoxite -r /tmp/knoxite store [volume ID] $HOME -d "Backup of all my data"
 document.txt          5.69 MiB / 5.69 MiB [#########################################] 100.00%
 other.txt             4.17 MiB / 4.17 MiB [#########################################] 100.00%
 ...
@@ -84,7 +78,7 @@ Snapshot cebc1213 created: 9 files, 8 dirs, 0 symlinks, 0 errors, 1.23 GiB Origi
 Now you can get an overview of all snapshots stored in this volume:
 
 ```
-$ ./knoxite -r /tmp/knoxite snapshot list [volume ID]
+$ knoxite -r /tmp/knoxite snapshot list [volume ID]
 ID        Date                 Original Size  Storage Size  Description
 ----------------------------------------------------------------------------------------------
 cebc1213  2016-07-29 02:27:15       1.23 GiB      1.23 GiB  Backup of all my data
@@ -96,7 +90,7 @@ cebc1213  2016-07-29 02:27:15       1.23 GiB      1.23 GiB  Backup of all my dat
 Running the following command lists the entire content of a snapshot:
 
 ```
-$ ./knoxite -r /tmp/knoxite ls [snapshot ID]
+$ knoxite -r /tmp/knoxite ls [snapshot ID]
 Perms       User   Group          Size  ModTime              Name
 ----------------------------------------------------------------------------------------------
 -rw-r--r--  user   group      5.69 MiB  2016-07-29 02:06:04  document.txt
@@ -107,7 +101,7 @@ Perms       User   Group          Size  ModTime              Name
 ### Show the content of a snapshotted file
 With the following command you can also print out the files content to stdout:
 ```
-$ ./knoxite -r /tmp/knoxite cat [snapshot ID] document.txt
+$ knoxite -r /tmp/knoxite cat [snapshot ID] document.txt
 This is the sample text stored in document.txt
 ```
 
@@ -115,7 +109,7 @@ This is the sample text stored in document.txt
 To restore the latest snapshot to /tmp/myhome, run:
 
 ```
-$ ./knoxite -r /tmp/knoxite restore [snapshot ID] /tmp/myhome
+$ knoxite -r /tmp/knoxite restore [snapshot ID] /tmp/myhome
 document.txt          5.69 MiB / 5.69 MiB [#########################################] 100.00%
 other.txt             4.17 MiB / 4.17 MiB [#########################################] 100.00%
 ...
@@ -126,7 +120,7 @@ Restore done: 9 files, 8 dirs, 0 symlinks, 0 errors, 1.23 GiB Original Size, 1.2
 It's easy to clone an existing snapshot, adding files to or updating existing files in it:
 
 ```
-$ ./knoxite -r /tmp/knoxite clone [snapshot ID] $HOME
+$ knoxite -r /tmp/knoxite clone [snapshot ID] $HOME
 document.txt          5.89 MiB / 5.89 MiB [#########################################] 100.00%
 other.txt             5.10 MiB / 5.10 MiB [#########################################] 100.00%
 ...
@@ -137,7 +131,7 @@ Snapshot aefc4591 created: 9 files, 8 dirs, 0 symlinks, 0 errors, 1.34 GiB Origi
 You can even mount a snapshot (currently read-only, read-write is work-in-progress):
 
 ```
-$ ./knoxite -r /tmp/knoxite mount [snapshot ID] /mnt
+$ knoxite -r /tmp/knoxite mount [snapshot ID] /mnt
 ```
 
 ### Backup. No more excuses.
