@@ -123,6 +123,12 @@ func executeRepoAdd(url string) error {
 	if err != nil {
 		return err
 	}
+    
+	err = backend.InitRepository()
+	if err != nil {
+		return err
+	}
+
 	r.BackendManager().AddBackend(&backend)
 
 	err = r.Save()
