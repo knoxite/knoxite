@@ -70,6 +70,12 @@ jobs:
           KNOXITE_BACKBLAZE_URL: ${{ secrets.KNOXITE_BACKBLAZE_URL }}
         run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=backblaze.cov ./storage/backblaze
         if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest' && github.event_name == 'push'
+      
+      - name: Storage Azure File Backend Tests
+        env:
+          KNOXITE_AZURE_FILE_URL: ${{ secrets.KNOXITE_AZURE_FILE_URL }}
+        run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=azure.cov ./storage/azure
+        if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest' && github.event_name == 'push'
 
       - name: Coverage
         env:
