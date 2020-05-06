@@ -14,6 +14,7 @@ import (
 	"encoding/hex"
 	"flag"
 	mrand "math/rand"
+	"net/url"
 	"os"
 	"reflect"
 	"testing"
@@ -60,8 +61,14 @@ func (b *BackendTest) NewBackendTest(t *testing.T) {
 }
 
 func (b *BackendTest) LocationTest(t *testing.T) {
-	if b.Backend.Location() != b.URL {
-		t.Errorf("%s: Expected %v, got %v", b.Description, b.URL, b.Backend.Location())
+	// since urls get parsed in BackendFromURL and some protocols use url-encoded parameters,
+	// we need to parse the url in LocationTest, too
+	expectedLocation, err := url.Parse(b.URL)
+	if err != nil {
+		panic(err)
+	}
+	if b.Backend.Location() != expectedLocation.String() {
+		t.Errorf("%s: Expected %v, got %v", b.Description, expectedLocation.String(), b.Backend.Location())
 	}
 }
 
