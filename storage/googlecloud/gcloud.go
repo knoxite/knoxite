@@ -76,7 +76,8 @@ func (*GoogleCloudStorage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	// we can have an object handle even if the object doesn't exist yet, so we check if we can access object attributes
 	folder := bucket.Object(folderPath)
 	_, err = folder.Attrs(ctx)
-	if err != nil {
+	// when the repository folder does not exist yet it will be automatically created when initially writing the repository files
+	if err != nil && err != storage.ErrObjectNotExist {
 		return &GoogleCloudStorage{}, err
 	}
 
