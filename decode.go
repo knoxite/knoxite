@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/klauspost/reedsolomon"
@@ -184,36 +185,19 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 		p.TotalStatistics.Dirs++
 		progress <- p
 	} else if arc.Type == SymLink {
-		//fmt.Printf("Creating symlink %s -> %s\n", path, arc.PointsTo)
-		// If the arc.PointsTo does not exist yet, we create it and remove it afterwards
 		_, ferr := os.Stat(arc.PointsTo)
-		
+
 		if os.IsNotExist(ferr) {
-		    var pointsTo string
-		    if filepath.IsAbs(arc.PointsTo) {
-			pointsTo = arc.PointsTo	
-		    } else {
-			basepath := filepath.Dir(path)	
-			pointsTo = filepath.Join(basepath, arc.PointsTo)
-		    }
-		    os.MkdirAll(filepath.Dir(pointsTo), 0755)
-		    _, err := os.Create(pointsTo)
-		    if err != nil {
-			    return err
-		    }
-		    err = os.Symlink(pointsTo, path)
-		    if err != nil {
-			    return err
-		    }
-		    err = os.Remove(pointsTo)
-		    if err != nil {
-			    return err
-		    }
+			// syscall.Symlink is able to create symlinks to non-existing files
+			err := syscall.Symlink(arc.PointsTo, path)
+			if err != nil {
+				return err
+			}
 		} else {
-		    err := os.Symlink(arc.PointsTo, path)
-		    if err != nil {
-			    return err
-		    }
+			err := os.Symlink(arc.PointsTo, path)
+			if err != nil {
+				return err
+			}
 		}
 		p.TotalStatistics.SymLinks++
 		progress <- p
@@ -278,8 +262,11 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 		}
 	}
 
-	// Restore ownerships
-	return os.Lchown(path, int(arc.UID), int(arc.GID))
+	if arc.Type != SymLink {
+		// Restore ownerships
+		return os.Lchown(path, int(arc.UID), int(arc.GID))
+	}
+	return nil
 }
 
 var (
