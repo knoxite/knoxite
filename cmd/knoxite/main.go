@@ -36,6 +36,9 @@ type GlobalOptions struct {
 }
 
 var (
+	Version   = ""
+	CommitSHA = ""
+
 	globalOpts = GlobalOptions{}
 
 	// RootCmd is the core command used for cli-arg parsing
@@ -65,4 +68,16 @@ func main() {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
+}
+
+func init() {
+	if CommitSHA != "" {
+		vt := RootCmd.VersionTemplate()
+		RootCmd.SetVersionTemplate(vt[:len(vt)-1] + " (" + CommitSHA + ")\n")
+	}
+	if Version == "" {
+		Version = "unknown (built from source)"
+	}
+
+	RootCmd.Version = Version
 }
