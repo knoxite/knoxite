@@ -13,13 +13,14 @@ import (
 
 // Stats contains a bunch of Stats counters
 type Stats struct {
-	Files       uint64 `json:"files"`
-	Dirs        uint64 `json:"dirs"`
-	SymLinks    uint64 `json:"symlinks"`
-	Size        uint64 `json:"size"`
-	StorageSize uint64 `json:"stored_size"`
-	Transferred uint64 `json:"transferred"`
-	Errors      uint64 `json:"errors"`
+	Files               uint64 `json:"files"`
+	Dirs                uint64 `json:"dirs"`
+	SymLinks            uint64 `json:"symlinks"`
+	Size                uint64 `json:"size"`
+	StorageSize         uint64 `json:"stored_size"`
+	Transferred         uint64 `json:"transferred"`
+	Errors              uint64 `json:"errors"`
+	NonIncludedSymLinks uint64 `json:"non_included_symlinks"`
 }
 
 // Add accumulates other into s
@@ -59,6 +60,6 @@ func SizeToString(size uint64) (str string) {
 
 // String returns human-readable Stats
 func (s Stats) String() string {
-	return fmt.Sprintf("%d files, %d dirs, %d symlinks, %d errors, %v Original Size, %v Storage Size",
-		s.Files, s.Dirs, s.SymLinks, s.Errors, SizeToString(s.Size), SizeToString(s.StorageSize))
+	return fmt.Sprintf("%d files, %d dirs, %d symlinks, %d errors, %v Original Size, %v Storage Size, %d Included Symlink-Files which are not backed up",
+		s.Files, s.Dirs, s.SymLinks, s.Errors, SizeToString(s.Size), SizeToString(s.StorageSize), s.NonIncludedSymLinks)
 }

@@ -47,6 +47,16 @@ func NewSnapshot(description string) (*Snapshot, error) {
 	return &snapshot, nil
 }
 
+func IsInAnyPath(p string, paths []string) bool {
+	for _, path := range paths {
+		rel, _ := filepath.Rel(path, p)
+		if !filepath.HasPrefix(rel, "../") {
+			return true
+		}
+	}
+	return false
+}
+
 func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, excludes []string, out chan ArchiveResult) {
 	var wg sync.WaitGroup
 	for _, path := range paths {
@@ -57,6 +67,7 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 				rel, err := filepath.Rel(cwd, result.Archive.Path)
 				if err == nil && !strings.HasPrefix(rel, "../") {
 					result.Archive.Path = rel
+
 				}
 				if isSpecialPath(result.Archive.Path) {
 					continue
@@ -73,6 +84,32 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 					snapshot.Stats.SymLinks++
 				}
 				snapshot.mut.Unlock()
+
+				if result.Archive.Type == SymLink {
+					var relativeToCwd string
+					if filepath.IsAbs(result.Archive.PointsTo) {
+						relativeToCwd, _ = filepath.Rel(cwd, result.Archive.PointsTo)
+					} else {
+						var relativeToFile string
+						if filepath.IsAbs(result.Archive.Path) {
+							relativeToFile = filepath.Join(filepath.Dir(result.Archive.Path), result.Archive.PointsTo)
+						} else {
+							relativeToFile = filepath.Join(filepath.Join(cwd, filepath.Dir(result.Archive.Path)), result.Archive.PointsTo)
+						}
+						relativeToCwd, _ = filepath.Rel(cwd, relativeToFile)
+					}
+
+					relativePaths := []string{}
+					for _, toRelativePath := range paths {
+						relativePath, _ := filepath.Rel(cwd, toRelativePath)
+						relativePaths = append(relativePaths, relativePath)
+					}
+
+					if err == nil && !IsInAnyPath(relativeToCwd, relativePaths) {
+						snapshot.Stats.NonIncludedSymLinks++
+					}
+				}
+
 			}
 
 			wg.Add(1)
