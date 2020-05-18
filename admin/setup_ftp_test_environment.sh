@@ -6,7 +6,7 @@
 #   For license see LICENSE
 #
 
-FTPSERVER_VERSION="0.5"
+FTPSERVER_VERSION="0.6.0"
 FTPSERVER_BINARY="/tmp/ftpserver"
 FTP_DIR="$HOME"/knoxite_ftp
 
@@ -17,7 +17,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 # download ftpserver
-curl -L "https://github.com/fclairamb/ftpserver/releases/download/v${FTPSERVER_VERSION}/ftpserver-${OS}-amd64" --output ${FTPSERVER_BINARY}
+curl -L "https://github.com/fclairamb/ftpserverlib/releases/download/v${FTPSERVER_VERSION}/ftpserver-${OS}-amd64" --output ${FTPSERVER_BINARY}
 chmod +x ${FTPSERVER_BINARY}
 
 # create dirs
