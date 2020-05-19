@@ -38,6 +38,7 @@ type StoreOptions struct {
 	Encryption       string
 	FailureTolerance uint
 	Excludes         []string
+	ExcludeExternalSymlinks bool
 }
 
 var (
@@ -65,6 +66,7 @@ func initStoreFlags(f func() *pflag.FlagSet) {
 	f().StringVarP(&storeOpts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
 	f().UintVarP(&storeOpts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
 	f().StringArrayVarP(&storeOpts.Excludes, "excludes", "x", []string{}, "list of excludes")
+	f().BoolVar(&storeOpts.ExcludeExternalSymlinks, "exclude-external-symlinks", false, "Exclude Symlinks not included in the snapshot")
 }
 
 func init() {
@@ -96,7 +98,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	startTime := time.Now()
 	progress := snapshot.Add(wd, targets, opts.Excludes, *repository, chunkIndex,
 		compression, encryption,
-		uint(len(repository.BackendManager().Backends))-opts.FailureTolerance, opts.FailureTolerance)
+		uint(len(repository.BackendManager().Backends))-opts.FailureTolerance, opts.FailureTolerance, opts.ExcludeExternalSymlinks)
 
 	fileProgressBar := &goprogressbar.ProgressBar{Width: 40}
 	overallProgressBar := &goprogressbar.ProgressBar{

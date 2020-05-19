@@ -57,7 +57,7 @@ func IsInAnyPath(p string, paths []string) bool {
 	return false
 }
 
-func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, excludes []string, out chan ArchiveResult) {
+func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, excludes []string, excludeExternalSymlinks bool, out chan ArchiveResult) {
 	var wg sync.WaitGroup
 	for _, path := range paths {
 		c := findFiles(path, excludes)
@@ -72,19 +72,6 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 				if isSpecialPath(result.Archive.Path) {
 					continue
 				}
-
-				snapshot.mut.Lock()
-				snapshot.Stats.Size += result.Archive.Size
-				switch result.Archive.Type {
-				case Directory:
-					snapshot.Stats.Dirs++
-				case File:
-					snapshot.Stats.Files++
-				case SymLink:
-					snapshot.Stats.SymLinks++
-				}
-				snapshot.mut.Unlock()
-
 				if result.Archive.Type == SymLink {
 					var relativeToCwd string
 					if filepath.IsAbs(result.Archive.PointsTo) {
@@ -106,9 +93,27 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 					}
 
 					if err == nil && !IsInAnyPath(relativeToCwd, relativePaths) {
+						if excludeExternalSymlinks {
+							continue
+						}
+
+						snapshot.mut.Lock()
 						snapshot.Stats.NonIncludedSymLinks++
+						snapshot.mut.Unlock()
 					}
 				}
+
+				snapshot.mut.Lock()
+				snapshot.Stats.Size += result.Archive.Size
+				switch result.Archive.Type {
+				case Directory:
+					snapshot.Stats.Dirs++
+				case File:
+					snapshot.Stats.Files++
+				case SymLink:
+					snapshot.Stats.SymLinks++
+				}
+				snapshot.mut.Unlock()
 
 			}
 
@@ -125,11 +130,11 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 }
 
 // Add adds a path to a Snapshot
-func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt uint16, dataParts, parityParts uint) chan Progress {
+func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt uint16, dataParts, parityParts uint, excludeExternalSymlinks bool) chan Progress {
 	progress := make(chan Progress)
 	fwd := make(chan ArchiveResult)
 
-	go snapshot.gatherTargetInformation(cwd, paths, excludes, fwd)
+	go snapshot.gatherTargetInformation(cwd, paths, excludes, excludeExternalSymlinks, fwd)
 
 	go func() {
 		for result := range fwd {
