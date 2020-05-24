@@ -109,3 +109,4 @@ func isSymLink(fi os.FileInfo) bool {
 func isRegularFile(fi os.FileInfo) bool {
 	return fi != nil && fi.Mode()&(os.ModeType|os.ModeCharDevice|os.ModeSymlink) == 0
 }
+

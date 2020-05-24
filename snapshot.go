@@ -94,12 +94,13 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 
 					if err == nil && !IsInAnyPath(relativeToCwd, relativePaths) {
 						if excludeExternalSymlinks {
+
+							snapshot.mut.Lock()
+							snapshot.Stats.Excluded++
+							snapshot.mut.Unlock()
+
 							continue
 						}
-
-						snapshot.mut.Lock()
-						snapshot.Stats.NonIncludedSymLinks++
-						snapshot.mut.Unlock()
 					}
 				}
 
