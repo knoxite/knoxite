@@ -101,7 +101,7 @@ func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string, exclu
 }
 
 func decodeChunk(repository Repository, archive Archive, chunk Chunk, b []byte) ([]byte, error) {
-	pipe, err := NewDecodingPipeline(archive.Compressed, archive.Encrypted, repository.password)
+	pipe, err := NewDecodingPipeline(archive.Compressed, archive.Encrypted, repository.Key)
 	if err != nil {
 		return []byte{}, err
 	}

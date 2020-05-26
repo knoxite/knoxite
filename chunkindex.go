@@ -33,7 +33,7 @@ func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 	}
 	b, err := repository.backend.LoadChunkIndex()
 	if err == nil {
-		pipe, errp := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
+		pipe, errp := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
 		if errp != nil {
 			return index, errp
 		}
@@ -59,7 +59,7 @@ func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 
 // Save writes a chunk-index
 func (index *ChunkIndex) Save(repository *Repository) error {
-	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
+	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
 	if err != nil {
 		return err
 	}

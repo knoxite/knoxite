@@ -8,6 +8,8 @@
 package knoxite
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 )
 
@@ -17,30 +19,40 @@ type Repository struct {
 	Version uint      `json:"version"`
 	Volumes []*Volume `json:"volumes"`
 	Paths   []string  `json:"storage"`
+	Key     string    `json:"key"` // key for encrypting data stored with knoxite
 	// Owner   string    `json:"owner"`
 
 	backend  BackendManager
-	password string
+	password string // password for knoxite repository file
 }
 
 // Const declarations
 const (
-	RepositoryVersion = 3
+	RepositoryVersion = 4
 )
 
 // Error declarations
 var (
-	ErrRepositoryIncompatible = errors.New("The repository is not compatible with this version of Knoxite")
-	ErrOpenRepositoryFailed   = errors.New("Wrong password or corrupted repository")
-	ErrVolumeNotFound         = errors.New("Volume not found")
-	ErrSnapshotNotFound       = errors.New("Snapshot not found")
+	ErrRepositoryIncompatible  = errors.New("The repository is not compatible with this version of Knoxite")
+	ErrOpenRepositoryFailed    = errors.New("Wrong password or corrupted repository")
+	ErrVolumeNotFound          = errors.New("Volume not found")
+	ErrSnapshotNotFound        = errors.New("Snapshot not found")
+	ErrGenerateRandomKeyFailed = errors.New("Failed to generate a random encryption key for new repository")
 )
 
 // NewRepository returns a new repository
 func NewRepository(path, password string) (Repository, error) {
+
+	// A random key of 32 is considered safe right now and may be increased later
+	key, err := generateRandomKey(32)
+	if err != nil {
+		return Repository{}, ErrGenerateRandomKeyFailed
+	}
+
 	repository := Repository{
 		Version:  RepositoryVersion,
 		password: password,
+		Key:      key,
 	}
 
 	backend, err := BackendFromURL(path)
@@ -53,7 +65,19 @@ func NewRepository(path, password string) (Repository, error) {
 	return repository, err
 }
 
-// OpenRepository opens an existing repository
+// generateRandomKey generates a random key with a specific length
+func generateRandomKey(length int) (string, error) {
+	b := make([]byte, length)
+
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+// OpenRepository opens an existing repository and migrates it if possible
 func OpenRepository(path, password string) (Repository, error) {
 	repository := Repository{
 		password: password,
@@ -77,7 +101,11 @@ func OpenRepository(path, password string) (Repository, error) {
 		return repository, ErrOpenRepositoryFailed
 	}
 	if repository.Version < RepositoryVersion {
-		return repository, ErrRepositoryIncompatible
+		// migrate to current version
+		err = repository.Migrate()
+		if err != nil {
+			return repository, err
+		}
 	}
 
 	for _, url := range repository.Paths {
@@ -185,4 +213,32 @@ func (r *Repository) Save() error {
 		return err
 	}
 	return r.backend.SaveRepository(b)
+}
+
+// Changes password of repository
+func (r *Repository) ChangePassword(newPassword string) error {
+	r.password = newPassword
+
+	return r.Save()
+}
+
+// Migrates a repository to the current version, if possible
+func (r *Repository) Migrate() error {
+
+	switch v := r.Version; {
+	case v < 3:
+		return ErrRepositoryIncompatible
+	case v == 3:
+		// since the introduction of the repo passwd command there are two keys:
+		// - Key is for encryption of the data and will be stored in encrypted repo file
+		// - password is for the encryption of the repository (which holds Key)
+		// to migrate we need to use the existing repository password as key
+		if r.Key == "" {
+			r.Key = r.password
+			r.Version = 4
+
+			return r.Save()
+		}
+	}
+	return ErrRepositoryIncompatible
 }

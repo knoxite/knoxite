@@ -119,7 +119,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 
 			if archive.Type == File {
 				dataParts = uint(math.Max(1, float64(dataParts)))
-				chunkchan, err := chunkFile(archive.Path, compress, encrypt, repository.password, int(dataParts), int(parityParts))
+				chunkchan, err := chunkFile(archive.Path, compress, encrypt, repository.Key, int(dataParts), int(parityParts))
 				if err != nil {
 					if os.IsNotExist(err) {
 						// if this file has already been deleted before we could backup it, we can gracefully ignore it and continue
@@ -200,7 +200,7 @@ func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
 	if err != nil {
 		return &snapshot, err
 	}
-	pipe, err := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
+	pipe, err := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
 	if err != nil {
 		return &snapshot, err
 	}
@@ -210,7 +210,7 @@ func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
 
 // Save writes a snapshot's metadata
 func (snapshot *Snapshot) Save(repository *Repository) error {
-	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
+	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
 	if err != nil {
 		return err
 	}
