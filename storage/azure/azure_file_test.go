@@ -81,7 +81,8 @@ func DeleteFolder(tb *storage.BackendTest, p string) error {
 		}
 	}
 
-	return directoryUrl.Delete(context.Background())
+	_, err = directoryUrl.Delete(context.Background())
+	return err
 }
 
 func TestStorageNewBackend(t *testing.T) {
