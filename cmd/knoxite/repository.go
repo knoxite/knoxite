@@ -43,6 +43,14 @@ var (
 			return executeRepoInit()
 		},
 	}
+	repoChangePasswordCmd = &cobra.Command{
+		Use:   "passwd",
+		Short: "changes the password of a repository",
+		Long:  `The passwd command changes the password of a repository`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeRepoChangePassword()
+		},
+	}
 	repoCatCmd = &cobra.Command{
 		Use:   "cat",
 		Short: "display repository information as JSON",
@@ -82,6 +90,7 @@ var (
 
 func init() {
 	repoCmd.AddCommand(repoInitCmd)
+	repoCmd.AddCommand(repoChangePasswordCmd)
 	repoCmd.AddCommand(repoCatCmd)
 	repoCmd.AddCommand(repoInfoCmd)
 	repoCmd.AddCommand(repoAddCmd)
@@ -106,6 +115,26 @@ func executeRepoInit() error {
 	return nil
 }
 
+func executeRepoChangePassword() error {
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	if err != nil {
+		return err
+	}
+
+	password, err := readPasswordTwice("Enter new password:", "Confirm password:")
+	if err != nil {
+		return err
+	}
+
+	err = r.ChangePassword(password)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Changed password successfully\n")
+	return nil
+}
+
 func executeRepoAdd(url string) error {
 	// acquire a shutdown lock. we don't want these next calls to be interrupted
 	lock := shutdown.Lock()
@@ -123,7 +152,7 @@ func executeRepoAdd(url string) error {
 	if err != nil {
 		return err
 	}
-    
+
 	err = backend.InitRepository()
 	if err != nil {
 		return err
