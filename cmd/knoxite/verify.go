@@ -91,41 +91,30 @@ func executeVerifySnapshot(volumeId string, snapshotId string, opts VerifyOption
 			selectedArchives[archives[idx]] = true
 		}
 
-		var wg sync.WaitGroup
-		mutex := &sync.Mutex{}
-
 		errors := make([]struct {
 			error
 			string
 		}, 0)
 
-		for archiveKey := range selectedArchives {
-			wg.Add(1)
-			go func(wg *sync.WaitGroup, archiveKey string, mutex *sync.Mutex, errors *[]struct {
-				error
-				string
-			}) {
-				defer wg.Done()
-				err := knoxite.VerifyArchive(repository, *snapshot.Archives[archiveKey])
-				if err != nil {
-					mutex.Lock()
-					*errors = append(*errors, struct {
-						error
-						string
-					}{err, archiveKey})
-					mutex.Unlock()
-				}
-			}(&wg, archiveKey, mutex, &errors)
-		}
+		mutex := sync.Mutex{}
 
-		wg.Wait()
+		for archiveKey := range selectedArchives {
+			err := knoxite.VerifyArchive(repository, *snapshot.Archives[archiveKey])
+			if err != nil {
+				mutex.Lock()
+				errors = append(errors, struct {
+					error
+					string
+				}{err, archiveKey})
+			}
+		}
 
 		if len(errors) == 0 {
 			fmt.Println("No errors found")
 		} else {
 			fmt.Printf("Verification failed! Errors in the following files:\n")
 			for _, err := range errors {
-			    fmt.Printf("    %s: %s\n", err.string, err.error)
+				fmt.Printf("    %s: %s\n", err.string, err.error)
 			}
 		}
 
