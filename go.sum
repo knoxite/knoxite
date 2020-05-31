@@ -178,6 +178,8 @@ github.com/mmcloughlin/avo v0.0.0-20200523190732-4439b6b2c061 h1:UCU8+cLbbvyxi0s
 github.com/mmcloughlin/avo v0.0.0-20200523190732-4439b6b2c061/go.mod h1:wqKykBG2QzQDJEzvRkcS8x6MiSJkF52hXZsXcjaB3ls=
 github.com/muesli/crunchy v0.4.0 h1:qdiml8gywULHBsztiSAf6rrE6EyuNasNKZ104mAaahM=
 github.com/muesli/crunchy v0.4.0/go.mod h1:9k4x6xdSbb7WwtAVy0iDjaiDjIk6Wa5AgUIqp+HqOpU=
+github.com/muesli/go-app-paths v0.2.1 h1:Qi+2igkDX2aPqyRddp7P0sMQIBwBqhkfQfNcjdGjL6Y=
+github.com/muesli/go-app-paths v0.2.1/go.mod h1:SxS3Umca63pcFcLtbjVb+J0oD7cl4ixQWoBKhGEtEho=
 github.com/muesli/goprogressbar v0.0.0-20190807022807-e540249d2ac1 h1:NROB7UaQ4VVE0mDQKHWhkmwL3YLXLEcmDbpLB99oc8Y=
 github.com/muesli/goprogressbar v0.0.0-20190807022807-e540249d2ac1/go.mod h1:19yRWZtJozyS7m+fyTUK0rE76LABdnU7zp0BuyeDwLc=
 github.com/muesli/gotable v0.0.0-20190807045009-bcaa6df995ab h1:+7+cCwXoLlGtUU6SW3bYx3+CVHJkf4WEbPB/+Wr1ftc=

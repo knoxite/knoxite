@@ -19,6 +19,7 @@ require (
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/mmcloughlin/avo v0.0.0-20200523190732-4439b6b2c061 // indirect
 	github.com/muesli/crunchy v0.4.0
+	github.com/muesli/go-app-paths v0.2.1
 	github.com/muesli/goprogressbar v0.0.0-20190807022807-e540249d2ac1
 	github.com/muesli/gotable v0.0.0-20190807045009-bcaa6df995ab
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
