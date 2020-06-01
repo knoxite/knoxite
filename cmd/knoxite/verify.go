@@ -9,11 +9,9 @@ package main
 
 import (
 	"fmt"
-	"math"
-	"math/rand"
-	"sync"
 
 	"github.com/knoxite/knoxite"
+	"github.com/muesli/goprogressbar"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -61,64 +59,46 @@ func executeVerifyVolume(volumeId string) error {
 }
 
 func executeVerifySnapshot(volumeId string, snapshotId string, opts VerifyOptions) error {
+	errors := make([]error, 0)
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
-
 	if err == nil {
-		_, snapshot, ferr := repository.FindSnapshot(snapshotId)
-		if ferr != nil {
-			return ferr
+		progress, err := knoxite.VerifySnapshot(repository, snapshotId, opts.Percentage)
+		if err != nil {
+			errors = append(errors, err)
+			return err
 		}
 
-		// get all keys of the snapshot Archives
-		archives := make([]string, 0, len(snapshot.Archives))
-		for key := range snapshot.Archives {
-			archives = append(archives, key)
-		}
+		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
+		lastPath := ""
+	
 
-		if opts.Percentage > 100 {
-			opts.Percentage = 100
-		} else if opts.Percentage < 0 {
-			opts.Percentage = 0
-		}
-
-		// select len(keys)*percentage unique keys to verify
-		nrOfSelectedArchives := int(math.Ceil(float64(len(archives)*opts.Percentage) / 100.0))
-
-		// we use a map[string]bool as a Set implementation
-		selectedArchives := make(map[string]bool)
-		for len(selectedArchives) < nrOfSelectedArchives {
-			idx := rand.Intn(len(archives))
-			selectedArchives[archives[idx]] = true
-		}
-
-		errors := make([]struct {
-			error
-			string
-		}, 0)
-
-		mutex := sync.Mutex{}
-
-		for archiveKey := range selectedArchives {
-			err := knoxite.VerifyArchive(repository, *snapshot.Archives[archiveKey])
-			if err != nil {
-				mutex.Lock()
-				errors = append(errors, struct {
-					error
-					string
-				}{err, archiveKey})
+		for p := range progress {
+			if p.Error != nil {
+				fmt.Println()
+				errors = append(errors, p.Error)
 			}
-		}
 
-		if len(errors) == 0 {
-			fmt.Println("No errors found")
-		} else {
-			fmt.Printf("Verification failed! Errors in the following files:\n")
-			for _, err := range errors {
-				fmt.Printf("    %s: %s\n", err.string, err.error)
+			pb.Total = int64(p.CurrentItemStats.Size)
+			pb.Current = int64(p.CurrentItemStats.Transferred)
+			pb.PrependText = fmt.Sprintf("%s / %s",
+				knoxite.SizeToString(uint64(pb.Current)),
+				knoxite.SizeToString(uint64(pb.Total)))
+
+			if p.Path != lastPath {
+				// We have just started restoring a new item
+				if len(lastPath) > 0 {
+					fmt.Println()
+				}
+				lastPath = p.Path
+				pb.Text = p.Path
 			}
-		}
 
+			pb.LazyPrint()
+
+		}
+		fmt.Println()
+		fmt.Printf("Verify done: %d errors\n", len(errors))
+		return nil
 	}
-
-	return nil
+	return err
 }
