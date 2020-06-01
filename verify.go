@@ -74,7 +74,6 @@ func VerifyRepo(repository Repository, Percentage int) (prog chan Progress, err 
 	}()
 
 	return prog, nil
-
 }
 
 func VerifyVolume(repository Repository, volumeId string, Percentage int) (prog chan Progress, err error) {
