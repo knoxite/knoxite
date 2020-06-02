@@ -65,7 +65,7 @@ var verifyTestCases = []struct {
 func TestVerifyRepo(t *testing.T) {
 	testPassword := "this_is_a_password"
 
-	for _, tt := range verifyTestCases{
+	for _, tt := range verifyTestCases {
 
 		dir, err := ioutil.TempDir("", "knoxite")
 		if err != nil {
@@ -136,7 +136,7 @@ func TestVerifyRepo(t *testing.T) {
 
 		tt.ErrorFunction(dir)
 		if err != nil {
-			t.Errorf("Failed doing destrutive function: %s", err)
+			t.Errorf("Failed during error/destructive function: %s", err)
 			return
 		}
 
@@ -158,7 +158,7 @@ func TestVerifyRepo(t *testing.T) {
 				}
 			}
 			if len(errors) != tt.NumberOfExpectedErrors {
-				t.Errorf("%d errors where expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
+				t.Errorf("%d errors were expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
 			}
 		}
 
@@ -242,7 +242,7 @@ func TestVerifyVolume(t *testing.T) {
 
 		tt.ErrorFunction(dir)
 		if err != nil {
-			t.Errorf("Failed doing destrutive function: %s", err)
+			t.Errorf("Failed during error/destructive function: %s", err)
 			return
 		}
 
@@ -264,7 +264,7 @@ func TestVerifyVolume(t *testing.T) {
 				}
 			}
 			if len(errors) != tt.NumberOfExpectedErrors {
-				t.Errorf("%d errors where expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
+				t.Errorf("%d errors were expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
 			}
 		}
 
@@ -348,7 +348,7 @@ func TestVerifySnapshot(t *testing.T) {
 
 		tt.ErrorFunction(dir)
 		if err != nil {
-			t.Errorf("Failed doing destrutive function: %s", err)
+			t.Errorf("Failed during error/destructive function: %s", err)
 			return
 		}
 
@@ -370,7 +370,7 @@ func TestVerifySnapshot(t *testing.T) {
 				}
 			}
 			if len(errors) != tt.NumberOfExpectedErrors {
-				t.Errorf("%d errors where expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
+				t.Errorf("%d errors were expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
 			}
 		}
 
