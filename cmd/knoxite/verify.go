@@ -60,7 +60,6 @@ func executeVerifyRepo(opts VerifyOptions) error {
 
 		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
 		lastPath := ""
-	
 
 		for p := range progress {
 			if p.Error != nil {
@@ -91,7 +90,6 @@ func executeVerifyRepo(opts VerifyOptions) error {
 		return nil
 	}
 	return err
-	
 }
 
 func executeVerifyVolume(volumeId string, opts VerifyOptions) error {
@@ -106,7 +104,6 @@ func executeVerifyVolume(volumeId string, opts VerifyOptions) error {
 
 		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
 		lastPath := ""
-	
 
 		for p := range progress {
 			if p.Error != nil {
@@ -151,7 +148,6 @@ func executeVerifySnapshot(volumeId string, snapshotId string, opts VerifyOption
 
 		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
 		lastPath := ""
-	
 
 		for p := range progress {
 			if p.Error != nil {

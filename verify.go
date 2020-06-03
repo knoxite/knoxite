@@ -12,11 +12,10 @@ import (
 	"math/rand"
 )
 
-func VerifyRepo(repository Repository, Percentage int) (prog chan Progress, err error) {
+func VerifyRepo(repository Repository, percentage int) (prog chan Progress, err error) {
 	prog = make(chan Progress)
 
 	go func() {
-
 		archiveToSnapshot := make(map[string]*Snapshot)
 
 		for _, volume := range repository.Volumes {
@@ -29,7 +28,6 @@ func VerifyRepo(repository Repository, Percentage int) (prog chan Progress, err 
 				for archiveHash := range snapshot.Archives {
 					archiveToSnapshot[archiveHash] = snapshot
 				}
-
 			}
 		}
 
@@ -39,15 +37,14 @@ func VerifyRepo(repository Repository, Percentage int) (prog chan Progress, err 
 		}
 
 		// get all keys of the snapshot Archives
-
-		if Percentage > 100 {
-			Percentage = 100
-		} else if Percentage < 0 {
-			Percentage = 0
+		if percentage > 100 {
+			percentage = 100
+		} else if percentage < 0 {
+			percentage = 0
 		}
 
 		// select len(keys)*percentage unique keys to verify
-		nrOfSelectedArchives := int(math.Ceil(float64(len(archives)*Percentage) / 100.0))
+		nrOfSelectedArchives := int(math.Ceil(float64(len(archives)*percentage) / 100.0))
 
 		// we use a map[string]bool as a Set implementation
 		selectedArchives := make(map[string]bool)
@@ -76,7 +73,7 @@ func VerifyRepo(repository Repository, Percentage int) (prog chan Progress, err 
 	return prog, nil
 }
 
-func VerifyVolume(repository Repository, volumeId string, Percentage int) (prog chan Progress, err error) {
+func VerifyVolume(repository Repository, volumeId string, percentage int) (prog chan Progress, err error) {
 	prog = make(chan Progress)
 
 	go func() {
@@ -96,7 +93,6 @@ func VerifyVolume(repository Repository, volumeId string, Percentage int) (prog 
 			for archiveHash := range snapshot.Archives {
 				archiveToSnapshot[archiveHash] = snapshot
 			}
-
 		}
 
 		archives := make([]string, 0)
@@ -105,15 +101,14 @@ func VerifyVolume(repository Repository, volumeId string, Percentage int) (prog 
 		}
 
 		// get all keys of the snapshot Archives
-
-		if Percentage > 100 {
-			Percentage = 100
-		} else if Percentage < 0 {
-			Percentage = 0
+		if percentage > 100 {
+			percentage = 100
+		} else if percentage < 0 {
+			percentage = 0
 		}
 
 		// select len(keys)*percentage unique keys to verify
-		nrOfSelectedArchives := int(math.Ceil(float64(len(archives)*Percentage) / 100.0))
+		nrOfSelectedArchives := int(math.Ceil(float64(len(archives)*percentage) / 100.0))
 
 		// we use a map[string]bool as a Set implementation
 		selectedArchives := make(map[string]bool)
@@ -134,7 +129,6 @@ func VerifyVolume(repository Repository, volumeId string, Percentage int) (prog 
 
 			p.CurrentItemStats.Transferred += uint64((*snapshot.Archives[archiveKey]).Size)
 			prog <- p
-
 		}
 		close(prog)
 	}()
@@ -142,7 +136,7 @@ func VerifyVolume(repository Repository, volumeId string, Percentage int) (prog 
 	return prog, nil
 }
 
-func VerifySnapshot(repository Repository, snapshotId string, Percentage int) (prog chan Progress, err error) {
+func VerifySnapshot(repository Repository, snapshotId string, percentage int) (prog chan Progress, err error) {
 	prog = make(chan Progress)
 
 	go func() {
@@ -157,14 +151,14 @@ func VerifySnapshot(repository Repository, snapshotId string, Percentage int) (p
 			archives = append(archives, key)
 		}
 
-		if Percentage > 100 {
-			Percentage = 100
-		} else if Percentage < 0 {
-			Percentage = 0
+		if percentage > 100 {
+			percentage = 100
+		} else if percentage < 0 {
+			percentage = 0
 		}
 
 		// select len(keys)*percentage unique keys to verify
-		nrOfSelectedArchives := int(math.Ceil(float64(len(archives)*Percentage) / 100.0))
+		nrOfSelectedArchives := int(math.Ceil(float64(len(archives)*percentage) / 100.0))
 
 		// we use a map[string]bool as a Set implementation
 		selectedArchives := make(map[string]bool)
@@ -206,10 +200,8 @@ func VerifyArchive(repository Repository, arc Archive) error {
 			if errc != nil {
 				return errc
 			}
-
 		}
 		return nil
 	}
 	return nil
-
 }

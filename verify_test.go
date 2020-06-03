@@ -66,7 +66,6 @@ func TestVerifyRepo(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	for _, tt := range verifyTestCases {
-
 		dir, err := ioutil.TempDir("", "knoxite")
 		if err != nil {
 			t.Errorf("Failed creating temporary dir for repository: %s", err)
@@ -131,7 +130,6 @@ func TestVerifyRepo(t *testing.T) {
 				t.Errorf("Failed saving chunk-index: %s", err)
 				return
 			}
-
 		}
 
 		tt.ErrorFunction(dir)
@@ -161,16 +159,13 @@ func TestVerifyRepo(t *testing.T) {
 				t.Errorf("%d errors were expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
 			}
 		}
-
 	}
-
 }
 
 func TestVerifyVolume(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	for _, tt := range verifyTestCases {
-
 		dir, err := ioutil.TempDir("", "knoxite")
 		if err != nil {
 			t.Errorf("Failed creating temporary dir for repository: %s", err)
@@ -267,16 +262,13 @@ func TestVerifyVolume(t *testing.T) {
 				t.Errorf("%d errors were expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
 			}
 		}
-
 	}
-
 }
 
 func TestVerifySnapshot(t *testing.T) {
 	testPassword := "this_is_a_password"
 
 	for _, tt := range verifyTestCases {
-
 		dir, err := ioutil.TempDir("", "knoxite")
 		if err != nil {
 			t.Errorf("Failed creating temporary dir for repository: %s", err)
@@ -358,7 +350,6 @@ func TestVerifySnapshot(t *testing.T) {
 				t.Errorf("Failed opening repository: %s", err)
 				return
 			}
-
 			progress, err := VerifySnapshot(r, snapshotOriginal.ID, tt.Percentage)
 			if err != nil {
 				t.Errorf("Failed to verify snapshot: %s", err)
@@ -373,6 +364,5 @@ func TestVerifySnapshot(t *testing.T) {
 				t.Errorf("%d errors were expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
 			}
 		}
-
 	}
 }
