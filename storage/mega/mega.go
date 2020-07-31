@@ -133,7 +133,7 @@ func (backend *MegaStorage) ReadFile(path string) ([]byte, error) {
 		return nil, err
 	}
 
-	download, err := backend.mega.NewDownload(&nodeToRead)
+	download, err := backend.mega.NewDownload(nodeToRead)
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +147,7 @@ func (backend *MegaStorage) ReadFile(path string) ([]byte, error) {
 		bytes = append(bytes, chunkBytes...)
 	}
 
-	download.Finish()
-	return bytes, nil
+	return bytes, download.Finish()
 }
 
 // WriteFile write files on mega
@@ -169,17 +168,20 @@ func (backend *MegaStorage) WriteFile(path string, data []byte) (size uint64, er
 		return 0, err
 	}
 
-	upload, err := backend.mega.NewUpload(&nodeToWriteIn, file, int64(len(data)))
+	upload, err := backend.mega.NewUpload(nodeToWriteIn, file, int64(len(data)))
 	if err != nil {
 		return 0, err
 	}
 
+	// creating a copy of data is a workaround for a bug in the github.com/t3rm1n4l/go-mega library, that overwrites data instead of using a copy itself
+	datacopy := make([]byte, len(data))
+	copy(datacopy, data)
 	for id := 0; id < upload.Chunks(); id++ {
 		chk_start, chk_size, err := upload.ChunkLocation(id)
 		if err != nil {
 			return 0, err
 		}
-		err = upload.UploadChunk(id, data[chk_start:chk_start+int64(chk_size)])
+		err = upload.UploadChunk(id, datacopy[chk_start:chk_start+int64(chk_size)])
 		if err != nil {
 			return 0, err
 		}
@@ -195,16 +197,11 @@ func (backend *MegaStorage) DeleteFile(path string) error {
 		return err
 	}
 
-	err = backend.mega.Delete(&fileToDelete, true)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return backend.mega.Delete(fileToDelete, true)
 }
 
 // getNodeFromPath() returns the last node in a path on mega. It may be a file or a directory node.
-func (backend *MegaStorage) getNodeFromPath(path string) (mega.Node, error) {
+func (backend *MegaStorage) getNodeFromPath(path string) (*mega.Node, error) {
 	path = strings.TrimPrefix(path, "/")
 	path = strings.TrimSuffix(path, "/")
 	slicedPath := strings.Split(path, "/")
@@ -215,7 +212,7 @@ func (backend *MegaStorage) getNodeFromPath(path string) (mega.Node, error) {
 		// get all nodes in current root directory
 		nodesInCurrentRoot, err := backend.mega.FS.PathLookup(currentRoot, []string{pathSlice})
 		if err != nil {
-			return mega.Node{}, err
+			return nil, err
 		}
 
 		// finding folder node by pathSlice
@@ -228,12 +225,12 @@ func (backend *MegaStorage) getNodeFromPath(path string) (mega.Node, error) {
 			}
 		}
 		if !found {
-			return mega.Node{}, errors.New("file or directory not found on mega: " + pathSlice)
+			return nil, errors.New("file or directory not found on mega: " + pathSlice)
 		}
 		// last element of slicedPath is the actual file/directory node
 		if i == len(slicedPath)-1 {
-			return *currentRoot, nil
+			return currentRoot, nil
 		}
 	}
-	return mega.Node{}, errors.New("file or directory not found on mega")
+	return nil, errors.New("file or directory not found on mega")
 }
