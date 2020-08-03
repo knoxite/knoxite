@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/knoxite/knoxite/cfg"
 	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
 )
@@ -29,6 +30,17 @@ var (
 		Long:  "The init command initializes a new configuration file",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return executeConfigInit()
+		},
+	}
+	configAliasCmd = &cobra.Command{
+		Use:   "alias <alias>",
+		Short: "Set an alias for the storage backend url to a repository",
+		Long:  `The set command adds an alias for the storage backend url to a repository`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("alias needs an ALIAS to set")
+			}
+			return executeConfigAlias(args[0])
 		},
 	}
 	configSetCmd = &cobra.Command{
@@ -66,6 +78,7 @@ var (
 func init() {
 	configCmd.AddCommand(configInitCmd)
 	configCmd.AddCommand(configSetCmd)
+	configCmd.AddCommand(configAliasCmd)
 	configCmd.AddCommand(configInfoCmd)
 	configCmd.AddCommand(configCatCmd)
 	RootCmd.AddCommand(configCmd)
@@ -73,6 +86,18 @@ func init() {
 
 func executeConfigInit() error {
 	log.Printf("Writing configuration file to: %s\n", config.URL().Path)
+	return config.Save()
+}
+
+func executeConfigAlias(alias string) error {
+	// At first check if the configuration file already exists
+	config.Repositories[alias] = cfg.RepoConfig{
+		Url: globalOpts.Repo,
+		// Compression: utils.CompressionText(knoxite.CompressionNone),
+		// Tolerance:   0,
+		// Encryption:  utils.EncryptionText(knoxite.EncryptionAES),
+	}
+
 	return config.Save()
 }
 
