@@ -26,7 +26,6 @@ import (
 
 // Error declarations
 var (
-	ErrEncryptionUnknown  = errors.New("unknown encryption format")
 	ErrRedundancyAmount = errors.New("failure tolerance can't be equal or higher as the number of storage backends")
 )
 
@@ -87,7 +86,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	if err != nil {
 		return err
 	}
-	encryption, err := EncryptionTypeFromString(opts.Encryption)
+	encryption, err := utils.EncryptionTypeFromString(opts.Encryption)
 	if err != nil {
 		return err
 	}
@@ -214,31 +213,4 @@ func executeStore(volumeID string, args []string, opts StoreOptions) error {
 		return err
 	}
 	return repository.Save()
-}
-
-// EncryptionTypeFromString returns the encryption type from a user-specified string
-func EncryptionTypeFromString(s string) (uint16, error) {
-	switch strings.ToLower(s) {
-	case "":
-		// default is AES
-		fallthrough
-	case "aes":
-		return knoxite.EncryptionAES, nil
-	case "none":
-		return knoxite.EncryptionNone, nil
-	}
-
-	return 0, ErrEncryptionUnknown
-}
-
-// EncryptionText returns a user-friendly string indicating the encryption algo that was used
-func EncryptionText(enum int) string {
-	switch enum {
-	case knoxite.EncryptionNone:
-		return "none"
-	case knoxite.EncryptionAES:
-		return "AES"
-	}
-
-	return "unknown"
 }
