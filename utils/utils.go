@@ -15,6 +15,7 @@ import (
 )
 
 var (
+	ErrEncryptionUnknown  = errors.New("unknown encryption format")
 	ErrCompressionUnknown = errors.New("unknown compression format")
 )
 // CompressionTypeFromString returns the compression type from a user-specified string
@@ -56,6 +57,33 @@ func CompressionText(enum int) string {
 		return "zlib"
 	case knoxite.CompressionZstd:
 		return "zstd"
+	}
+
+	return "unknown"
+}
+
+// EncryptionTypeFromString returns the encryption type from a user-specified string
+func EncryptionTypeFromString(s string) (uint16, error) {
+	switch strings.ToLower(s) {
+	case "":
+		// default is AES
+		fallthrough
+	case "aes":
+		return knoxite.EncryptionAES, nil
+	case "none":
+		return knoxite.EncryptionNone, nil
+	}
+
+	return 0, ErrEncryptionUnknown
+}
+
+// EncryptionText returns a user-friendly string indicating the encryption algo that was used
+func EncryptionText(enum int) string {
+	switch enum {
+	case knoxite.EncryptionNone:
+		return "none"
+	case knoxite.EncryptionAES:
+		return "AES"
 	}
 
 	return "unknown"
