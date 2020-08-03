@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2020,      Nicolas Martin <penguwin@penguwin.eu>
  *
  *   For license see LICENSE
  */
@@ -9,26 +10,17 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
-	"os"
-	"strings"
-	"syscall"
 
 	shutdown "github.com/klauspost/shutdown2"
-	"github.com/muesli/crunchy"
 	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/utils"
 )
 
-// Error declarations
 var (
-	ErrPasswordMismatch = errors.New("Passwords did not match")
-
 	repoCmd = &cobra.Command{
 		Use:   "repo",
 		Short: "manage repository",
@@ -121,7 +113,7 @@ func executeRepoChangePassword() error {
 		return err
 	}
 
-	password, err := readPasswordTwice("Enter new password:", "Confirm password:")
+	password, err := utils.ReadPasswordTwice("Enter new password:", "Confirm password:")
 	if err != nil {
 		return err
 	}
@@ -230,7 +222,7 @@ func executeRepoInfo() error {
 func openRepository(path, password string) (knoxite.Repository, error) {
 	if password == "" {
 		var err error
-		password, err = readPassword("Enter password:")
+		password, err = utils.ReadPassword("Enter password:")
 		if err != nil {
 			return knoxite.Repository{}, err
 		}
@@ -242,61 +234,11 @@ func openRepository(path, password string) (knoxite.Repository, error) {
 func newRepository(path, password string) (knoxite.Repository, error) {
 	if password == "" {
 		var err error
-		password, err = readPasswordTwice("Enter a password to encrypt this repository with:", "Confirm password:")
+		password, err = utils.ReadPasswordTwice("Enter a password to encrypt this repository with:", "Confirm password:")
 		if err != nil {
 			return knoxite.Repository{}, err
 		}
 	}
 
 	return knoxite.NewRepository(path, password)
-}
-
-func readPassword(prompt string) (string, error) {
-	var tty io.WriteCloser
-	tty, err := os.OpenFile("/dev/tty", os.O_WRONLY, 0)
-	if err != nil {
-		tty = os.Stdout
-	} else {
-		defer tty.Close()
-	}
-
-	fmt.Fprint(tty, prompt+" ")
-	buf, err := terminal.ReadPassword(int(syscall.Stdin))
-	fmt.Fprintln(tty)
-
-	return string(buf), err
-}
-
-func readPasswordTwice(prompt, promptConfirm string) (string, error) {
-	pw, err := readPassword(prompt)
-	if err != nil {
-		return pw, err
-	}
-
-	crunchErr := crunchy.NewValidator().Check(pw)
-	if crunchErr != nil {
-		fmt.Printf("Password is considered unsafe: %v\n", crunchErr)
-		fmt.Printf("Are you sure you want to use this password (y/N)?: ")
-		var buf string
-		_, err = fmt.Scan(&buf)
-		if err != nil {
-			return pw, err
-		}
-
-		buf = strings.TrimSpace(buf)
-		buf = strings.ToLower(buf)
-		if buf != "y" {
-			return pw, crunchErr
-		}
-	}
-
-	pwconfirm, err := readPassword(promptConfirm)
-	if err != nil {
-		return pw, err
-	}
-	if pw != pwconfirm {
-		return pw, ErrPasswordMismatch
-	}
-
-	return pw, nil
 }
