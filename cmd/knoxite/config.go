@@ -7,11 +7,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
+	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
 )
 
@@ -43,11 +45,29 @@ var (
 			return executeConfigSet(args[0], args[1])
 		},
 	}
+	configInfoCmd = &cobra.Command{
+		Use:   "info",
+		Short: "display information about the configuration file on stdout",
+		Long:  `The info command displays information about the configuration file on stdout`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeConfigInfo()
+		},
+	}
+	configCatCmd = &cobra.Command{
+		Use:   "cat",
+		Short: "display the configuration file on stdout",
+		Long:  `The cat command displays the configuration file on stdout`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeConfigCat()
+		},
+	}
 )
 
 func init() {
 	configCmd.AddCommand(configInitCmd)
 	configCmd.AddCommand(configSetCmd)
+	configCmd.AddCommand(configInfoCmd)
+	configCmd.AddCommand(configCatCmd)
 	RootCmd.AddCommand(configCmd)
 }
 
@@ -90,4 +110,32 @@ func executeConfigSet(option string, value string) error {
 	config.Repositories[strings.ToLower(parts[0])] = repo
 
 	return config.Save()
+}
+
+func executeConfigInfo() error {
+	tab := gotable.NewTable(
+		[]string{"Alias", "Storage URL", "Compression", "Tolerance", "Encryption"},
+		[]int64{-15, -35, -15, -15, 15},
+		"No repository configurations found.")
+
+	for alias, repo := range config.Repositories {
+		tab.AppendRow([]interface{}{
+			alias,
+			repo.Url,
+			repo.Compression,
+			fmt.Sprintf("%v", repo.Tolerance),
+			repo.Encryption,
+		})
+	}
+	return tab.Print()
+}
+
+func executeConfigCat() error {
+	json, err := json.MarshalIndent(config, "", "    ")
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%s\n", json)
+	return nil
 }
