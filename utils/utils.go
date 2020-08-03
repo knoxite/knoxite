@@ -10,14 +10,73 @@ package utils
 
 import (
 	"errors"
+	"fmt"
+	"io"
+	"os"
 	"strings"
+	"syscall"
+
 	"github.com/knoxite/knoxite"
+	"github.com/muesli/crunchy"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (
+	ErrPasswordMismatch   = errors.New("Passwords did not match")
 	ErrEncryptionUnknown  = errors.New("unknown encryption format")
 	ErrCompressionUnknown = errors.New("unknown compression format")
 )
+
+func ReadPassword(prompt string) (string, error) {
+	var tty io.WriteCloser
+	tty, err := os.OpenFile("/dev/tty", os.O_WRONLY, 0)
+	if err != nil {
+		tty = os.Stdout
+	} else {
+		defer tty.Close()
+	}
+
+	fmt.Fprint(tty, prompt+" ")
+	buf, err := terminal.ReadPassword(int(syscall.Stdin))
+	fmt.Fprintln(tty)
+
+	return string(buf), err
+}
+
+func ReadPasswordTwice(prompt, promptConfirm string) (string, error) {
+	pw, err := ReadPassword(prompt)
+	if err != nil {
+		return pw, err
+	}
+
+	crunchErr := crunchy.NewValidator().Check(pw)
+	if crunchErr != nil {
+		fmt.Printf("Password is considered unsafe: %v\n", crunchErr)
+		fmt.Printf("Are you sure you want to use this password (y/N)?: ")
+		var buf string
+		_, err = fmt.Scan(&buf)
+		if err != nil {
+			return pw, err
+		}
+
+		buf = strings.TrimSpace(buf)
+		buf = strings.ToLower(buf)
+		if buf != "y" {
+			return pw, crunchErr
+		}
+	}
+
+	pwconfirm, err := ReadPassword(promptConfirm)
+	if err != nil {
+		return pw, err
+	}
+	if pw != pwconfirm {
+		return pw, ErrPasswordMismatch
+	}
+
+	return pw, nil
+}
+
 // CompressionTypeFromString returns the compression type from a user-specified string
 func CompressionTypeFromString(s string) (uint16, error) {
 	switch strings.ToLower(s) {
