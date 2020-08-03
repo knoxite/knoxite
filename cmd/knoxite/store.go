@@ -52,10 +52,31 @@ var (
 			if len(args) < 2 {
 				return fmt.Errorf("store needs to know which files and/or directories to work on")
 			}
+			storeOpts = configureStoreOpts(cmd, storeOpts)
+
 			return executeStore(args[0], args[1:], storeOpts)
 		},
 	}
 )
+
+// configureStoreOpts will compare the setting from the configuration file and
+// the user set command line flags.
+// When there exists a config for the repo we'll use the values from
+// there unless the user sets another value via the command line flags.
+func configureStoreOpts(cmd *cobra.Command, opts StoreOptions) StoreOptions {
+	if rep, ok := config.Repositories[globalOpts.Repo]; ok {
+		if !cmd.Flags().Changed("compression") {
+			opts.Compression = rep.Compression
+		}
+		if !cmd.Flags().Changed("encryption") {
+			opts.Encryption = rep.Encryption
+		}
+		if !cmd.Flags().Changed("tolerance") {
+			opts.FailureTolerance = rep.Tolerance
+		}
+	}
+	return opts
+}
 
 func initStoreFlags(f func() *pflag.FlagSet) {
 	f().StringVarP(&storeOpts.Description, "desc", "d", "", "a description or comment for this volume")
