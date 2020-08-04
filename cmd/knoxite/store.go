@@ -64,7 +64,7 @@ var (
 // When there exists a config for the repo we'll use the values from
 // there unless the user sets another value via the command line flags.
 func configureStoreOpts(cmd *cobra.Command, opts StoreOptions) StoreOptions {
-	if rep, ok := config.Repositories[globalOpts.Repo]; ok {
+	if rep, ok := cfg.Repositories[globalOpts.Repo]; ok {
 		if !cmd.Flags().Changed("compression") {
 			opts.Compression = rep.Compression
 		}

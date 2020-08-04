@@ -1,10 +1,11 @@
 /*
  * knoxite
  *     Copyright (c) 2020, Nicolas Martin <penguwin@penguwin.eu>
+ *                   2020, Sergio Rubio <sergio@rubio.im>
  *
  *   For license see LICENSE
  */
-package cfg
+package config
 
 import (
 	"crypto/aes"

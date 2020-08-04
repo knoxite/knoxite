@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/knoxite/knoxite/cfg"
+	"github.com/knoxite/knoxite/config"
 	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
 )
@@ -85,20 +85,20 @@ func init() {
 }
 
 func executeConfigInit() error {
-	log.Printf("Writing configuration file to: %s\n", config.URL().Path)
-	return config.Save()
+	log.Printf("Writing configuration file to: %s\n", cfg.URL().Path)
+	return cfg.Save()
 }
 
 func executeConfigAlias(alias string) error {
 	// At first check if the configuration file already exists
-	config.Repositories[alias] = cfg.RepoConfig{
+	cfg.Repositories[alias] = config.RepoConfig{
 		Url: globalOpts.Repo,
 		// Compression: utils.CompressionText(knoxite.CompressionNone),
 		// Tolerance:   0,
 		// Encryption:  utils.EncryptionText(knoxite.EncryptionAES),
 	}
 
-	return config.Save()
+	return cfg.Save()
 }
 
 func executeConfigSet(option string, value string) error {
@@ -110,7 +110,7 @@ func executeConfigSet(option string, value string) error {
 	}
 
 	// The first part should be the repos alias
-	repo, ok := config.Repositories[strings.ToLower(parts[0])]
+	repo, ok := cfg.Repositories[strings.ToLower(parts[0])]
 	if !ok {
 		return fmt.Errorf("No alias with name %s found", parts[0])
 	}
@@ -132,9 +132,9 @@ func executeConfigSet(option string, value string) error {
 	default:
 		return fmt.Errorf("Unknown configuration option: %s", opt)
 	}
-	config.Repositories[strings.ToLower(parts[0])] = repo
+	cfg.Repositories[strings.ToLower(parts[0])] = repo
 
-	return config.Save()
+	return cfg.Save()
 }
 
 func executeConfigInfo() error {
@@ -143,7 +143,7 @@ func executeConfigInfo() error {
 		[]int64{-15, -35, -15, -15, 15},
 		"No repository configurations found.")
 
-	for alias, repo := range config.Repositories {
+	for alias, repo := range cfg.Repositories {
 		tab.AppendRow([]interface{}{
 			alias,
 			repo.Url,
@@ -156,7 +156,7 @@ func executeConfigInfo() error {
 }
 
 func executeConfigCat() error {
-	json, err := json.MarshalIndent(config, "", "    ")
+	json, err := json.MarshalIndent(cfg, "", "    ")
 	if err != nil {
 		return err
 	}
