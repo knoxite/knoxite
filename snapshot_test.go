@@ -161,7 +161,10 @@ func TestSnapshotCreate(t *testing.T) {
 				t.Errorf("Failed restoring snapshot: %s", err)
 				return
 			}
-			for range progress {
+			for p := range progress {
+				if p.Error != nil {
+					t.Errorf("Failed restoring snapshot: %s", p.Error)
+				}
 			}
 
 			for i, archive := range snapshot.Archives {
