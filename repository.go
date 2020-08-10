@@ -42,7 +42,6 @@ var (
 
 // NewRepository returns a new repository
 func NewRepository(path, password string) (Repository, error) {
-
 	// A random key of 32 is considered safe right now and may be increased later
 	key, err := generateRandomKey(32)
 	if err != nil {
