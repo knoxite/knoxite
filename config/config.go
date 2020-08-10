@@ -102,7 +102,7 @@ func New(url string) (*Config, error) {
 	var backend ConfigBackend
 
 	if url == "" {
-		return nil, fmt.Errorf("Empty URL provided but not supported")
+		return nil, fmt.Errorf("empty URL provided but not supported")
 	}
 
 	err := config.SetURL(url)
@@ -113,10 +113,9 @@ func New(url string) (*Config, error) {
 	switch config.url.Scheme {
 	case "", "file":
 		if ok, _ := IsEncrypted(config.url); ok {
-			fmt.Println("Loading encrypted configuration file")
-			backend, err = NewAESBackend(config.url)
-			if err != nil {
-				log.Fatalf("error loading the AES configuration backend. err: %v", err)
+			// fmt.Println("Loading encrypted configuration file")
+			if backend, err = NewAESBackend(config.url); err != nil {
+				return nil, fmt.Errorf("error loading the AES configuration backend: %v", err)
 			}
 		} else {
 			backend = NewFileBackend()
@@ -125,10 +124,10 @@ func New(url string) (*Config, error) {
 		backend = NewMemBackend()
 	case "crypto":
 		if backend, err = NewAESBackend(config.url); err != nil {
-			fmt.Printf("error loading the AES configuration backend. err: %v", err)
+			return nil, fmt.Errorf("error loading the AES configuration backend: %v", err)
 		}
 	default:
-		return nil, fmt.Errorf("Configuration backend '%s' not supported", config.url.Scheme)
+		return nil, fmt.Errorf("configuration backend '%s' not supported", config.url.Scheme)
 	}
 
 	config.backend = backend
@@ -174,7 +173,7 @@ func Lookup() string {
 	// over the rest.
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Printf("Error getting current working directory. err: %v", err)
+		log.Printf("Error getting current working directory: %v", err)
 		cwd = "."
 	}
 	cwdCfg := filepath.Join(cwd, cfgFileName)
