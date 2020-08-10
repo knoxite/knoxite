@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -250,6 +251,10 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 		if err != nil {
 			return err
 		}
+	}
+
+	if runtime.GOOS == "windows" {
+		return nil
 	}
 
 	// Restore ownerships
