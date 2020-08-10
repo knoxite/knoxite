@@ -17,7 +17,7 @@ import (
 func TestNew(t *testing.T) {
 	conf, err := New("/foobar")
 	if err != nil {
-		panic(err)
+		t.Fatalf("Failed creating file backend: %s", err)
 	}
 
 	if conf.Type() != FileConf {
@@ -26,7 +26,7 @@ func TestNew(t *testing.T) {
 
 	conf, err = New("file:///foobar")
 	if err != nil {
-		panic(err)
+		t.Fatalf("Failed creating file backend: %s", err)
 	}
 
 	if conf.Type() != FileConf {
@@ -36,25 +36,28 @@ func TestNew(t *testing.T) {
 	cwd, _ := os.Getwd()
 	p := filepath.Join(cwd, "testdata/knoxite-crypto.conf")
 	conf, err = New(url.QueryEscape(p))
+	if err != nil {
+		t.Fatalf("Failed loading crypto config backend: %s", err)
+	}
 	if conf.Type() != CryptoConf {
 		t.Errorf("Backend for '%s' should be an AESBackend", p)
 	}
 
 	conf, err = New("mem:")
 	if err != nil {
-		panic(err)
+		t.Fatalf("Failed creating mem backend: %s", err)
 	}
 
 	if conf.Type() != MemoryConf {
 		t.Error("Backend for 'mem:' should be a MemoryBackend")
 	}
 
-	conf, err = New("c:\\foobar")
+	_, err = New("c:\\foobar")
 	if err == nil {
 		t.Error("Not a valid URL, should return an error")
 	}
 
-	conf, err = New("")
+	_, err = New("")
 	if err == nil {
 		t.Error("Not a valid URL, should return an error")
 	}
@@ -63,7 +66,7 @@ func TestNew(t *testing.T) {
 func TestLoad(t *testing.T) {
 	conf, err := New("mem://")
 	if err != nil {
-		panic(err)
+		t.Fatalf("Failed creating mem backend: %s", err)
 	}
 	err = conf.Load()
 	if err != nil {
