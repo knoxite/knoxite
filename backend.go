@@ -99,6 +99,9 @@ func BackendFromURL(path string) (Backend, error) {
 				return nil, err
 			}
 		}
+		if !strings.HasPrefix(path, "/") {
+			path = "/" + path
+		}
 		path = "file://" + path
 	}
 

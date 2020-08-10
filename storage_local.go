@@ -11,6 +11,8 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
+	"runtime"
+	"strings"
 )
 
 // StorageLocal stores data on the local disk
@@ -24,8 +26,13 @@ func init() {
 
 // NewBackend returns a StorageLocal backend
 func (*StorageLocal) NewBackend(u url.URL) (Backend, error) {
+	path := u.Path
+	if runtime.GOOS == "windows" {
+		path = strings.TrimPrefix(path, "/")
+	}
+
 	backend := StorageLocal{}
-	storagefs, _ := NewStorageFilesystem(u.Path, &backend)
+	storagefs, _ := NewStorageFilesystem(path, &backend)
 	backend.StorageFilesystem = storagefs
 	return &backend, nil
 }
