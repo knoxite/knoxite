@@ -132,7 +132,7 @@ func TestVerifyRepo(t *testing.T) {
 			}
 		}
 
-		tt.ErrorFunction(dir)
+		err = tt.ErrorFunction(dir)
 		if err != nil {
 			t.Errorf("Failed during error/destructive function: %s", err)
 			return
@@ -235,7 +235,7 @@ func TestVerifyVolume(t *testing.T) {
 			volumeOriginal = vol
 		}
 
-		tt.ErrorFunction(dir)
+		err = tt.ErrorFunction(dir)
 		if err != nil {
 			t.Errorf("Failed during error/destructive function: %s", err)
 			return
@@ -338,7 +338,7 @@ func TestVerifySnapshot(t *testing.T) {
 			snapshotOriginal = snapshot
 		}
 
-		tt.ErrorFunction(dir)
+		err = tt.ErrorFunction(dir)
 		if err != nil {
 			t.Errorf("Failed during error/destructive function: %s", err)
 			return
