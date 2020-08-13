@@ -54,7 +54,7 @@ var (
 			if len(args) < 2 {
 				return fmt.Errorf("set needs to know which value to set")
 			}
-			return executeConfigSet(args[0], args[1])
+			return executeConfigSet(args[0], args[1:])
 		},
 	}
 	configInfoCmd = &cobra.Command{
@@ -116,7 +116,7 @@ func executeConfigAlias(alias string) error {
 	return cfg.Save()
 }
 
-func executeConfigSet(option string, value string) error {
+func executeConfigSet(option string, values []string) error {
 	// This probably wont scale for more complex configuration options but works
 	// fine for now.
 	parts := strings.Split(option, ".")
@@ -133,17 +133,21 @@ func executeConfigSet(option string, value string) error {
 	opt := strings.ToLower(parts[1])
 	switch opt {
 	case "url":
-		repo.Url = value
+		repo.Url = values[0]
 	case "compression":
-		repo.Compression = value
+		repo.Compression = values[0]
 	case "encryption":
-		repo.Encryption = value
+		repo.Encryption = values[0]
 	case "tolerance":
-		tol, err := strconv.Atoi(value)
+		tol, err := strconv.Atoi(values[0])
 		if err != nil {
 			return fmt.Errorf("Failed to convert %s to uint for the fault tolerance option: %v", opt, err)
 		}
 		repo.Tolerance = uint(tol)
+	case "store_excludes":
+		repo.StoreExcludes = values
+	case "restore_excludes":
+		repo.RestoreExcludes = values
 	default:
 		return fmt.Errorf("Unknown configuration option: %s", opt)
 	}
