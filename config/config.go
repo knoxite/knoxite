@@ -31,10 +31,12 @@ var cfgFileName = "knoxite.conf"
 
 // The RepoConfig struct contains all the default values for a a repository.
 type RepoConfig struct {
-	Url         string `json:"url"`
-	Compression string `json:"compression"`
-	Tolerance   uint   `json:"tolerance"`
-	Encryption  string `json:"encryption"`
+	Url             string   `json:"url"`
+	Compression     string   `json:"compression"`
+	Tolerance       uint     `json:"tolerance"`
+	Encryption      string   `json:"encryption"`
+	StoreExcludes   []string `json:"store_excludes"`
+	RestoreExcludes []string `json:"restore_excludes"`
 }
 
 type Config struct {
