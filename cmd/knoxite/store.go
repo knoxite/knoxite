@@ -59,10 +59,10 @@ var (
 	}
 )
 
-// configureStoreOpts will compare the setting from the configuration file and
+// configureStoreOpts will compare the settings from the configuration file and
 // the user set command line flags.
-// When there exists a config for the repo we'll use the values from
-// there unless the user sets another value via the command line flags.
+// Values set via the command line flags will overwrite settings stored in the
+// configuration file.
 func configureStoreOpts(cmd *cobra.Command, opts StoreOptions) StoreOptions {
 	if rep, ok := cfg.Repositories[globalOpts.Repo]; ok {
 		if !cmd.Flags().Changed("compression") {
@@ -73,6 +73,9 @@ func configureStoreOpts(cmd *cobra.Command, opts StoreOptions) StoreOptions {
 		}
 		if !cmd.Flags().Changed("tolerance") {
 			opts.FailureTolerance = rep.Tolerance
+		}
+		if !cmd.Flags().Changed("excludes") {
+			opts.Excludes = rep.StoreExcludes
 		}
 	}
 	return opts
