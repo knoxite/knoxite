@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -49,6 +50,13 @@ func TestFileLoad(t *testing.T) {
 	}
 	if repo.Tolerance != 0 {
 		t.Errorf("Expected repoTolerance of 0, got: %v", repo.Tolerance)
+	}
+	excludes := []string{"just", "an", "example"}
+	if !reflect.DeepEqual(repo.StoreExcludes, excludes) {
+		t.Errorf("Store Excludes did not match:\nExpected: %v\nGot: %v", excludes, repo.StoreExcludes)
+	}
+	if !reflect.DeepEqual(repo.RestoreExcludes, excludes) {
+		t.Errorf("Restore Excludes did not match:\nExpected: %v\nGot: %v", excludes, repo.RestoreExcludes)
 	}
 
 	// try to load the config from an absolute path using a URI
