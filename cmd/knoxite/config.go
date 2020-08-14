@@ -73,6 +73,20 @@ var (
 			return executeConfigCat()
 		},
 	}
+	configConvertCmd = &cobra.Command{
+		Use:   "convert <source> <target>",
+		Short: "convert between several configuration backends",
+		Long:  "The convert command translates between several configuration backends",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				return fmt.Errorf("convert needs a source to work on")
+			}
+			if len(args) < 2 {
+				return fmt.Errorf("convert needs a target to write to")
+			}
+			return executeConfigConvert(args[0], args[1])
+		},
+	}
 )
 
 func init() {
@@ -81,6 +95,7 @@ func init() {
 	configCmd.AddCommand(configAliasCmd)
 	configCmd.AddCommand(configInfoCmd)
 	configCmd.AddCommand(configCatCmd)
+	configCmd.AddCommand(configConvertCmd)
 	RootCmd.AddCommand(configCmd)
 }
 
@@ -163,4 +178,25 @@ func executeConfigCat() error {
 
 	fmt.Printf("%s\n", json)
 	return nil
+}
+
+func executeConfigConvert(source string, target string) error {
+	// Load the source config
+	scr, err := config.New(source)
+	if err != nil {
+		return err
+	}
+	if err = scr.Load(); err != nil {
+		return err
+	}
+
+	// Create the target
+	tar, err := config.New(target)
+	if err != nil {
+		return err
+	}
+
+	// copy over the repo configs and save the target
+	tar.Repositories = scr.Repositories
+	return tar.Save()
 }
