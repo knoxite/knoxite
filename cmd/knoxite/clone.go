@@ -31,8 +31,8 @@ var (
 			if len(args) < 2 {
 				return fmt.Errorf("clone needs to know which files and/or directories to work on")
 			}
-			cloneOpts = configureStoreOpts(cmd, cloneOpts)
 
+			configureStoreOpts(cmd, &cloneOpts)
 			return executeClone(args[0], args[1:], cloneOpts)
 		},
 	}

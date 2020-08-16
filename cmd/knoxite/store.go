@@ -52,8 +52,8 @@ var (
 			if len(args) < 2 {
 				return fmt.Errorf("store needs to know which files and/or directories to work on")
 			}
-			storeOpts = configureStoreOpts(cmd, storeOpts)
 
+			configureStoreOpts(cmd, &storeOpts)
 			return executeStore(args[0], args[1:], storeOpts)
 		},
 	}
@@ -63,7 +63,7 @@ var (
 // the user set command line flags.
 // Values set via the command line flags will overwrite settings stored in the
 // configuration file.
-func configureStoreOpts(cmd *cobra.Command, opts StoreOptions) StoreOptions {
+func configureStoreOpts(cmd *cobra.Command, opts *StoreOptions) {
 	if rep, ok := cfg.Repositories[globalOpts.Repo]; ok {
 		if !cmd.Flags().Changed("compression") {
 			opts.Compression = rep.Compression
@@ -78,7 +78,6 @@ func configureStoreOpts(cmd *cobra.Command, opts StoreOptions) StoreOptions {
 			opts.Excludes = rep.StoreExcludes
 		}
 	}
-	return opts
 }
 
 func initStoreFlags(f func() *pflag.FlagSet) {
