@@ -59,7 +59,6 @@ func (*WebDAVStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	backend.StorageFilesystem = fs
 
 	return &backend, nil
-
 }
 
 // Location returns the type and location of the repository
@@ -124,5 +123,4 @@ func (backend *WebDAVStorage) Stat(path string) (uint64, error) {
 		return 0, err
 	}
 	return uint64(stat.Size()), nil
-
 }

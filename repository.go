@@ -223,7 +223,6 @@ func (r *Repository) ChangePassword(newPassword string) error {
 
 // Migrates a repository to the current version, if possible
 func (r *Repository) Migrate() error {
-
 	switch v := r.Version; {
 	case v < 3:
 		return ErrRepositoryIncompatible

@@ -77,7 +77,6 @@ func (*BackblazeStorage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		Bucket:         bucket,
 		backblaze:      cl,
 	}, nil
-
 }
 
 // Location returns the type and location of the repository

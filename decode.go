@@ -268,7 +268,6 @@ var (
 
 func init() {
 	cache = make(map[string][]byte)
-
 }
 
 // DecodeArchiveData returns the content of a single archive

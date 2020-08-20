@@ -65,7 +65,6 @@ func VerifyRepo(repository Repository, percentage int) (prog chan Progress, err 
 
 			p.CurrentItemStats.Transferred += uint64((*snapshot.Archives[archiveKey]).Size)
 			prog <- p
-
 		}
 		close(prog)
 	}()
@@ -178,7 +177,6 @@ func VerifySnapshot(repository Repository, snapshotId string, percentage int) (p
 
 			p.CurrentItemStats.Transferred += uint64((*snapshot.Archives[archiveKey]).Size)
 			prog <- p
-
 		}
 		close(prog)
 	}()

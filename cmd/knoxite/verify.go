@@ -83,8 +83,8 @@ func executeVerifyRepo(opts VerifyOptions) error {
 			}
 
 			pb.LazyPrint()
-
 		}
+
 		fmt.Println()
 		fmt.Printf("Verify done: %d errors\n", len(errors))
 		return nil
@@ -127,8 +127,8 @@ func executeVerifyVolume(volumeId string, opts VerifyOptions) error {
 			}
 
 			pb.LazyPrint()
-
 		}
+
 		fmt.Println()
 		fmt.Printf("Verify done: %d errors\n", len(errors))
 		return nil
@@ -171,8 +171,8 @@ func executeVerifySnapshot(volumeId string, snapshotId string, opts VerifyOption
 			}
 
 			pb.LazyPrint()
-
 		}
+
 		fmt.Println()
 		fmt.Printf("Verify done: %d errors\n", len(errors))
 		return nil

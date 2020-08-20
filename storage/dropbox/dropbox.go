@@ -35,7 +35,6 @@ func (*DropboxStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	user := u.User.Username()
 	if user == "" {
 		return &DropboxStorage{}, knoxite.ErrInvalidUsername
-
 	}
 
 	backend := DropboxStorage{
