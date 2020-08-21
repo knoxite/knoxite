@@ -7,6 +7,7 @@ require (
 	cloud.google.com/go/storage v1.10.0
 	github.com/Azure/azure-storage-file-go v0.8.0
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
+	github.com/charmbracelet/glamour v0.2.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-ini/ini v1.51.1 // indirect
 	github.com/google/readahead v0.0.0-20161222183148-eaceba169032 // indirect

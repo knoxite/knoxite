@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2020,      Nicolas Martin <penguwin@penguwin.eu>
  *
  *   For license see LICENSE
  */
@@ -10,9 +11,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/knoxite/knoxite"
 
+	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
 )
 
@@ -48,6 +51,12 @@ func executeCat(snapshotID string, file string) error {
 		b, _, erra := knoxite.DecodeArchiveData(repository, *archive)
 		if erra != nil {
 			return erra
+		}
+
+		if filepath.Ext(file) == ".md" {
+			if b, err = glamour.RenderBytes(b, "auto"); err != nil {
+				return err
+			}
 		}
 
 		_, err = os.Stdout.Write(b)
