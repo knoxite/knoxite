@@ -42,7 +42,7 @@ type inputChunk struct {
 	Num  uint
 }
 
-func processChunk(id int, compress, encrypt uint16, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- ChunkResult, wg *sync.WaitGroup) {
+func processChunk(_ int, compress, encrypt uint16, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- ChunkResult, wg *sync.WaitGroup) {
 	pipe, _ := NewEncodingPipeline(compress, encrypt, password)
 
 	for j := range jobs {

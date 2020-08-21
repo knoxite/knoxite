@@ -192,7 +192,7 @@ func (node *Node) Attr(ctx context.Context, a *fuse.Attr) error {
 }
 
 // Lookup is used to stat items.
-func (node *Node) Lookup(ctx context.Context, name string) (fs.Node, error) {
+func (node *Node) Lookup(_ context.Context, name string) (fs.Node, error) {
 	// fmt.Println("Lookup:", name)
 	item, ok := node.Items[name]
 	if ok {
@@ -203,7 +203,7 @@ func (node *Node) Lookup(ctx context.Context, name string) (fs.Node, error) {
 }
 
 // ReadDirAll returns all items directly below this node.
-func (node *Node) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
+func (node *Node) ReadDirAll(_ context.Context) ([]fuse.Dirent, error) {
 	// fmt.Println("ReadDirAll:", node.Item.Path)
 	entries := []fuse.Dirent{}
 
@@ -225,7 +225,7 @@ func (node *Node) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
 }
 
 // Open opens a file.
-func (node *Node) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
+func (node *Node) Open(_ context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
 	if !req.Flags.IsReadOnly() {
 		return nil, fuse.Errno(syscall.EACCES)
 	}
@@ -234,7 +234,7 @@ func (node *Node) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.Op
 }
 
 // Read reads from a file.
-func (node *Node) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
+func (node *Node) Read(_ context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
 	d, err := knoxite.ReadArchive(*node.Repository, node.Archive, int(req.Offset), req.Size)
 	if err != nil {
 		if err != io.EOF {
@@ -249,12 +249,12 @@ func (node *Node) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.Re
 }
 
 // Readlink returns the target a symlink is pointing to.
-func (node *Node) Readlink(ctx context.Context, req *fuse.ReadlinkRequest) (string, error) {
+func (node *Node) Readlink(_ context.Context, _ *fuse.ReadlinkRequest) (string, error) {
 	return node.Archive.PointsTo, nil
 }
 
 // ReadAll reads an entire archive's content.
-/*func (node *Node) ReadAll(ctx context.Context) ([]byte, error) {
+/*func (node *Node) ReadAll(_ context.Context) ([]byte, error) {
 	d, _, err := knoxite.DecodeArchiveData(*node.Repository, node.Item)
 	if err != nil {
 		return d, err
