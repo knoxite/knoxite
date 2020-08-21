@@ -20,7 +20,7 @@ import (
 	"github.com/knoxite/knoxite"
 )
 
-// MegaStorage stores data on a remote Mega
+// MegaStorage stores data on a remote Mega.
 type MegaStorage struct {
 	url  url.URL
 	mega *mega.Mega
@@ -31,7 +31,7 @@ func init() {
 	knoxite.RegisterStorageBackend(&MegaStorage{})
 }
 
-// NewBackend returns a MegaStorage backend
+// NewBackend returns a MegaStorage backend.
 func (*MegaStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	backend := MegaStorage{
 		url:  u,
@@ -62,27 +62,27 @@ func (*MegaStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	return &backend, nil
 }
 
-// Location returns the type and location of the repository
+// Location returns the type and location of the repository.
 func (backend *MegaStorage) Location() string {
 	return backend.url.String()
 }
 
-// Close the backend
+// Close the backend.
 func (backend *MegaStorage) Close() error {
 	return nil
 }
 
-// Protocols returns the Protocol Schemes supported by this backend
+// Protocols returns the Protocol Schemes supported by this backend.
 func (backend *MegaStorage) Protocols() []string {
 	return []string{"mega"}
 }
 
-// Description returns a user-friendly description for this backend
+// Description returns a user-friendly description for this backend.
 func (backend *MegaStorage) Description() string {
 	return "mega.nz storage"
 }
 
-// AvailableSpace returns the free space on this backend
+// AvailableSpace returns the free space on this backend.
 func (backend *MegaStorage) AvailableSpace() (uint64, error) {
 	quota, err := backend.mega.GetQuota()
 	if err != nil {
@@ -92,7 +92,7 @@ func (backend *MegaStorage) AvailableSpace() (uint64, error) {
 	return quota.Mstrg - quota.Cstrg, nil
 }
 
-// CreatePath creates a dir including all its parent dirs, when required
+// CreatePath creates a dir including all its parent dirs, when required.
 func (backend *MegaStorage) CreatePath(path string) error {
 	path = strings.TrimPrefix(path, "/")
 	path = strings.TrimSuffix(path, "/")
@@ -116,7 +116,7 @@ func (backend *MegaStorage) CreatePath(path string) error {
 	return nil
 }
 
-// Stat returns the size of a file
+// Stat returns the size of a file.
 func (backend *MegaStorage) Stat(path string) (uint64, error) {
 	node, err := backend.getNodeFromPath(path)
 	if err != nil {
@@ -126,7 +126,7 @@ func (backend *MegaStorage) Stat(path string) (uint64, error) {
 	return uint64(node.GetSize()), nil
 }
 
-// ReadFile reads a file from mega
+// ReadFile reads a file from mega.
 func (backend *MegaStorage) ReadFile(path string) ([]byte, error) {
 	nodeToRead, err := backend.getNodeFromPath(path)
 	if err != nil {
@@ -150,7 +150,7 @@ func (backend *MegaStorage) ReadFile(path string) ([]byte, error) {
 	return bytes, download.Finish()
 }
 
-// WriteFile write files on mega
+// WriteFile write files on mega.
 func (backend *MegaStorage) WriteFile(path string, data []byte) (size uint64, err error) {
 	dir, file := filepath.Split(path)
 
@@ -190,7 +190,7 @@ func (backend *MegaStorage) WriteFile(path string, data []byte) (size uint64, er
 	return uint64(len(data)), err
 }
 
-// DeleteFile deletes a file from mega
+// DeleteFile deletes a file from mega.
 func (backend *MegaStorage) DeleteFile(path string) error {
 	fileToDelete, err := backend.getNodeFromPath(path)
 	if err != nil {

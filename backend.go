@@ -14,13 +14,13 @@ import (
 	"strings"
 )
 
-// BackendFactory is used to initialize a new backend
+// BackendFactory is used to initialize a new backend.
 type BackendFactory interface {
 	NewBackend(url url.URL) (Backend, error)
 	Protocols() []string
 }
 
-// Backend is used to store and access data
+// Backend is used to store and access data.
 type Backend interface {
 	// Location returns the type and location of the repository
 	Location() string
@@ -72,7 +72,8 @@ var (
 	backends = []BackendFactory{}
 )
 
-// RegisterStorageBackend needs to be called by storage backends to register themselves
+// RegisterStorageBackend needs to be called by storage backends to register
+// themselves.
 func RegisterStorageBackend(factory BackendFactory) {
 	backends = append(backends, factory)
 }
@@ -89,7 +90,7 @@ func newBackendFromProtocol(url url.URL) (Backend, error) {
 	return nil, ErrInvalidRepositoryURL
 }
 
-// BackendFromURL returns the matching backend for path
+// BackendFromURL returns the matching backend for path.
 func BackendFromURL(path string) (Backend, error) {
 	if !strings.Contains(path, "://") {
 		if !filepath.IsAbs(path) {

@@ -31,7 +31,7 @@ import (
 	_ "github.com/knoxite/knoxite/storage/webdav"
 )
 
-// GlobalOptions holds all those options that can be set for every command
+// GlobalOptions holds all those options that can be set for every command.
 type GlobalOptions struct {
 	Repo      string
 	Password  string
@@ -45,7 +45,7 @@ var (
 	globalOpts = GlobalOptions{}
 	cfg        = &config.Config{}
 
-	// RootCmd is the core command used for cli-arg parsing
+	// RootCmd is the core command used for cli-arg parsing.
 	RootCmd = &cobra.Command{
 		Use:   "knoxite",
 		Short: "Knoxite is a data storage & backup tool",

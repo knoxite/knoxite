@@ -24,7 +24,7 @@ import (
 	"github.com/knoxite/knoxite"
 )
 
-// FTPStorage stores data on a remote FTP
+// FTPStorage stores data on a remote FTP.
 type FTPStorage struct {
 	url   url.URL
 	ftp   *ftp.ServerConn
@@ -41,7 +41,7 @@ func init() {
 	knoxite.RegisterStorageBackend(&FTPStorage{})
 }
 
-// NewBackend establishes an FTP connection and returns a FTPStorage backend
+// NewBackend establishes an FTP connection and returns a FTPStorage backend.
 func (*FTPStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	_, port, err := net.SplitHostPort(u.Host)
 	if err != nil || len(port) == 0 {
@@ -82,12 +82,12 @@ func (*FTPStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	return &backend, nil
 }
 
-// Location returns the type and location of the repository
+// Location returns the type and location of the repository.
 func (backend *FTPStorage) Location() string {
 	return backend.url.String()
 }
 
-// Close the backend
+// Close the backend.
 func (backend *FTPStorage) Close() error {
 	if backend.login {
 		if err := backend.ftp.Logout(); err != nil {
@@ -97,22 +97,22 @@ func (backend *FTPStorage) Close() error {
 	return backend.ftp.Quit()
 }
 
-// Protocols returns the Protocol Schemes supported by this backend
+// Protocols returns the Protocol Schemes supported by this backend.
 func (backend *FTPStorage) Protocols() []string {
 	return []string{"ftp"}
 }
 
-// Description returns a user-friendly description for this backend
+// Description returns a user-friendly description for this backend.
 func (backend *FTPStorage) Description() string {
 	return "FTP Storage"
 }
 
-// AvailableSpace returns the free space on this backen
+// AvailableSpace returns the free space on this backen.
 func (backend *FTPStorage) AvailableSpace() (uint64, error) {
 	return 0, knoxite.ErrAvailableSpaceUnknown
 }
 
-// CreatePath creates a dir including all its parent dirs, when required
+// CreatePath creates a dir including all its parent dirs, when required.
 func (backend *FTPStorage) CreatePath(path string) error {
 	slicedPath := strings.Split(path, "/")
 	for i := range slicedPath {
@@ -126,13 +126,13 @@ func (backend *FTPStorage) CreatePath(path string) error {
 	return nil
 }
 
-// Stat returns the size of a file on ftp
+// Stat returns the size of a file on ftp.
 func (backend *FTPStorage) Stat(path string) (uint64, error) {
 	size, err := backend.ftp.FileSize(path)
 	return uint64(size), err
 }
 
-// ReadFile reads a file from ftp
+// ReadFile reads a file from ftp.
 func (backend *FTPStorage) ReadFile(path string) ([]byte, error) {
 	file, err := backend.ftp.Retr(path)
 	if err != nil {
@@ -143,18 +143,18 @@ func (backend *FTPStorage) ReadFile(path string) ([]byte, error) {
 	return ioutil.ReadAll(file)
 }
 
-// WriteFile writes file to ftp
+// WriteFile writes file to ftp.
 func (backend *FTPStorage) WriteFile(path string, data []byte) (size uint64, err error) {
 	err = backend.ftp.Stor(path, bytes.NewReader(data))
 	return uint64(len(data)), err
 }
 
-// DeleteFile deletes a file from ftp
+// DeleteFile deletes a file from ftp.
 func (backend *FTPStorage) DeleteFile(path string) error {
 	return backend.ftp.Delete(path)
 }
 
-// DeletePath deletes a directory including all its content from ftp
+// DeletePath deletes a directory including all its content from ftp.
 func (backend *FTPStorage) DeletePath(path string) error {
 	fmt.Println("Deleting path", path)
 	list, err := backend.ftp.List("")

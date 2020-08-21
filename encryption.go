@@ -14,7 +14,7 @@ import (
 	"errors"
 )
 
-// Available encryption algos
+// Available encryption algos.
 const (
 	EncryptionNone = iota
 	EncryptionAES
@@ -25,7 +25,7 @@ var (
 	ErrInvalidPassword = errors.New("Empty password not permitted")
 )
 
-// Encryptor is a pipeline processor that encrypts data
+// Encryptor is a pipeline processor that encrypts data.
 type Encryptor struct {
 	Method uint16
 
@@ -33,7 +33,7 @@ type Encryptor struct {
 	block cipher.Block
 }
 
-// NewEncryptor returns a newly configured Encryptor
+// NewEncryptor returns a newly configured Encryptor.
 func NewEncryptor(method uint16, password string) (Encryptor, error) {
 	e := Encryptor{
 		Method: method,
@@ -56,7 +56,7 @@ func NewEncryptor(method uint16, password string) (Encryptor, error) {
 	return e, nil
 }
 
-// Process encrypts the data
+// Process encrypts the data.
 func (e Encryptor) Process(data []byte) ([]byte, error) {
 	if e.Method == EncryptionNone {
 		return data, nil
@@ -69,7 +69,7 @@ func (e Encryptor) Process(data []byte) ([]byte, error) {
 	return b, nil
 }
 
-// Decryptor is a pipeline processor that decrypts data
+// Decryptor is a pipeline processor that decrypts data.
 type Decryptor struct {
 	Method uint16
 
@@ -77,7 +77,7 @@ type Decryptor struct {
 	block cipher.Block
 }
 
-// NewDecryptor returns a newly configured Decryptor
+// NewDecryptor returns a newly configured Decryptor.
 func NewDecryptor(method uint16, password string) (Decryptor, error) {
 	e := Decryptor{
 		Method: method,
@@ -100,7 +100,7 @@ func NewDecryptor(method uint16, password string) (Decryptor, error) {
 	return e, nil
 }
 
-// Process decrypts the data
+// Process decrypts the data.
 func (e Decryptor) Process(data []byte) ([]byte, error) {
 	if e.Method == EncryptionNone {
 		return data, nil

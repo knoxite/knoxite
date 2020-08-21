@@ -11,7 +11,7 @@ import (
 	"fmt"
 )
 
-// A ChunkIndexItem links a chunk with one or many snapshots
+// A ChunkIndexItem links a chunk with one or many snapshots.
 type ChunkIndexItem struct {
 	Hash        string   `json:"hash"`
 	DataParts   uint     `json:"data_parts"`
@@ -20,13 +20,12 @@ type ChunkIndexItem struct {
 	Snapshots   []string `json:"snapshots"`
 }
 
-// A ChunkIndex links chunks with snapshots
-// MUST BE encrypted
+// A ChunkIndex links chunks with snapshots.
 type ChunkIndex struct {
 	Chunks map[string]*ChunkIndexItem `json:"chunks"`
 }
 
-// OpenChunkIndex opens an existing chunkindex
+// OpenChunkIndex opens an existing chunkindex.
 func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 	index := ChunkIndex{
 		Chunks: make(map[string]*ChunkIndexItem),
@@ -57,7 +56,7 @@ func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 	return index, err
 }
 
-// Save writes a chunk-index
+// Save writes a chunk-index.
 func (index *ChunkIndex) Save(repository *Repository) error {
 	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
 	if err != nil {
@@ -70,7 +69,7 @@ func (index *ChunkIndex) Save(repository *Repository) error {
 	return repository.backend.SaveChunkIndex(b)
 }
 
-// Pack deletes unreferenced chunks and removes them from the index
+// Pack deletes unreferenced chunks and removes them from the index.
 func (index *ChunkIndex) Pack(repository *Repository) (freedSize uint64, err error) {
 	chunks := make(map[string]*ChunkIndexItem)
 
@@ -112,7 +111,7 @@ func (index *ChunkIndex) reindex(repository *Repository) error {
 	return nil
 }
 
-// AddArchive updates chunk-index with the new chunks
+// AddArchive updates chunk-index with the new chunks.
 func (index *ChunkIndex) AddArchive(archive *Archive, snapshot string) {
 	for _, chunk := range archive.Chunks {
 		c, ok := index.Chunks[chunk.Hash]
@@ -131,7 +130,7 @@ func (index *ChunkIndex) AddArchive(archive *Archive, snapshot string) {
 	}
 }
 
-// RemoveSnapshot removes all references to snapshot from the chunk-index
+// RemoveSnapshot removes all references to snapshot from the chunk-index.
 func (index *ChunkIndex) RemoveSnapshot(snapshot string) {
 	for _, chunk := range index.Chunks {
 		snapshots := []string{}

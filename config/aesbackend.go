@@ -22,15 +22,15 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
-// EncryptedHeaderPrefix is added to the encrypted configuration
-// to make it possible to detect it's an encrypted configuration file
+// EncryptedHeaderPrefix is added to the encrypted configuration to make it
+// possible to detect it's an encrypted configuration file.
 const EncryptedHeaderPrefix = "knoxiteconf+"
 
 var (
 	password string
 )
 
-// AESBackend symmetrically encrypts the configuration file using AES-GCM
+// AESBackend symmetrically encrypts the configuration file using AES-GCM.
 type AESBackend struct{}
 
 // NewAESBackend creates the backend.
@@ -80,7 +80,7 @@ func (b *AESBackend) Type() int {
 	return CryptoConf
 }
 
-// Load configuration file from the given URL and decrypt it
+// Load configuration file from the given URL and decrypt it.
 func (b *AESBackend) Load(u *url.URL) (*Config, error) {
 	path, err := url.PathUnescape(u.Path)
 	if err != nil {
@@ -124,7 +124,7 @@ func (b *AESBackend) Load(u *url.URL) (*Config, error) {
 	return config, nil
 }
 
-// Save encrypts then saves the configuration
+// Save encrypts then saves the configuration.
 func (b *AESBackend) Save(config *Config) error {
 	u := config.URL()
 	path, err := url.QueryUnescape(u.Path)

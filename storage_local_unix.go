@@ -11,7 +11,7 @@ package knoxite
 
 import "syscall"
 
-// AvailableSpace returns the free space on this backend
+// AvailableSpace returns the free space on this backend.
 func (backend *StorageLocal) AvailableSpace() (uint64, error) {
 	//FIXME: make this cross-platform compatible
 	var stat syscall.Statfs_t

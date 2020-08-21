@@ -18,8 +18,7 @@ import (
 	uuid "github.com/nu7hatch/gouuid"
 )
 
-// A Snapshot is a compilation of one or many archives
-// MUST BE encrypted
+// A Snapshot is a compilation of one or many archives.
 type Snapshot struct {
 	mut sync.Mutex
 
@@ -30,7 +29,7 @@ type Snapshot struct {
 	Archives    map[string]*Archive `json:"items"`
 }
 
-// NewSnapshot creates a new snapshot
+// NewSnapshot creates a new snapshot.
 func NewSnapshot(description string) (*Snapshot, error) {
 	snapshot := Snapshot{
 		Date:        time.Now(),
@@ -87,7 +86,7 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 	close(out)
 }
 
-// Add adds a path to a Snapshot
+// Add adds a path to a Snapshot.
 func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt uint16, dataParts, parityParts uint) chan Progress {
 	progress := make(chan Progress)
 	fwd := make(chan ArchiveResult)
@@ -178,7 +177,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 	return progress
 }
 
-// Clone clones a snapshot
+// Clone clones a snapshot.
 func (snapshot *Snapshot) Clone() (*Snapshot, error) {
 	s, err := NewSnapshot(snapshot.Description)
 	if err != nil {
@@ -191,7 +190,7 @@ func (snapshot *Snapshot) Clone() (*Snapshot, error) {
 	return s, nil
 }
 
-// openSnapshot opens an existing snapshot
+// openSnapshot opens an existing snapshot.
 func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
 	snapshot := Snapshot{
 		Archives: make(map[string]*Archive),
@@ -208,7 +207,7 @@ func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
 	return &snapshot, err
 }
 
-// Save writes a snapshot's metadata
+// Save writes a snapshot's metadata.
 func (snapshot *Snapshot) Save(repository *Repository) error {
 	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
 	if err != nil {
@@ -221,7 +220,7 @@ func (snapshot *Snapshot) Save(repository *Repository) error {
 	return repository.backend.SaveSnapshot(snapshot.ID, b)
 }
 
-// AddArchive adds an archive to a snapshot
+// AddArchive adds an archive to a snapshot.
 func (snapshot *Snapshot) AddArchive(archive *Archive) {
 	snapshot.Archives[archive.Path] = archive
 }

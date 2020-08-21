@@ -9,8 +9,7 @@ package knoxite
 
 import uuid "github.com/nu7hatch/gouuid"
 
-// A Volume contains various snapshots
-// MUST BE encrypted
+// A Volume contains various snapshots.
 type Volume struct {
 	ID          string   `json:"id"`
 	Name        string   `json:"name"`
@@ -18,7 +17,7 @@ type Volume struct {
 	Snapshots   []string `json:"snapshots"`
 }
 
-// NewVolume creates a new volume
+// NewVolume creates a new volume.
 func NewVolume(name, description string) (*Volume, error) {
 	vol := Volume{
 		Name:        name,
@@ -34,13 +33,13 @@ func NewVolume(name, description string) (*Volume, error) {
 	return &vol, nil
 }
 
-// AddSnapshot adds a snapshot to a volume
+// AddSnapshot adds a snapshot to a volume.
 func (v *Volume) AddSnapshot(id string) error {
 	v.Snapshots = append(v.Snapshots, id)
 	return nil
 }
 
-// RemoveSnapshot removes a snapshot from a volume
+// RemoveSnapshot removes a snapshot from a volume.
 func (v *Volume) RemoveSnapshot(id string) error {
 	snapshots := []string{}
 	found := false
@@ -61,7 +60,7 @@ func (v *Volume) RemoveSnapshot(id string) error {
 	return nil
 }
 
-// LoadSnapshot loads a snapshot within a volume from a repository
+// LoadSnapshot loads a snapshot within a volume from a repository.
 func (v *Volume) LoadSnapshot(id string, repository *Repository) (*Snapshot, error) {
 	for _, snapshot := range v.Snapshots {
 		if snapshot == id {

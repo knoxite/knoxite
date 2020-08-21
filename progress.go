@@ -9,7 +9,7 @@ package knoxite
 
 import "time"
 
-// Progress contains stats and current path
+// Progress contains stats and current path.
 type Progress struct {
 	Path             string
 	Timer            time.Time
@@ -39,7 +39,7 @@ func newProgressError(err error) Progress {
 	}
 }
 
-// TransferSpeed returns the average transfer speed in bytes per second
+// TransferSpeed returns the average transfer speed in bytes per second.
 func (p Progress) TransferSpeed() uint64 {
 	return uint64(float64(p.CurrentItemStats.Transferred) / time.Since(p.Timer).Seconds())
 }

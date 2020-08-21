@@ -19,7 +19,7 @@ import (
 
 const appName = "knoxite"
 
-// Available configuration backends
+// Available configuration backends.
 const (
 	FileConf = iota
 	CryptoConf
@@ -28,7 +28,7 @@ const (
 
 var cfgFileName = "knoxite.conf"
 
-// The RepoConfig struct contains all the default values for a a repository
+// The RepoConfig struct contains all the default values for a a repository.
 type RepoConfig struct {
 	Url         string `json:"url"`
 	Compression string `json:"compression"`

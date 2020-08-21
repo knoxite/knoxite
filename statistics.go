@@ -11,7 +11,7 @@ import (
 	"fmt"
 )
 
-// Stats contains a bunch of Stats counters
+// Stats contains a bunch of Stats counters.
 type Stats struct {
 	Files       uint64 `json:"files"`
 	Dirs        uint64 `json:"dirs"`
@@ -22,7 +22,7 @@ type Stats struct {
 	Errors      uint64 `json:"errors"`
 }
 
-// Add accumulates other into s
+// Add accumulates other into s.
 func (s *Stats) Add(other Stats) {
 	s.Files += other.Files
 	s.Dirs += other.Dirs
@@ -33,7 +33,7 @@ func (s *Stats) Add(other Stats) {
 	s.Errors += other.Errors
 }
 
-// SizeToString prettifies sizes
+// SizeToString prettifies sizes.
 func SizeToString(size uint64) (str string) {
 	b := float64(size)
 
@@ -57,7 +57,7 @@ func SizeToString(size uint64) (str string) {
 	return
 }
 
-// String returns human-readable Stats
+// String returns human-readable Stats.
 func (s Stats) String() string {
 	return fmt.Sprintf("%d files, %d dirs, %d symlinks, %d errors, %v Original Size, %v Storage Size",
 		s.Files, s.Dirs, s.SymLinks, s.Errors, SizeToString(s.Size), SizeToString(s.StorageSize))

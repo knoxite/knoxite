@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 )
 
-// FileBackend implements a filesystem backend for the configuration
+// FileBackend implements a filesystem backend for the configuration.
 type FileBackend struct{}
 
 // NewFileBackend returns a FileBackend that handles loading and
@@ -28,7 +28,7 @@ func (fs *FileBackend) Type() int {
 	return FileConf
 }
 
-// Load loads chains from config
+// Load a config from a URL.
 func (fs *FileBackend) Load(u *url.URL) (*Config, error) {
 	var config Config
 
@@ -56,7 +56,7 @@ func (fs *FileBackend) Load(u *url.URL) (*Config, error) {
 	return &config, nil
 }
 
-// Save saves chains to config
+// Save config.
 func (fs *FileBackend) Save(config *Config) error {
 	path, err := url.QueryUnescape(config.URL().Path)
 	if err != nil {

@@ -77,7 +77,7 @@ func ReadPasswordTwice(prompt, promptConfirm string) (string, error) {
 	return pw, nil
 }
 
-// CompressionTypeFromString returns the compression type from a user-specified string
+// CompressionTypeFromString returns the compression type from a user-specified string.
 func CompressionTypeFromString(s string) (uint16, error) {
 	switch strings.ToLower(s) {
 	case "":
@@ -101,7 +101,7 @@ func CompressionTypeFromString(s string) (uint16, error) {
 }
 
 // CompressionText returns a user-friendly string indicating the compression algo that was used
-// returns "unknown" when none is found
+// returns "unknown" when none is found.
 func CompressionText(enum int) string {
 	switch enum {
 	case knoxite.CompressionNone:
@@ -121,7 +121,7 @@ func CompressionText(enum int) string {
 	return "unknown"
 }
 
-// EncryptionTypeFromString returns the encryption type from a user-specified string
+// EncryptionTypeFromString returns the encryption type from a user-specified string.
 func EncryptionTypeFromString(s string) (uint16, error) {
 	switch strings.ToLower(s) {
 	case "":
@@ -136,7 +136,7 @@ func EncryptionTypeFromString(s string) (uint16, error) {
 	return 0, ErrEncryptionUnknown
 }
 
-// EncryptionText returns a user-friendly string indicating the encryption algo that was used
+// EncryptionText returns a user-friendly string indicating the encryption algo that was used.
 func EncryptionText(enum int) string {
 	switch enum {
 	case knoxite.EncryptionNone:

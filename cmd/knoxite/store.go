@@ -29,7 +29,7 @@ var (
 	ErrRedundancyAmount = errors.New("failure tolerance can't be equal or higher as the number of storage backends")
 )
 
-// StoreOptions holds all the options that can be set for the 'store' command
+// StoreOptions holds all the options that can be set for the 'store' command.
 type StoreOptions struct {
 	Description      string
 	Compression      string

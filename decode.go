@@ -41,8 +41,8 @@ func (e *SeekError) Error() string {
 	return fmt.Sprintf("Could not seek to offset %d", e.Offset)
 }
 
-// CheckSumError records an error and the calculated
-// checksums that did not match.
+// CheckSumError records an error and the calculated checksums that did not
+// match.
 type CheckSumError struct {
 	Method           string
 	ExpectedCheckSum string
@@ -53,8 +53,8 @@ func (e *CheckSumError) Error() string {
 	return fmt.Sprintf("%s mismatch, expected %s, got %s", e.Method, e.ExpectedCheckSum, e.FoundCheckSum)
 }
 
-// DataReconstructionError records an error and the associated
-// parity information
+// DataReconstructionError records an error and the associated parity
+// information.
 type DataReconstructionError struct {
 	Chunk          Chunk
 	BlocksFound    uint
@@ -65,7 +65,7 @@ func (e *DataReconstructionError) Error() string {
 	return fmt.Sprintf("Could not reconstruct data, got %d out of %d chunks (%d backends missing data)", e.BlocksFound, e.Chunk.DataParts, e.FailedBackends)
 }
 
-// DecodeSnapshot restores an entire snapshot to dst
+// DecodeSnapshot restores an entire snapshot to dst.
 func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string, excludes []string) (prog chan Progress, err error) {
 	prog = make(chan Progress)
 	go func() {
@@ -172,7 +172,7 @@ func loadChunk(repository Repository, archive Archive, chunk Chunk) ([]byte, err
 	return decodeChunk(repository, archive, chunk, b)
 }
 
-// DecodeArchive restores a single archive to path
+// DecodeArchive restores a single archive to path.
 func DecodeArchive(progress chan Progress, repository Repository, arc Archive, path string) error {
 	p := newProgress(&arc)
 
@@ -270,7 +270,7 @@ func init() {
 	cache = make(map[string][]byte)
 }
 
-// DecodeArchiveData returns the content of a single archive
+// DecodeArchiveData returns the content of a single archive.
 func DecodeArchiveData(repository Repository, arc Archive) ([]byte, Stats, error) {
 	var b []byte
 	var stats Stats
@@ -336,7 +336,7 @@ func readArchiveChunk(repository Repository, arc Archive, chunkNum uint) (*[]byt
 	return &b, nil
 }
 
-// ReadArchive reads from an archive
+// ReadArchive reads from an archive.
 func ReadArchive(repository Repository, arc Archive, offset int, size int) (*[]byte, error) {
 	var b []byte
 

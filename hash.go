@@ -14,7 +14,7 @@ import (
 	"github.com/minio/highwayhash"
 )
 
-// Available hash algos
+// Available hash algos.
 const (
 	HashSha256 = iota
 	HashHighway256
@@ -22,7 +22,7 @@ const (
 
 var hashkey [32]byte
 
-// Hash data
+// Hash data.
 func Hash(b []byte, hashtype uint8) string {
 	var data [32]byte
 

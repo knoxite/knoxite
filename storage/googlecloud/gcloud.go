@@ -22,7 +22,7 @@ import (
 	"github.com/knoxite/knoxite"
 )
 
-// GoogleCloudStorage stores data in a Google Cloud Storage bucket
+// GoogleCloudStorage stores data in a Google Cloud Storage bucket.
 type GoogleCloudStorage struct {
 	knoxite.StorageFilesystem
 	url    url.URL
@@ -34,9 +34,9 @@ func init() {
 	knoxite.RegisterStorageBackend(&GoogleCloudStorage{})
 }
 
-// NewBackend returns a GoogleCloudStorage backend
-// to create a storage client we need either the path to a credential JSON file set via the environment variable GOOGLE_APPLICATION_CREDENTIALS="[PATH]"
-// or the path to the JSON file passed via the user parameter of the URL scheme
+// NewBackend returns a GoogleCloudStorage backend.
+// To create a storage client we need either the path to a credential JSON file set via the environment variable GOOGLE_APPLICATION_CREDENTIALS="[PATH]"
+// or the path to the JSON file passed via the user parameter of the URL scheme.
 func (*GoogleCloudStorage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	var credentialsPath string
 
@@ -95,38 +95,38 @@ func (*GoogleCloudStorage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	return &backend, nil
 }
 
-// Location returns the type and location of the repository
+// Location returns the type and location of the repository.
 func (backend *GoogleCloudStorage) Location() string {
 	return backend.url.String()
 }
 
-// Close the backend
+// Close the backend.
 func (backend *GoogleCloudStorage) Close() error {
 	return backend.client.Close()
 }
 
-// Protocols returns the Protocol Schemes supported by this backend
+// Protocols returns the Protocol Schemes supported by this backend.
 func (backend *GoogleCloudStorage) Protocols() []string {
 	return []string{"googlecloudstorage"}
 }
 
-// Description returns a user-friendly description for this backend
+// Description returns a user-friendly description for this backend.
 func (backend *GoogleCloudStorage) Description() string {
 	return "Google Cloud Storage"
 }
 
-// AvailableSpace returns the free space on this backend
+// AvailableSpace returns the free space on this backend.
 func (backend *GoogleCloudStorage) AvailableSpace() (uint64, error) {
 	// since google cloud storage doesn't have quota and you can store as much data as you want we return 0
 	return 0, nil
 }
 
-// CreatePath is not needed in Google Cloud Storage backend bacause paths are automatically created when writing a file
+// CreatePath is not needed in Google Cloud Storage backend bacause paths are automatically created when writing a file.
 func (backend *GoogleCloudStorage) CreatePath(path string) error {
 	return nil
 }
 
-// Stat returns the size of a file
+// Stat returns the size of a file.
 func (backend *GoogleCloudStorage) Stat(path string) (uint64, error) {
 	folder := backend.bucket.Object(path)
 	attrs, err := folder.Attrs(context.Background())
@@ -137,7 +137,7 @@ func (backend *GoogleCloudStorage) Stat(path string) (uint64, error) {
 	return uint64(attrs.Size), nil
 }
 
-// ReadFile reads a file from Google Cloud Storage
+// ReadFile reads a file from Google Cloud Storage.
 func (backend *GoogleCloudStorage) ReadFile(path string) ([]byte, error) {
 	reader, err := backend.bucket.Object(path).NewReader(context.Background())
 	if err != nil {
@@ -156,7 +156,7 @@ func (backend *GoogleCloudStorage) ReadFile(path string) ([]byte, error) {
 	return data, nil
 }
 
-// WriteFile writes a file on Google Cloud Storage
+// WriteFile writes a file on Google Cloud Storage.
 func (backend *GoogleCloudStorage) WriteFile(path string, data []byte) (size uint64, err error) {
 	writer := backend.bucket.Object(path).NewWriter(context.Background())
 	// we set the ChunkSize to 0 to upload the data in a single request
@@ -174,7 +174,7 @@ func (backend *GoogleCloudStorage) WriteFile(path string, data []byte) (size uin
 	return uint64(written), nil
 }
 
-// DeleteFile deletes a file from Google Cloud Storage
+// DeleteFile deletes a file from Google Cloud Storage.
 func (backend *GoogleCloudStorage) DeleteFile(path string) error {
 	err := backend.bucket.Object(path).Delete(context.Background())
 	if err != nil {
