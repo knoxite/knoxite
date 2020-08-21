@@ -73,9 +73,9 @@ func (backend *WebDAVStorage) Close() error {
 
 // Protocols returns the Protocol Schemes supported by this backend.
 func (backend *WebDAVStorage) Protocols() []string {
-	// Those protocols are not offical protocols, but because webdav uses http, and the
-	// http backend already exists, we have to use webdav(s)
-	// This protocol scheme is also used by file explorers like dolphin
+	// Those protocols are not official protocols, but because webdav uses http,
+	// and the http backend already exists, we have to use webdav(s).
+	// This protocol scheme is also used by file explorers like dolphin.
 	return []string{"webdav", "webdavs"}
 }
 

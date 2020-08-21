@@ -95,7 +95,7 @@ func (c *Config) URL() *url.URL {
 
 // New returns a new Config struct
 //
-// The URL will be matched agains all the supported backends and the first
+// The URL will be matched against all the supported backends and the first
 // backend that can handle the URL scheme will be loaded.
 func New(url string) (*Config, error) {
 	config := &Config{}
