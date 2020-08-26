@@ -34,8 +34,9 @@ func init() {
 	knoxite.RegisterStorageBackend(&GoogleCloudStorage{})
 }
 
-// NewBackend returns a GoogleCloudStorage backend.
-// To create a storage client we need either the path to a credential JSON file set via the environment variable GOOGLE_APPLICATION_CREDENTIALS="[PATH]"
+// NewBackend returns a GoogleCloudStorage backend
+// to create a storage client we need either the path to a credential JSON file set
+// via the environment variable GOOGLE_APPLICATION_CREDENTIALS="[PATH]"
 // or the path to the JSON file passed via the user parameter of the URL scheme.
 func (*GoogleCloudStorage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	var credentialsPath string
@@ -66,17 +67,20 @@ func (*GoogleCloudStorage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		return &GoogleCloudStorage{}, knoxite.ErrInvalidRepositoryURL
 	}
 
-	// we can have a bucket handle even if the bucket doesn't exist yet, so we check if we can access bucket attributes
+	// we can have a bucket handle even if the bucket doesn't exist yet
+	// so we check if we can access bucket attributes
 	bucket := client.Bucket(slicedPath[1])
 	_, err = bucket.Attrs(ctx)
 	if err != nil {
 		return &GoogleCloudStorage{}, err
 	}
 
-	// we can have an object handle even if the object doesn't exist yet, so we check if we can access object attributes
+	// we can have an object handle even if the object doesn't exist yet
+	// so we check if we can access object attributes
 	folder := bucket.Object(folderPath)
 	_, err = folder.Attrs(ctx)
-	// when the repository folder does not exist yet it will be automatically created when initially writing the repository files
+	// when the repository folder does not exist yet it will be automatically created
+	// by initially writing the repository files
 	if err != nil && err != storage.ErrObjectNotExist {
 		return &GoogleCloudStorage{}, err
 	}
@@ -118,11 +122,13 @@ func (backend *GoogleCloudStorage) Description() string {
 
 // AvailableSpace returns the free space on this backend.
 func (backend *GoogleCloudStorage) AvailableSpace() (uint64, error) {
-	// since google cloud storage doesn't have quota and you can store as much data as you want we return 0
-	return 0, nil
+	// since google cloud storage doesn't have quota and you can store
+	// as much data as you want we return 0
+	return 0, knoxite.ErrAvailableSpaceUnlimited
 }
 
-// CreatePath is not needed in Google Cloud Storage backend bacause paths are automatically created when writing a file.
+// CreatePath is not needed in Google Cloud Storage backend
+// because paths are automatically created when writing a file.
 func (backend *GoogleCloudStorage) CreatePath(path string) error {
 	return nil
 }

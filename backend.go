@@ -64,10 +64,11 @@ type Backend interface {
 
 // Error declarations
 var (
-	ErrRepositoryExists      = errors.New("Repository seems to already exist")
-	ErrInvalidRepositoryURL  = errors.New("Invalid repository url specified")
-	ErrAvailableSpaceUnknown = errors.New("Available space is unknown or undefined")
-	ErrInvalidUsername       = errors.New("Username wrong or missing")
+	ErrRepositoryExists        = errors.New("Repository seems to already exist")
+	ErrInvalidRepositoryURL    = errors.New("Invalid repository url specified")
+	ErrAvailableSpaceUnknown   = errors.New("Available space is unknown or undefined")
+	ErrAvailableSpaceUnlimited = errors.New("Available space is unlimited")
+	ErrInvalidUsername         = errors.New("Username wrong or missing")
 
 	backends = []BackendFactory{}
 )

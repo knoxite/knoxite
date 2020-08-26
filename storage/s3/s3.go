@@ -107,7 +107,7 @@ func (backend *S3Storage) Description() string {
 
 // AvailableSpace returns the free space on this backend.
 func (backend *S3Storage) AvailableSpace() (uint64, error) {
-	return uint64(0), knoxite.ErrAvailableSpaceUnknown
+	return uint64(0), knoxite.ErrAvailableSpaceUnlimited
 }
 
 // LoadChunk loads a Chunk from network.
