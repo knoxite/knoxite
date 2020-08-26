@@ -102,7 +102,7 @@ func (backend *BackblazeStorage) Description() string {
 // AvailableSpace returns the free space on this backend.
 func (backend *BackblazeStorage) AvailableSpace() (uint64, error) {
 	// Currently not supported
-	return 0, knoxite.ErrAvailableSpaceUnknown
+	return 0, knoxite.ErrAvailableSpaceUnlimited
 }
 
 // LoadChunk loads a Chunk from backblaze.
