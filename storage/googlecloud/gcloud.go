@@ -37,7 +37,7 @@ func init() {
 // NewBackend returns a GoogleCloudStorage backend
 // to create a storage client we need either the path to a credential JSON file set
 // via the environment variable GOOGLE_APPLICATION_CREDENTIALS="[PATH]"
-// or the path to the JSON file passed via the user parameter of the URL scheme
+// or the path to the JSON file passed via the user parameter of the URL scheme.
 func (*GoogleCloudStorage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	var credentialsPath string
 
@@ -128,7 +128,7 @@ func (backend *GoogleCloudStorage) AvailableSpace() (uint64, error) {
 }
 
 // CreatePath is not needed in Google Cloud Storage backend
-// bacause paths are automatically created when writing a file
+// because paths are automatically created when writing a file.
 func (backend *GoogleCloudStorage) CreatePath(path string) error {
 	return nil
 }
