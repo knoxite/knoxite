@@ -17,6 +17,7 @@ require (
 	github.com/minio/highwayhash v1.0.0
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/mmcloughlin/avo v0.0.0-20200523190732-4439b6b2c061 // indirect
+	github.com/muesli/combinator v0.3.0
 	github.com/muesli/crunchy v0.4.0
 	github.com/muesli/go-app-paths v0.2.1
 	github.com/muesli/goprogressbar v0.0.0-20190807022807-e540249d2ac1
