@@ -117,7 +117,7 @@ func (b *BackendTest) SaveRepositoryTest(t *testing.T) {
 
 func (b *BackendTest) AvailableSpaceTest(t *testing.T) {
 	space, err := b.Backend.AvailableSpace()
-	if err != nil && err != knoxite.ErrAvailableSpaceUnknown {
+	if err != nil && err != knoxite.ErrAvailableSpaceUnknown && err != knoxite.ErrAvailableSpaceUnlimited {
 		t.Errorf("%s: expected available space information, got %s", b.Description, err)
 	}
 	if err == nil && space <= 0 {
