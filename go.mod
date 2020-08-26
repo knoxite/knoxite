@@ -18,6 +18,7 @@ require (
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mmcloughlin/avo v0.0.0-20200523190732-4439b6b2c061 // indirect
+	github.com/muesli/combinator v0.3.0
 	github.com/muesli/crunchy v0.4.0
 	github.com/muesli/go-app-paths v0.2.1
 	github.com/muesli/goprogressbar v0.0.0-20200829150239-abc87a99d0c4
