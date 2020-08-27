@@ -7,6 +7,7 @@ builds:
   -
     id: "knoxite"
     binary: knoxite
+    main: ./cmd/knoxite/main.go
     ldflags: -s -w -X main.Version={{ .Version }} -X main.CommitSHA={{ .Commit }}
     goos:
       - linux
@@ -23,6 +24,7 @@ builds:
   -
     id: "darwin"
     binary: "knoxite"
+    main: ./cmd/knoxite/main.go
     ldflags: -s -w -X main.Version={{ .Version }} -X main.CommitSHA={{ .Commit }}
     goos:
       - darwin
