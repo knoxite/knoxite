@@ -19,7 +19,7 @@ require (
 	github.com/mmcloughlin/avo v0.0.0-20200523190732-4439b6b2c061 // indirect
 	github.com/muesli/crunchy v0.4.0
 	github.com/muesli/go-app-paths v0.2.1
-	github.com/muesli/goprogressbar v0.0.0-20190807022807-e540249d2ac1
+	github.com/muesli/goprogressbar v0.0.0-20200829150239-abc87a99d0c4
 	github.com/muesli/gotable v0.0.0-20190807045009-bcaa6df995ab
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/pkg/sftp v1.11.0
@@ -37,6 +37,7 @@ require (
 	github.com/ungerik/go-dry v0.0.0-20180411133923-654ae31114c8 // indirect
 	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2
+	golang.org/x/sys v0.0.0-20200523222454-059865788121
 	google.golang.org/api v0.28.0
 	gopkg.in/ini.v1 v1.51.1 // indirect
 	gopkg.in/kothar/go-backblaze.v0 v0.0.0-20191215213626-7594ed38700f
