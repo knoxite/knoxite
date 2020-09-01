@@ -60,6 +60,16 @@ jobs:
           KNOXITE_AZURE_FILE_URL: ${{ secrets.KNOXITE_AZURE_FILE_URL }}
         run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=azure.cov ./storage/azure
 
+      - name: Storage Mega Backend Tests
+        env:
+          KNOXITE_MEGA_URL: ${{ secrets.KNOXITE_MEGA_URL }}
+        run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=mega.cov ./storage/mega
+
+      - name: Storage Backblaze B2 Backend Tests
+        env:
+          KNOXITE_BACKBLAZE_URL: ${{ secrets.KNOXITE_BACKBLAZE_URL }}
+        run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=backblaze.cov ./storage/backblaze
+
       - name: Storage Google Cloud Backend Tests
         env:
           KNOXITE_GOOGLECLOUD_URL: ${{ secrets.KNOXITE_GOOGLECLOUD_URL }},
@@ -70,16 +80,6 @@ jobs:
           KNOXITE_GC_KEY_PRIVATE_KEY: ${{ secrets.KNOXITE_GC_KEY_PRIVATE_KEY }}
           KNOXITE_GC_KEY_PROJECT_ID: ${{ secrets.KNOXITE_GC_KEY_PROJECT_ID }}
         run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=googlecloud.cov ./storage/googlecloud
-
-      - name: Storage Mega Backend Tests
-        env:
-          KNOXITE_MEGA_URL: ${{ secrets.KNOXITE_MEGA_URL }}
-        run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=mega.cov ./storage/mega
-
-      - name: Storage Backblaze B2 Backend Tests
-        env:
-          KNOXITE_BACKBLAZE_URL: ${{ secrets.KNOXITE_BACKBLAZE_URL }}
-        run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=backblaze.cov ./storage/backblaze
 
       - name: Coverage
         env:

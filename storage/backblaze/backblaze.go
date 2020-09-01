@@ -10,6 +10,7 @@ package backblaze
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"net/url"
 	"strconv"
@@ -130,7 +131,7 @@ func (backend *BackblazeStorage) StoreChunk(shasum string, part, totalParts uint
 
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	file, err := backend.Bucket.UploadFile(fileName, metadata, buf)
+	file, err := backend.upload(fileName, metadata, buf)
 	if err != nil {
 		return 0, err
 	}
@@ -168,7 +169,7 @@ func (backend *BackblazeStorage) LoadSnapshot(id string) ([]byte, error) {
 func (backend *BackblazeStorage) SaveSnapshot(id string, data []byte) error {
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	_, err := backend.Bucket.UploadFile("snapshot-"+id, metadata, buf)
+	_, err := backend.upload("snapshot-"+id, metadata, buf)
 	return err
 }
 
@@ -187,7 +188,7 @@ func (backend *BackblazeStorage) LoadChunkIndex() ([]byte, error) {
 func (backend *BackblazeStorage) SaveChunkIndex(data []byte) error {
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	_, err := backend.Bucket.UploadFile(backend.chunkIndexFile, metadata, buf)
+	_, err := backend.upload(backend.chunkIndexFile, metadata, buf)
 	return err
 }
 
@@ -199,7 +200,7 @@ func (backend *BackblazeStorage) InitRepository() error {
 	// Creating the files on backblaze
 	metadata := make(map[string]string)
 
-	if _, err := backend.Bucket.UploadFile(backend.repositoryFile, metadata, buf); err != nil {
+	if _, err := backend.upload(backend.repositoryFile, metadata, buf); err != nil {
 		return err
 	}
 	return nil
@@ -228,7 +229,7 @@ func (backend *BackblazeStorage) LoadRepository() ([]byte, error) {
 func (backend *BackblazeStorage) SaveRepository(data []byte) error {
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	_, err := backend.Bucket.UploadFile(backend.repositoryFile, metadata, buf)
+	_, err := backend.upload(backend.repositoryFile, metadata, buf)
 	return err
 }
 
@@ -249,4 +250,21 @@ func (backend *BackblazeStorage) findLatestFileVersion(fileName string) ([]backb
 	}
 
 	return files, nil
+}
+
+func (backend *BackblazeStorage) upload(name string, meta map[string]string, file io.Reader) (*backblaze.File, error) {
+	// delete existing versions of a file, before reuploading
+	files, err := backend.findLatestFileVersion(backend.repositoryFile)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range files {
+		_, err := backend.Bucket.DeleteFileVersion(v.Name, v.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return backend.Bucket.UploadFile(name, meta, file)
 }
