@@ -51,6 +51,11 @@ func TestNew(t *testing.T) {
 		t.Error("Backend for 'mem:' should be a MemoryBackend")
 	}
 
+	_, err = New("~/foobar")
+	if err != nil {
+		t.Fatalf("Failed here: %v", err)
+	}
+
 	_, err = New("c:\\foobar")
 	if err == nil {
 		t.Error("Not a valid URL, should return an error")
