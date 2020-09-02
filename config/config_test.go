@@ -42,7 +42,7 @@ func TestNew(t *testing.T) {
 		t.Errorf("Backend for '%s' should be an AESBackend", p)
 	}
 
-	conf, err = New("mem:")
+	conf, err = New("mem://")
 	if err != nil {
 		t.Fatalf("Failed creating mem backend: %s", err)
 	}
