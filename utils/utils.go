@@ -150,11 +150,19 @@ func EncryptionText(enum int) string {
 	return "unknown"
 }
 
+func isUrl(str string) bool {
+	if _, err := url.Parse(str); err != nil {
+		return false
+	}
+
+	return strings.Contains(str, "://")
+}
+
 func PathToUrl(u string) (*url.URL, error) {
 	url := &url.URL{}
 	// Check if the given string starts with a protocol scheme. Prepend the file
 	// scheme in case none is provided
-	if !strings.HasPrefix(u, "file://") && !strings.HasPrefix(u, "crypto://") && !strings.HasPrefix(u, "mem://") {
+	if !isUrl(u) {
 		url.Scheme = "file"
 		url.Path = u
 	} else {
