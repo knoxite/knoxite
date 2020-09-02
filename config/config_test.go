@@ -8,7 +8,6 @@
 package config
 
 import (
-	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -35,7 +34,7 @@ func TestNew(t *testing.T) {
 
 	cwd, _ := os.Getwd()
 	p := filepath.Join(cwd, "testdata/knoxite-crypto.conf")
-	conf, err = New(url.QueryEscape(p))
+	conf, err = New(p)
 	if err != nil {
 		t.Fatalf("Failed loading crypto config backend: %s", err)
 	}
