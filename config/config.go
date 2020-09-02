@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 
 	gap "github.com/muesli/go-app-paths"
 )
@@ -82,9 +83,19 @@ func (c *Config) Type() int {
 // Next time the config is loaded or saved
 // the new URL will be used.
 func (c *Config) SetURL(u string) error {
-	url, err := url.Parse(u)
-	if err != nil {
-		return err
+	url := &url.URL{}
+	// Check if the given string starts with a protocol scheme. Prepend the file
+	// scheme in case none is provided
+	if !strings.HasPrefix(u, "file://") && !strings.HasPrefix(u, "crypto://") && !strings.HasPrefix(u, "mem://") {
+		url.Scheme = "file"
+		url.Path = u
+	} else {
+		// u = url.QueryEscape(u)
+		var err error
+		url, err = url.Parse(u)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Expand tilde to the users home directory
