@@ -12,11 +12,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"strings"
 	"syscall"
 
 	"github.com/knoxite/knoxite"
+	"github.com/mitchellh/go-homedir"
 	"github.com/muesli/crunchy"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -146,4 +148,43 @@ func EncryptionText(enum int) string {
 	}
 
 	return "unknown"
+}
+
+func isUrl(str string) bool {
+	if _, err := url.Parse(str); err != nil {
+		return false
+	}
+
+	return strings.Contains(str, "://")
+}
+
+func PathToUrl(u string) (*url.URL, error) {
+	url := &url.URL{}
+	// Check if the given string starts with a protocol scheme. Prepend the file
+	// scheme in case none is provided
+	if !isUrl(u) {
+		url.Scheme = "file"
+		url.Path = u
+	} else {
+		// u = url.QueryEscape(u)
+		var err error
+		url, err = url.Parse(u)
+		if err != nil {
+			return url, err
+		}
+	}
+
+	// In case some other path elements have wrongfully been interpreted as Host
+	// part of the url
+	if url.Host != "" {
+		url.Path = url.Host[1:] + url.Path
+		url.Host = ""
+	}
+
+	// Expand tilde to the users home directory
+	// This is needed in case the shell is unable to expand the path to the users
+	// home directory for inputs like these:
+	// crypto://password@~/path/to/config
+	url.Path, _ = homedir.Expand(url.Path)
+	return url, nil
 }

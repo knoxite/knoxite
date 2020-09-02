@@ -12,9 +12,9 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"os/user"
 	"path/filepath"
 
+	"github.com/knoxite/knoxite/utils"
 	gap "github.com/muesli/go-app-paths"
 )
 
@@ -82,29 +82,10 @@ func (c *Config) Type() int {
 // Next time the config is loaded or saved
 // the new URL will be used.
 func (c *Config) SetURL(u string) error {
-	url, err := url.Parse(u)
+	url, err := utils.PathToUrl(u)
 	if err != nil {
 		return err
 	}
-
-	// Expand tilde to the users home directory
-	// This is needed in case the shell is unable to expand the path to the users
-	// home directory for inputs like these:
-	// crypto://password@~/path/to/config
-	// NOTE: - url.Parse() will interpret `~` as the Host Element of the URL in
-	//         this case.
-	//       - Using filepath.Abs() won't work as it will interpret `~` as the
-	//         name of a regular folder.
-	if url.Host == "~" {
-		usr, err := user.Current()
-		if err != nil {
-			return err
-		}
-
-		url.Path = filepath.Join(usr.HomeDir, url.Path)
-		url.Host = ""
-	}
-
 	c.url = url
 	return nil
 }
