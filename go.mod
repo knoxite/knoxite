@@ -16,6 +16,7 @@ require (
 	github.com/klauspost/shutdown2 v1.1.0
 	github.com/minio/highwayhash v1.0.0
 	github.com/minio/minio-go v6.0.14+incompatible
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mmcloughlin/avo v0.0.0-20200523190732-4439b6b2c061 // indirect
 	github.com/muesli/crunchy v0.4.0
 	github.com/muesli/go-app-paths v0.2.1

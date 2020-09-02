@@ -12,10 +12,10 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strings"
 
+	"github.com/mitchellh/go-homedir"
 	gap "github.com/muesli/go-app-paths"
 )
 
@@ -106,16 +106,14 @@ func (c *Config) SetURL(u string) error {
 	//         this case.
 	//       - Using filepath.Abs() won't work as it will interpret `~` as the
 	//         name of a regular folder.
-	if url.Host == "~" {
-		usr, err := user.Current()
-		if err != nil {
-			return err
-		}
-
-		url.Path = filepath.Join(usr.HomeDir, url.Path)
+	if url.Host != "" {
+		// In case some other path elements have wrongfully been interpreted as
+		// Host part of the url
+		url.Path = url.Host[1:] + url.Path
 		url.Host = ""
 	}
 
+	url.Path, _ = homedir.Expand(url.Path)
 	c.url = url
 	return nil
 }
