@@ -57,8 +57,8 @@ func TestNew(t *testing.T) {
 	}
 
 	_, err = New("c:\\foobar")
-	if err == nil {
-		t.Error("Not a valid URL, should return an error")
+	if err != nil {
+		t.Errorf("Failed to create backend for valid windows url: %s", err)
 	}
 
 	_, err = New("")
