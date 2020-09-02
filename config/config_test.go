@@ -51,6 +51,11 @@ func TestNew(t *testing.T) {
 		t.Error("Backend for 'mem:' should be a MemoryBackend")
 	}
 
+	_, err = New("foobar")
+	if err != nil {
+		t.Fatalf("Failed for 'foobar': %v", err)
+	}
+
 	_, err = New("~/foobar")
 	if err != nil {
 		t.Fatalf("Failed here: %v", err)
@@ -67,6 +72,11 @@ func TestNew(t *testing.T) {
 	}
 
 	_, err = New("\\Foobar")
+	if err != nil {
+		t.Errorf("Failed to create backend for valid windows url: %s", err)
+	}
+
+	_, err = New("C:Foobar")
 	if err != nil {
 		t.Errorf("Failed to create backend for valid windows url: %s", err)
 	}
