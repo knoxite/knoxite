@@ -13,9 +13,8 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/mitchellh/go-homedir"
+	"github.com/knoxite/knoxite/utils"
 	gap "github.com/muesli/go-app-paths"
 )
 
@@ -83,37 +82,10 @@ func (c *Config) Type() int {
 // Next time the config is loaded or saved
 // the new URL will be used.
 func (c *Config) SetURL(u string) error {
-	url := &url.URL{}
-	// Check if the given string starts with a protocol scheme. Prepend the file
-	// scheme in case none is provided
-	if !strings.HasPrefix(u, "file://") && !strings.HasPrefix(u, "crypto://") && !strings.HasPrefix(u, "mem://") {
-		url.Scheme = "file"
-		url.Path = u
-	} else {
-		// u = url.QueryEscape(u)
-		var err error
-		url, err = url.Parse(u)
-		if err != nil {
-			return err
-		}
+	url, err := utils.PathToUrl(u)
+	if err != nil {
+		return err
 	}
-
-	// Expand tilde to the users home directory
-	// This is needed in case the shell is unable to expand the path to the users
-	// home directory for inputs like these:
-	// crypto://password@~/path/to/config
-	// NOTE: - url.Parse() will interpret `~` as the Host Element of the URL in
-	//         this case.
-	//       - Using filepath.Abs() won't work as it will interpret `~` as the
-	//         name of a regular folder.
-	if url.Host != "" {
-		// In case some other path elements have wrongfully been interpreted as
-		// Host part of the url
-		url.Path = url.Host[1:] + url.Path
-		url.Host = ""
-	}
-
-	url.Path, _ = homedir.Expand(url.Path)
 	c.url = url
 	return nil
 }
