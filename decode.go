@@ -66,14 +66,15 @@ func (e *DataReconstructionError) Error() string {
 }
 
 // DecodeSnapshot restores an entire snapshot to dst.
-func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string, excludes []string) (prog chan Progress, err error) {
-	prog = make(chan Progress)
+func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string, excludes []string) (chan Progress, error) {
+	prog := make(chan Progress)
 	go func() {
 		for _, arc := range snapshot.Archives {
 			path := filepath.Join(dst, arc.Path)
 
 			match := false
 			for _, exclude := range excludes {
+				var err error
 				match, err = filepath.Match(strings.ToLower(exclude), strings.ToLower(arc.Path))
 				if err != nil {
 					fmt.Println("Invalid exclude filter:", exclude)
