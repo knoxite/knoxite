@@ -245,3 +245,16 @@ func (backend *S3Storage) SaveRepository(data []byte) error {
 	_, err := backend.client.PutObject(backend.repositoryBucket, knoxite.RepoFilename, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
 	return err
 }
+
+// LockRepository locks the repository and prevents other instances from
+// concurrent access.
+func (backend *S3Storage) LockRepository() error {
+	// TODO: implement
+	return nil
+}
+
+// UnlockRepository releases the lock.
+func (backend *S3Storage) UnlockRepository() error {
+	// TODO: implement
+	return nil
+}

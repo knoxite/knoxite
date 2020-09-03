@@ -233,6 +233,19 @@ func (backend *BackblazeStorage) SaveRepository(data []byte) error {
 	return err
 }
 
+// LockRepository locks the repository and prevents other instances from
+// concurrent access.
+func (backend *BackblazeStorage) LockRepository() error {
+	// TODO: implement
+	return nil
+}
+
+// UnlockRepository releases the lock.
+func (backend *BackblazeStorage) UnlockRepository() error {
+	// TODO: implement
+	return nil
+}
+
 func (backend *BackblazeStorage) findLatestFileVersion(fileName string) ([]backblaze.FileStatus, error) {
 	var files []backblaze.FileStatus
 

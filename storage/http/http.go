@@ -269,3 +269,16 @@ func (backend *HTTPStorage) SaveRepository(data []byte) error {
 	//	fmt.Printf("Uploaded repository: %d bytes\n", len(data))
 	return err
 }
+
+// LockRepository locks the repository and prevents other instances from
+// concurrent access.
+func (backend *HTTPStorage) LockRepository() error {
+	// TODO: implement
+	return nil
+}
+
+// UnlockRepository releases the lock.
+func (backend *HTTPStorage) UnlockRepository() error {
+	// TODO: implement
+	return nil
+}

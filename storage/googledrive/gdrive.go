@@ -103,3 +103,16 @@ func (backend *GoogleDriveStorage) LoadRepository() ([]byte, error) {
 func (backend *GoogleDriveStorage) SaveRepository(data []byte) error {
 	return knoxite.ErrStoreRepositoryFailed
 }
+
+// LockRepository locks the repository and prevents other instances from
+// concurrent access.
+func (backend *GoogleDriveStorage) LockRepository() error {
+	// TODO: implement
+	return nil
+}
+
+// UnlockRepository releases the lock.
+func (backend *GoogleDriveStorage) UnlockRepository() error {
+	// TODO: implement
+	return nil
+}
