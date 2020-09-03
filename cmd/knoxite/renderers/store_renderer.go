@@ -5,7 +5,7 @@
  *   For license see LICENSE
  */
 
-package main
+package renderers
 
 import (
 	"fmt"
@@ -16,16 +16,21 @@ import (
 	"github.com/muesli/goprogressbar"
 )
 
-type ConsoleRenderer struct {
+type StoreRenderer struct {
 	DefaultRenderer    knoxite.DefaultRenderer
 	FileProgressBar    goprogressbar.ProgressBar
 	OverallProgressBar goprogressbar.ProgressBar
 	MultiProgressBar   goprogressbar.MultiProgressBar
 	LastPath           string
 	Items              int64
+	DisposeMessage     string
 }
 
-func (r *ConsoleRenderer) Init() {
+func (r *StoreRenderer) Init() error {
+	err := r.DefaultRenderer.Init()
+	if err != nil {
+		return err
+	}
 	startTime := time.Now()
 
 	r.FileProgressBar = goprogressbar.ProgressBar{Width: 40}
@@ -43,19 +48,24 @@ func (r *ConsoleRenderer) Init() {
 	r.MultiProgressBar.AddProgressBar(&r.OverallProgressBar)
 
 	r.Items = 1
+	return nil
 }
 
-func (r *ConsoleRenderer) Render(p knoxite.Progress) error {
-	r.DefaultRenderer.Render(p)
+func (r *StoreRenderer) Render(p knoxite.Progress) error {
+	if err := r.DefaultRenderer.Render(p); err != nil {
+		return err
+	}
 
 	if p.Error != nil {
 		fmt.Println()
 		return p.Error
 	}
+
 	if p.Path != r.LastPath && r.LastPath != "" {
 		r.Items++
 		fmt.Println()
 	}
+
 	r.FileProgressBar.Total = int64(p.CurrentItemStats.Size)
 	r.FileProgressBar.Current = int64(p.CurrentItemStats.Transferred)
 	r.FileProgressBar.PrependText = fmt.Sprintf("%s  %s/s",
@@ -77,5 +87,13 @@ func (r *ConsoleRenderer) Render(p knoxite.Progress) error {
 
 	r.MultiProgressBar.LazyPrint()
 
+	return nil
+}
+
+func (r *StoreRenderer) Dispose() error {
+	if err := r.DefaultRenderer.Dispose(); err != nil {
+		return err
+	}
+	fmt.Println(r.DisposeMessage)
 	return nil
 }

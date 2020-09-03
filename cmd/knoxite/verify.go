@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2020, Fabian Siegel <fabians1999@gmail.com>
+ *     Copyright (c) 2020, Matthias Hartmann <mahartma@mahartma.com>
  *
  *   For license see LICENSE
  */
@@ -10,14 +11,16 @@ package main
 import (
 	"fmt"
 
+	shutdown "github.com/klauspost/shutdown2"
 	"github.com/knoxite/knoxite"
-	"github.com/muesli/goprogressbar"
+	"github.com/knoxite/knoxite/cmd/knoxite/renderers"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
 type VerifyOptions struct {
 	Percentage int
+	Output     knoxite.DefaultOutput
 }
 
 var (
@@ -49,7 +52,10 @@ func init() {
 }
 
 func executeVerifyRepo(opts VerifyOptions) error {
+	// we want to be notified during the first phase of a shutdown
+	cancel := shutdown.First()
 	errors := make([]error, 0)
+
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err == nil {
 		progress, err := knoxite.VerifyRepo(repository, opts.Percentage)
@@ -58,42 +64,35 @@ func executeVerifyRepo(opts VerifyOptions) error {
 			return err
 		}
 
-		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
-		lastPath := ""
-
-		for p := range progress {
-			if p.Error != nil {
-				fmt.Println()
-				errors = append(errors, p.Error)
-			}
-
-			pb.Total = int64(p.CurrentItemStats.Size)
-			pb.Current = int64(p.CurrentItemStats.Transferred)
-			pb.PrependText = fmt.Sprintf("%s / %s",
-				knoxite.SizeToString(uint64(pb.Current)),
-				knoxite.SizeToString(uint64(pb.Total)))
-
-			if p.Path != lastPath {
-				// We have just started restoring a new item
-				if len(lastPath) > 0 {
-					fmt.Println()
-				}
-				lastPath = p.Path
-				pb.Text = p.Path
-			}
-
-			pb.LazyPrint()
+		verifyRenderer := renderers.VerifyRenderer{
+			Errors:         &errors,
+			DisposeMessage: fmt.Sprintf("Verify done: %d errors", len(errors)),
 		}
 
-		fmt.Println()
-		fmt.Printf("Verify done: %d errors\n", len(errors))
-		return nil
+		output := knoxite.DefaultOutput{
+			Renderers: knoxite.Renderers{&verifyRenderer},
+		}
+
+		err = output.Init()
+		if err != nil {
+			return nil
+		}
+
+		err = output.Render(progress, cancel)
+		if err != nil {
+			return err
+		}
+
+		return output.Dispose()
 	}
 	return err
 }
 
 func executeVerifyVolume(volumeId string, opts VerifyOptions) error {
+	// we want to be notified during the first phase of a shutdown
+	cancel := shutdown.First()
 	errors := make([]error, 0)
+
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err == nil {
 		progress, err := knoxite.VerifyVolume(repository, volumeId, opts.Percentage)
@@ -102,42 +101,35 @@ func executeVerifyVolume(volumeId string, opts VerifyOptions) error {
 			return err
 		}
 
-		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
-		lastPath := ""
-
-		for p := range progress {
-			if p.Error != nil {
-				fmt.Println()
-				errors = append(errors, p.Error)
-			}
-
-			pb.Total = int64(p.CurrentItemStats.Size)
-			pb.Current = int64(p.CurrentItemStats.Transferred)
-			pb.PrependText = fmt.Sprintf("%s / %s",
-				knoxite.SizeToString(uint64(pb.Current)),
-				knoxite.SizeToString(uint64(pb.Total)))
-
-			if p.Path != lastPath {
-				// We have just started restoring a new item
-				if len(lastPath) > 0 {
-					fmt.Println()
-				}
-				lastPath = p.Path
-				pb.Text = p.Path
-			}
-
-			pb.LazyPrint()
+		verifyRenderer := renderers.VerifyRenderer{
+			Errors:         &errors,
+			DisposeMessage: fmt.Sprintf("Verify done: %d errors", len(errors)),
 		}
 
-		fmt.Println()
-		fmt.Printf("Verify done: %d errors\n", len(errors))
-		return nil
+		output := knoxite.DefaultOutput{
+			Renderers: knoxite.Renderers{&verifyRenderer},
+		}
+
+		err = output.Init()
+		if err != nil {
+			return nil
+		}
+
+		err = output.Render(progress, cancel)
+		if err != nil {
+			return err
+		}
+
+		return output.Dispose()
 	}
 	return err
 }
 
 func executeVerifySnapshot(volumeId string, snapshotId string, opts VerifyOptions) error {
+	// we want to be notified during the first phase of a shutdown
+	cancel := shutdown.First()
 	errors := make([]error, 0)
+
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err == nil {
 		progress, err := knoxite.VerifySnapshot(repository, snapshotId, opts.Percentage)
@@ -146,36 +138,26 @@ func executeVerifySnapshot(volumeId string, snapshotId string, opts VerifyOption
 			return err
 		}
 
-		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
-		lastPath := ""
-
-		for p := range progress {
-			if p.Error != nil {
-				fmt.Println()
-				errors = append(errors, p.Error)
-			}
-
-			pb.Total = int64(p.CurrentItemStats.Size)
-			pb.Current = int64(p.CurrentItemStats.Transferred)
-			pb.PrependText = fmt.Sprintf("%s / %s",
-				knoxite.SizeToString(uint64(pb.Current)),
-				knoxite.SizeToString(uint64(pb.Total)))
-
-			if p.Path != lastPath {
-				// We have just started restoring a new item
-				if len(lastPath) > 0 {
-					fmt.Println()
-				}
-				lastPath = p.Path
-				pb.Text = p.Path
-			}
-
-			pb.LazyPrint()
+		verifyRenderer := renderers.VerifyRenderer{
+			Errors:         &errors,
+			DisposeMessage: fmt.Sprintf("Verify done: %d errors", len(errors)),
 		}
 
-		fmt.Println()
-		fmt.Printf("Verify done: %d errors\n", len(errors))
-		return nil
+		output := knoxite.DefaultOutput{
+			Renderers: knoxite.Renderers{&verifyRenderer},
+		}
+
+		err = output.Init()
+		if err != nil {
+			return nil
+		}
+
+		err = output.Render(progress, cancel)
+		if err != nil {
+			return err
+		}
+
+		return output.Dispose()
 	}
 	return err
 }

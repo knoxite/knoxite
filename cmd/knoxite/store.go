@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2020, Matthias Hartmann <mahartma@mahartma.com>
  *
  *   For license see LICENSE
  */
@@ -18,6 +19,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/renderers"
 	"github.com/knoxite/knoxite/utils"
 )
 
@@ -102,10 +104,12 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	if len(repository.BackendManager().Backends)-int(opts.FailureTolerance) <= 0 {
 		return ErrRedundancyAmount
 	}
+
 	compression, err := utils.CompressionTypeFromString(opts.Compression)
 	if err != nil {
 		return err
 	}
+
 	encryption, err := utils.EncryptionTypeFromString(opts.Encryption)
 	if err != nil {
 		return err
@@ -117,17 +121,25 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 		compression, encryption,
 		tol, opts.FailureTolerance)
 
-	consoleRenderer := ConsoleRenderer{}
-	consoleRenderer.Init()
+	storeRenderer := renderers.StoreRenderer{
+		DisposeMessage: fmt.Sprintf("Snapshot %s created: %s", snapshot.ID, snapshot.Stats.String()),
+	}
 
 	output := knoxite.DefaultOutput{
-		Renderers: knoxite.Renderers{&consoleRenderer},
+		Renderers: knoxite.Renderers{&storeRenderer},
+	}
+
+	err = output.Init()
+	if err != nil {
+		return nil
 	}
 
 	err = output.Render(progress, cancel)
-	fmt.Printf("\nSnapshot %s created: %s\n", snapshot.ID, snapshot.Stats.String())
+	if err != nil {
+		return err
+	}
 
-	return err
+	return output.Dispose()
 }
 
 func executeStore(volumeID string, args []string, opts StoreOptions) error {
