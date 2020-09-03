@@ -83,7 +83,7 @@ func executeVerifyRepo(opts VerifyOptions) error {
 			return err
 		}
 
-		return output.Dispose()
+		return output.Close()
 	}
 	return err
 }
@@ -120,7 +120,7 @@ func executeVerifyVolume(volumeId string, opts VerifyOptions) error {
 			return err
 		}
 
-		return output.Dispose()
+		return output.Close()
 	}
 	return err
 }
@@ -157,7 +157,7 @@ func executeVerifySnapshot(volumeId string, snapshotId string, opts VerifyOption
 			return err
 		}
 
-		return output.Dispose()
+		return output.Close()
 	}
 	return err
 }

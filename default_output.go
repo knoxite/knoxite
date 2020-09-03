@@ -38,6 +38,6 @@ func (o DefaultOutput) Render(p chan Progress, cancel shutdown.Notifier) error {
 	return nil
 }
 
-func (o *DefaultOutput) Dispose() error {
-	return o.Renderers.Dispose()
+func (o *DefaultOutput) Close() error {
+	return o.Renderers.Close()
 }

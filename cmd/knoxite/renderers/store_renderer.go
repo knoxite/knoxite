@@ -90,8 +90,8 @@ func (r *StoreRenderer) Render(p knoxite.Progress) error {
 	return nil
 }
 
-func (r *StoreRenderer) Dispose() error {
-	if err := r.DefaultRenderer.Dispose(); err != nil {
+func (r *StoreRenderer) Close() error {
+	if err := r.DefaultRenderer.Close(); err != nil {
 		return err
 	}
 	fmt.Println(r.DisposeMessage)

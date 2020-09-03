@@ -12,7 +12,7 @@ package knoxite
 type Renderer interface {
 	Init() error
 	Render(p Progress) error
-	Dispose() error
+	Close() error
 }
 
 type DefaultRenderer struct {
@@ -28,6 +28,6 @@ func (r DefaultRenderer) Render(p Progress) error {
 	return nil
 }
 
-func (r *DefaultRenderer) Dispose() error {
+func (r *DefaultRenderer) Close() error {
 	return nil
 }

@@ -34,10 +34,10 @@ func (r Renderers) Render(p Progress) error {
 	return nil
 }
 
-func (r Renderers) Dispose() error {
+func (r Renderers) Close() error {
 	fmt.Println()
 	for _, renderer := range r {
-		if err := renderer.Dispose(); err != nil {
+		if err := renderer.Close(); err != nil {
 			return err
 		}
 	}
@@ -49,5 +49,5 @@ func (r Renderers) Dispose() error {
 type Output interface {
 	Init() error
 	Render(p chan Progress, cancel shutdown.Notifier) error
-	Dispose() error
+	Close() error
 }

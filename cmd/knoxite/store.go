@@ -139,7 +139,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 		return err
 	}
 
-	return output.Dispose()
+	return output.Close()
 }
 
 func executeStore(volumeID string, args []string, opts StoreOptions) error {

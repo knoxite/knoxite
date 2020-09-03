@@ -59,7 +59,7 @@ func (r *VerifyRenderer) Render(p knoxite.Progress) error {
 	return nil
 }
 
-func (r *VerifyRenderer) Dispose() error {
+func (r *VerifyRenderer) Close() error {
 	fmt.Println(r.DisposeMessage)
 	return nil
 }
