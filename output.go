@@ -13,39 +13,41 @@ import (
 	shutdown "github.com/klauspost/shutdown2"
 )
 
+// Renderers is a type to easily operate on the array of renderers.
 type Renderers []Renderer
 
-func (r Renderers) Render(p Progress) error {
+func (r Renderers) Init() error {
 	for _, renderer := range r {
-		err := renderer.Render(p)
-		if err != nil {
+		if err := renderer.Init(); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-type Output interface {
-	Render(p chan Progress, cancel shutdown.Notifier) error
-}
-
-type DefaultOutput struct {
-	Renderers Renderers
-}
-
-func (o DefaultOutput) Render(p chan Progress, cancel shutdown.Notifier) error {
-	for v := range p {
-		select {
-		case n := <-cancel:
-			fmt.Println("Aborting rendering...")
-			close(n)
-			return nil
-		default:
-			err := o.Renderers.Render(v)
-			if err != nil {
-				return err
-			}
+func (r Renderers) Render(p Progress) error {
+	for _, renderer := range r {
+		if err := renderer.Render(p); err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+func (r Renderers) Dispose() error {
+	fmt.Println()
+	for _, renderer := range r {
+		if err := renderer.Dispose(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// The composite with renderers as leafs is about to be decorated
+// for the different UIs.
+type Output interface {
+	Init() error
+	Render(p chan Progress, cancel shutdown.Notifier) error
+	Dispose() error
 }
