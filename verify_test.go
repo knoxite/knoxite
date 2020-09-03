@@ -130,6 +130,10 @@ func TestVerifyRepo(t *testing.T) {
 				t.Errorf("Failed saving chunk-index: %s", err)
 				return
 			}
+			if r.Close() != nil {
+				t.Errorf("Failed closing repository: %s", err)
+				return
+			}
 		}
 
 		err = tt.ErrorFunction(dir)
@@ -139,7 +143,7 @@ func TestVerifyRepo(t *testing.T) {
 		}
 
 		{
-			r, err := OpenRepository(dir, testPassword)
+			r, err := OpenRepository(dir, testPassword, false)
 			if err != nil {
 				t.Errorf("Failed opening repository: %s", err)
 				return
@@ -157,6 +161,10 @@ func TestVerifyRepo(t *testing.T) {
 			}
 			if len(errors) != tt.NumberOfExpectedErrors {
 				t.Errorf("%d errors were expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
+			}
+
+			if r.Close() != nil {
+				t.Errorf("Failed closing repository: %s", err)
 			}
 		}
 	}
@@ -231,6 +239,10 @@ func TestVerifyVolume(t *testing.T) {
 				t.Errorf("Failed saving chunk-index: %s", err)
 				return
 			}
+			if r.Close() != nil {
+				t.Errorf("Failed closing repository: %s", err)
+				return
+			}
 
 			volumeOriginal = vol
 		}
@@ -242,7 +254,7 @@ func TestVerifyVolume(t *testing.T) {
 		}
 
 		{
-			r, err := OpenRepository(dir, testPassword)
+			r, err := OpenRepository(dir, testPassword, false)
 			if err != nil {
 				t.Errorf("Failed opening repository: %s", err)
 				return
@@ -260,6 +272,10 @@ func TestVerifyVolume(t *testing.T) {
 			}
 			if len(errors) != tt.NumberOfExpectedErrors {
 				t.Errorf("%d errors were expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
+			}
+
+			if r.Close() != nil {
+				t.Errorf("Failed closing repository: %s", err)
 			}
 		}
 	}
@@ -334,6 +350,10 @@ func TestVerifySnapshot(t *testing.T) {
 				t.Errorf("Failed saving chunk-index: %s", err)
 				return
 			}
+			if r.Close() != nil {
+				t.Errorf("Failed closing repository: %s", err)
+				return
+			}
 
 			snapshotOriginal = snapshot
 		}
@@ -345,11 +365,12 @@ func TestVerifySnapshot(t *testing.T) {
 		}
 
 		{
-			r, err := OpenRepository(dir, testPassword)
+			r, err := OpenRepository(dir, testPassword, false)
 			if err != nil {
 				t.Errorf("Failed opening repository: %s", err)
 				return
 			}
+
 			progress, err := VerifySnapshot(r, snapshotOriginal.ID, tt.Percentage)
 			if err != nil {
 				t.Errorf("Failed to verify snapshot: %s", err)
@@ -362,6 +383,10 @@ func TestVerifySnapshot(t *testing.T) {
 			}
 			if len(errors) != tt.NumberOfExpectedErrors {
 				t.Errorf("%d errors were expected but %d occured", tt.NumberOfExpectedErrors, len(errors))
+			}
+
+			if r.Close() != nil {
+				t.Errorf("Failed closing repository: %s", err)
 			}
 		}
 	}

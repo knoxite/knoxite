@@ -86,6 +86,7 @@ func TestSnapshotCreate(t *testing.T) {
 				t.Errorf("Failed creating repository: %s", err)
 				return
 			}
+
 			vol, err := NewVolume("test_name", "test_description")
 			if err != nil {
 				t.Errorf("Failed creating volume: %s", err)
@@ -149,10 +150,14 @@ func TestSnapshotCreate(t *testing.T) {
 			}
 
 			snapshotOriginal = snapshot
+			if r.Close() != nil {
+				t.Errorf("Failed closing repository: %s", err)
+				return
+			}
 		}
 
 		{
-			r, err := OpenRepository(dir, testPassword)
+			r, err := OpenRepository(dir, testPassword, false)
 			if err != nil {
 				t.Errorf("Failed opening repository: %s", err)
 				return
@@ -236,6 +241,10 @@ func TestSnapshotCreate(t *testing.T) {
 					return
 				}
 			}
+
+			if r.Close() != nil {
+				t.Errorf("Failed closing repository: %s", err)
+			}
 		}
 	}
 }
@@ -292,5 +301,9 @@ func TestSnapshotFind(t *testing.T) {
 	_, s, err := r.FindSnapshot("latest")
 	if err != nil || s == nil {
 		t.Errorf("Failed finding latest snapshot: %s %s", err, snapshot.ID)
+	}
+
+	if r.Close() != nil {
+		t.Errorf("Failed closing repository: %s", err)
 	}
 }

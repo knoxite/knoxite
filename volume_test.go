@@ -44,10 +44,15 @@ func TestVolumeCreate(t *testing.T) {
 				return
 			}
 		}
+
+		if r.Close() != nil {
+			t.Errorf("Failed closing repository: %s", err)
+			return
+		}
 	}
 
 	{
-		r, err := OpenRepository(dir, testPassword)
+		r, err := OpenRepository(dir, testPassword, false)
 		if err != nil {
 			t.Errorf("Failed opening repository: %s", err)
 			return
@@ -63,6 +68,10 @@ func TestVolumeCreate(t *testing.T) {
 		}
 		if volume.Description != vol.Description {
 			t.Errorf("Failed verifying volume description: %s != %s", vol.Description, volume.Description)
+		}
+
+		if r.Close() != nil {
+			t.Errorf("Failed closing repository: %s", err)
 		}
 	}
 }
@@ -90,6 +99,10 @@ func TestVolumeFind(t *testing.T) {
 	v, err := r.FindVolume("latest")
 	if err != nil || v == nil {
 		t.Errorf("Failed finding latest volume: %s %s", err, vol.ID)
+	}
+
+	if r.Close() != nil {
+		t.Errorf("Failed closing repository: %s", err)
 	}
 }
 
@@ -128,5 +141,9 @@ func TestSnapshotRemove(t *testing.T) {
 	err = vol.RemoveSnapshot("invalidID")
 	if err == nil {
 		t.Errorf("Expected no error, got: %s", err)
+	}
+
+	if r.Close() != nil {
+		t.Errorf("Failed closing repository: %s", err)
 	}
 }

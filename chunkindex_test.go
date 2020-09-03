@@ -98,4 +98,8 @@ func TestChunkIndexPack(t *testing.T) {
 	if err != nil {
 		t.Errorf("Packing chunk index failed: %s", err)
 	}
+
+	if r.Close() != nil {
+		t.Errorf("Failed closing repository: %s", err)
+	}
 }

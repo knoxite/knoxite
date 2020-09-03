@@ -57,10 +57,11 @@ func executeClone(snapshotID string, args []string, opts StoreOptions) error {
 	if lock == nil {
 		return nil
 	}
-	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password, true)
 	if err != nil {
 		return err
 	}
+
 	volume, s, err := repository.FindSnapshot(snapshotID)
 	if err != nil {
 		return err
@@ -100,5 +101,10 @@ func executeClone(snapshotID string, args []string, opts StoreOptions) error {
 	if err != nil {
 		return err
 	}
-	return repository.Save()
+	err = repository.Save()
+	if err != nil {
+		return err
+	}
+
+	return repository.Close()
 }

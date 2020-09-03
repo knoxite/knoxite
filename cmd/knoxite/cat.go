@@ -35,10 +35,12 @@ func init() {
 }
 
 func executeCat(snapshotID string, file string) error {
-	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password, false)
 	if err != nil {
 		return err
 	}
+	defer repository.Close()
+
 	_, snapshot, ferr := repository.FindSnapshot(snapshotID)
 	if ferr != nil {
 		return ferr

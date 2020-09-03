@@ -23,16 +23,22 @@ func TestRepositoryCreate(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	_, err = NewRepository(dir, testPassword)
+	r, err := NewRepository(dir, testPassword)
 	if err != nil {
 		t.Errorf("Failed creating repository: %s", err)
 		return
 	}
+	if r.Close() != nil {
+		t.Errorf("Failed closing repository: %s", err)
+	}
 
-	_, err = OpenRepository(dir, testPassword)
+	r, err = OpenRepository(dir, testPassword, false)
 	if err != nil {
 		t.Errorf("Failed opening repository: %s", err)
 		return
+	}
+	if r.Close() != nil {
+		t.Errorf("Failed closing repository: %s", err)
 	}
 }
 
@@ -72,6 +78,10 @@ func TestRepositoryIsEmpty(t *testing.T) {
 	if r.IsEmpty() {
 		t.Error("Repository should not be empty")
 	}
+
+	if r.Close() != nil {
+		t.Errorf("Failed closing repository: %s", err)
+	}
 }
 
 func TestRepositoryChangePassword(t *testing.T) {
@@ -85,13 +95,14 @@ func TestRepositoryChangePassword(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	_, err = NewRepository(dir, testPassword)
+	repo, err := NewRepository(dir, testPassword)
 	if err != nil {
 		t.Errorf("Failed creating repository: %s", err)
 		return
 	}
+	repo.Close()
 
-	repo, err := OpenRepository(dir, testPassword)
+	repo, err = OpenRepository(dir, testPassword, true)
 	if err != nil {
 		t.Errorf("Failed opening repository: %s", err)
 		return
@@ -101,17 +112,18 @@ func TestRepositoryChangePassword(t *testing.T) {
 		t.Errorf("Failed to change repository password: %s", err)
 		return
 	}
+	repo.Close()
 
-	_, err = OpenRepository(dir, testPassword)
+	_, err = OpenRepository(dir, testPassword, false)
 	if err == nil {
 		t.Errorf("Repository can still be opened with the old password after changing it: %s", err)
 		return
 	}
 
-	_, err = OpenRepository(dir, newPassword)
+	repo, err = OpenRepository(dir, newPassword, false)
 	if err != nil {
 		t.Errorf("Failed opening repository with new password after changing it: %s", err)
 		return
 	}
-
+	repo.Close()
 }

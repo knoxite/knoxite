@@ -40,35 +40,37 @@ func init() {
 }
 
 func executeLs(snapshotID string) error {
-	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
-	if err == nil {
-		tab := gotable.NewTable([]string{"Perms", "User", "Group", "Size", "ModTime", "Name"},
-			[]int64{-10, -8, -5, 12, -19, -48},
-			"No files found.")
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password, false)
+	if err != nil {
+		return err
+	}
+	defer repository.Close()
 
-		_, snapshot, ferr := repository.FindSnapshot(snapshotID)
-		if ferr != nil {
-			return ferr
-		}
+	tab := gotable.NewTable([]string{"Perms", "User", "Group", "Size", "ModTime", "Name"},
+		[]int64{-10, -8, -5, 12, -19, -48},
+		"No files found.")
 
-		for _, archive := range snapshot.Archives {
-			username := strconv.FormatInt(int64(archive.UID), 10)
-			u, uerr := user.LookupId(username)
-			if uerr == nil {
-				username = u.Username
-			}
-			groupname := strconv.FormatInt(int64(archive.GID), 10)
-			tab.AppendRow([]interface{}{
-				archive.Mode,
-				username,
-				groupname,
-				knoxite.SizeToString(archive.Size),
-				time.Unix(archive.ModTime, 0).Format(timeFormat),
-				archive.Path})
-		}
-
-		_ = tab.Print()
+	_, snapshot, err := repository.FindSnapshot(snapshotID)
+	if err != nil {
+		return err
 	}
 
-	return err
+	for _, archive := range snapshot.Archives {
+		username := strconv.FormatInt(int64(archive.UID), 10)
+		u, err := user.LookupId(username)
+		if err == nil {
+			username = u.Username
+		}
+		groupname := strconv.FormatInt(int64(archive.GID), 10)
+		tab.AppendRow([]interface{}{
+			archive.Mode,
+			username,
+			groupname,
+			knoxite.SizeToString(archive.Size),
+			time.Unix(archive.ModTime, 0).Format(timeFormat),
+			archive.Path})
+	}
+
+	_ = tab.Print()
+	return nil
 }

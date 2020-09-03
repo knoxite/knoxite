@@ -68,31 +68,42 @@ func executeVolumeInit(name, description string) error {
 	}
 	defer lock()
 
-	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
-	if err == nil {
-		vol, verr := knoxite.NewVolume(name, description)
-		if verr == nil {
-			verr = repository.AddVolume(vol)
-			if verr != nil {
-				return fmt.Errorf("Creating volume %s failed: %v", name, verr)
-			}
-
-			annotation := "Name: " + vol.Name
-			if len(vol.Description) > 0 {
-				annotation += ", Description: " + vol.Description
-			}
-			fmt.Printf("Volume %s (%s) created\n", vol.ID, annotation)
-			return repository.Save()
-		}
-	}
-	return err
-}
-
-func executeVolumeList() error {
-	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password, true)
 	if err != nil {
 		return err
 	}
+
+	vol, err := knoxite.NewVolume(name, description)
+	if err != nil {
+		return err
+	}
+
+	err = repository.AddVolume(vol)
+	if err != nil {
+		return fmt.Errorf("Creating volume %s failed: %v", name, err)
+	}
+
+	annotation := "Name: " + vol.Name
+	if len(vol.Description) > 0 {
+		annotation += ", Description: " + vol.Description
+	}
+
+	err = repository.Save()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Volume %s (%s) created\n", vol.ID, annotation)
+
+	return repository.Close()
+}
+
+func executeVolumeList() error {
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password, false)
+	if err != nil {
+		return err
+	}
+	defer repository.Close()
 
 	tab := gotable.NewTable([]string{"ID", "Name", "Description"},
 		[]int64{-8, -32, -48}, "No volumes found. This repository is empty.")

@@ -54,10 +54,11 @@ func init() {
 }
 
 func executeSnapshotRemove(snapshotID string) error {
-	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password, true)
 	if err != nil {
 		return err
 	}
+
 	chunkIndex, err := knoxite.OpenChunkIndex(&repository)
 	if err != nil {
 		return err
@@ -86,14 +87,16 @@ func executeSnapshotRemove(snapshotID string) error {
 
 	fmt.Printf("Snapshot %s removed: %s\n", snapshot.ID, snapshot.Stats.String())
 	fmt.Println("Do not forget to run 'repo pack' to delete un-referenced chunks and free up storage space!")
-	return nil
+
+	return repository.Close()
 }
 
 func executeSnapshotList(volID string) error {
-	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password, false)
 	if err != nil {
 		return err
 	}
+	defer repository.Close()
 
 	volume, err := repository.FindVolume(volID)
 	if err != nil {

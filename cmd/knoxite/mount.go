@@ -48,10 +48,12 @@ func init() {
 }
 
 func executeMount(snapshotID, mountpoint string) error {
-	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password, false)
 	if err != nil {
 		return err
 	}
+	defer repository.Close()
+
 	_, snapshot, err := repository.FindSnapshot(snapshotID)
 	if err != nil {
 		return err

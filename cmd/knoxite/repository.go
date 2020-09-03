@@ -104,11 +104,11 @@ func executeRepoInit() error {
 	}
 
 	fmt.Printf("Created new repository at %s\n", (*r.BackendManager().Backends[0]).Location())
-	return nil
+	return r.Close()
 }
 
 func executeRepoChangePassword() error {
-	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password, true)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func executeRepoChangePassword() error {
 	}
 
 	fmt.Printf("Changed password successfully\n")
-	return nil
+	return r.Close()
 }
 
 func executeRepoAdd(url string) error {
@@ -135,7 +135,7 @@ func executeRepoAdd(url string) error {
 	}
 	defer lock()
 
-	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password, true)
 	if err != nil {
 		return err
 	}
@@ -157,11 +157,12 @@ func executeRepoAdd(url string) error {
 		return err
 	}
 	fmt.Printf("Added %s to repository\n", backend.Location())
-	return nil
+
+	return r.Close()
 }
 
 func executeRepoCat() error {
-	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password, false)
 	if err != nil {
 		return err
 	}
@@ -171,14 +172,16 @@ func executeRepoCat() error {
 		return err
 	}
 	fmt.Printf("%s\n", json)
-	return nil
+
+	return r.Close()
 }
 
 func executeRepoPack() error {
-	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password, true)
 	if err != nil {
 		return err
 	}
+
 	index, err := knoxite.OpenChunkIndex(&r)
 	if err != nil {
 		return err
@@ -195,11 +198,12 @@ func executeRepoPack() error {
 	}
 
 	fmt.Printf("Freed storage space: %s\n", knoxite.SizeToString(freedSize))
-	return nil
+
+	return r.Close()
 }
 
 func executeRepoInfo() error {
-	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password, false)
 	if err != nil {
 		return err
 	}
@@ -216,10 +220,10 @@ func executeRepoInfo() error {
 	}
 
 	_ = tab.Print()
-	return nil
+	return r.Close()
 }
 
-func openRepository(path, password string) (knoxite.Repository, error) {
+func openRepository(path, password string, rw bool) (knoxite.Repository, error) {
 	if password == "" {
 		var err error
 		password, err = utils.ReadPassword("Enter password:")
@@ -229,9 +233,9 @@ func openRepository(path, password string) (knoxite.Repository, error) {
 	}
 
 	if rep, ok := cfg.Repositories[path]; ok {
-		return knoxite.OpenRepository(rep.Url, password)
+		return knoxite.OpenRepository(rep.Url, password, rw)
 	}
-	return knoxite.OpenRepository(path, password)
+	return knoxite.OpenRepository(path, password, rw)
 }
 
 func newRepository(path, password string) (knoxite.Repository, error) {
