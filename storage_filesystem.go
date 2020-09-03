@@ -20,6 +20,8 @@ const (
 	ChunkIndexFilename = "index"
 	chunksDirname      = "chunks"
 	snapshotsDirname   = "snapshots"
+	// LockFilename is the default filename for repository locks.
+	LockFilename = "repository.lock"
 )
 
 // BackendFilesystem is used to store and access data on a filesytem based backend.
@@ -43,6 +45,7 @@ type StorageFilesystem struct {
 	snapshotPath   string
 	chunkIndexPath string
 	repositoryPath string
+	lockPath       string
 
 	storage *BackendFilesystem
 }
@@ -55,6 +58,7 @@ func NewStorageFilesystem(path string, storage BackendFilesystem) (StorageFilesy
 		snapshotPath:   filepath.Join(path, snapshotsDirname),
 		chunkIndexPath: filepath.Join(path, chunksDirname, ChunkIndexFilename),
 		repositoryPath: filepath.Join(path, RepoFilename),
+		lockPath:       filepath.Join(path, LockFilename),
 		storage:        &storage,
 	}
 	return s, nil
@@ -164,6 +168,23 @@ func (backend StorageFilesystem) LoadRepository() ([]byte, error) {
 func (backend StorageFilesystem) SaveRepository(b []byte) error {
 	_, err := (*backend.storage).WriteFile(backend.repositoryPath, b)
 	return err
+}
+
+// LockRepository locks the repository and prevents other instances from
+// concurrent access.
+func (backend StorageFilesystem) LockRepository() error {
+	b, err := (*backend.storage).ReadFile(backend.lockPath)
+	if err == nil {
+		return ErrRepositoryLocked
+	}
+
+	_, err = (*backend.storage).WriteFile(backend.lockPath, b)
+	return err
+}
+
+// UnlockRepository releases the lock.
+func (backend StorageFilesystem) UnlockRepository() error {
+	return (*backend.storage).DeleteFile(backend.lockPath)
 }
 
 // SubDirForChunk files a chunk into a subdir, based on the chunks name.

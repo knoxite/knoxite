@@ -60,11 +60,18 @@ type Backend interface {
 	LoadRepository() ([]byte, error)
 	// SaveRepository stores the metadata for a repository
 	SaveRepository(data []byte) error
+
+	// LockRepository locks the repository and prevents other instances from
+	// concurrent access
+	LockRepository() error
+	// UnlockRepository releases the lock
+	UnlockRepository() error
 }
 
 // Error declarations
 var (
 	ErrRepositoryExists        = errors.New("Repository seems to already exist")
+	ErrRepositoryLocked        = errors.New("Repository is locked by another process")
 	ErrInvalidRepositoryURL    = errors.New("Invalid repository url specified")
 	ErrAvailableSpaceUnknown   = errors.New("Available space is unknown or undefined")
 	ErrAvailableSpaceUnlimited = errors.New("Available space is unlimited")

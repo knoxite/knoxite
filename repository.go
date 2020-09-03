@@ -22,6 +22,7 @@ type Repository struct {
 	// Owner   string    `json:"owner"`
 
 	backend  BackendManager
+	rwLock   bool   // access lock for read/write operations
 	password string // password for knoxite repository file
 }
 
@@ -51,6 +52,7 @@ func NewRepository(path, password string) (Repository, error) {
 		Version:  RepositoryVersion,
 		password: password,
 		Key:      key,
+		rwLock:   true,
 	}
 
 	backend, err := BackendFromURL(path)

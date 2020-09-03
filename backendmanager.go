@@ -175,3 +175,25 @@ func (backend *BackendManager) SaveRepository(b []byte) error {
 
 	return nil
 }
+
+func (backend *BackendManager) LockRepository() error {
+	for _, be := range backend.Backends {
+		err := (*be).LockRepository()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (backend *BackendManager) UnlockRepository() error {
+	for _, be := range backend.Backends {
+		err := (*be).UnlockRepository()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
