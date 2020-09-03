@@ -62,6 +62,11 @@ func NewRepository(path, password string) (Repository, error) {
 	repository.backend.AddBackend(&backend)
 
 	err = repository.init()
+	if err != nil {
+		return repository, err
+	}
+
+	err = repository.backend.LockRepository()
 	return repository, err
 }
 
@@ -78,9 +83,10 @@ func generateRandomKey(length int) (string, error) {
 }
 
 // OpenRepository opens an existing repository and migrates it if possible.
-func OpenRepository(path, password string) (Repository, error) {
+func OpenRepository(path, password string, rw bool) (Repository, error) {
 	repository := Repository{
 		password: password,
+		rwLock:   rw,
 	}
 
 	backend, err := BackendFromURL(path)
@@ -90,6 +96,12 @@ func OpenRepository(path, password string) (Repository, error) {
 	b, err := backend.LoadRepository()
 	if err != nil {
 		return repository, err
+	}
+	if rw {
+		err = backend.LockRepository()
+		if err != nil {
+			return repository, err
+		}
 	}
 
 	pipe, err := NewDecodingPipeline(CompressionNone, EncryptionAES, password)
@@ -117,6 +129,14 @@ func OpenRepository(path, password string) (Repository, error) {
 	}
 
 	return repository, err
+}
+
+func (r *Repository) Close() error {
+	if r.rwLock {
+		return r.backend.UnlockRepository()
+	}
+
+	return nil
 }
 
 // AddVolume adds a volume to a repository.
