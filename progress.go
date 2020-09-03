@@ -15,6 +15,7 @@ type Progress struct {
 	Timer            time.Time
 	CurrentItemStats Stats
 	TotalStatistics  Stats
+	Verbosity        string
 	Error            error
 }
 
@@ -29,7 +30,8 @@ func newProgress(archive *Archive) Progress {
 		TotalStatistics: Stats{
 			Size: archive.Size,
 		},
-		Error: nil,
+		Verbosity: "Verbosity flag has been set",
+		Error:     nil,
 	}
 }
 

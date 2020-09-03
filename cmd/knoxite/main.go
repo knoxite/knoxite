@@ -36,6 +36,7 @@ type GlobalOptions struct {
 	Repo      string
 	Password  string
 	ConfigURL string
+	Verbose   bool
 }
 
 var (

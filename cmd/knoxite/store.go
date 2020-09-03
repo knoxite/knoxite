@@ -12,11 +12,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
-	humanize "github.com/dustin/go-humanize"
 	shutdown "github.com/klauspost/shutdown2"
-	"github.com/muesli/goprogressbar"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -116,68 +113,21 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 
 	tol := uint(len(repository.BackendManager().Backends) - int(opts.FailureTolerance))
 
-	startTime := time.Now()
 	progress := snapshot.Add(wd, targets, opts.Excludes, *repository, chunkIndex,
 		compression, encryption,
 		tol, opts.FailureTolerance)
 
-	fileProgressBar := &goprogressbar.ProgressBar{Width: 40}
-	overallProgressBar := &goprogressbar.ProgressBar{
-		Text:  fmt.Sprintf("%d of %d total", 0, 0),
-		Width: 60,
-		PrependTextFunc: func(p *goprogressbar.ProgressBar) string {
-			return fmt.Sprintf("%s/s",
-				knoxite.SizeToString(uint64(float64(p.Current)/time.Since(startTime).Seconds())))
-		},
+	consoleRenderer := ConsoleRenderer{}
+	consoleRenderer.Init()
+
+	output := knoxite.DefaultOutput{
+		Renderers: knoxite.Renderers{&consoleRenderer},
 	}
 
-	pb := goprogressbar.MultiProgressBar{}
-	pb.AddProgressBar(fileProgressBar)
-	pb.AddProgressBar(overallProgressBar)
-	lastPath := ""
-
-	items := int64(1)
-	for p := range progress {
-		select {
-		case n := <-cancel:
-			fmt.Println("Aborting...")
-			close(n)
-			return nil
-
-		default:
-			if p.Error != nil {
-				fmt.Println()
-				return p.Error
-			}
-			if p.Path != lastPath && lastPath != "" {
-				items++
-				fmt.Println()
-			}
-			fileProgressBar.Total = int64(p.CurrentItemStats.Size)
-			fileProgressBar.Current = int64(p.CurrentItemStats.Transferred)
-			fileProgressBar.PrependText = fmt.Sprintf("%s  %s/s",
-				knoxite.SizeToString(uint64(fileProgressBar.Current)),
-				knoxite.SizeToString(p.TransferSpeed()))
-
-			overallProgressBar.Total = int64(p.TotalStatistics.Size)
-			overallProgressBar.Current = int64(p.TotalStatistics.Transferred)
-			overallProgressBar.Text = fmt.Sprintf("%s / %s (%s of %s)",
-				knoxite.SizeToString(uint64(overallProgressBar.Current)),
-				knoxite.SizeToString(uint64(overallProgressBar.Total)),
-				humanize.Comma(items),
-				humanize.Comma(int64(p.TotalStatistics.Files+p.TotalStatistics.Dirs+p.TotalStatistics.SymLinks)))
-
-			if p.Path != lastPath {
-				lastPath = p.Path
-				fileProgressBar.Text = p.Path
-			}
-
-			pb.LazyPrint()
-		}
-	}
-
+	err = output.Render(progress, cancel)
 	fmt.Printf("\nSnapshot %s created: %s\n", snapshot.ID, snapshot.Stats.String())
-	return nil
+
+	return err
 }
 
 func executeStore(volumeID string, args []string, opts StoreOptions) error {
