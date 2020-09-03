@@ -72,9 +72,9 @@ func (fs *FileBackend) Save(config *Config) error {
 	}
 
 	j, err := json.MarshalIndent(config, "", "  ")
-	if err == nil {
-		err = ioutil.WriteFile(config.URL().Path, j, 0644)
+	if err != nil {
+		return err
 	}
 
-	return err
+	return ioutil.WriteFile(config.URL().Path, j, 0644)
 }

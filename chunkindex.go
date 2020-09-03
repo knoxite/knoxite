@@ -30,29 +30,27 @@ func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 	index := ChunkIndex{
 		Chunks: make(map[string]*ChunkIndexItem),
 	}
+
 	b, err := repository.backend.LoadChunkIndex()
-	if err == nil {
-		pipe, errp := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
-		if errp != nil {
-			return index, errp
-		}
-		errp = pipe.Decode(b, &index)
-		if errp != nil {
-			return index, errp
-		}
-	} else {
+	if err != nil {
 		if !repository.IsEmpty() {
 			fmt.Println("Chunk-Index is empty, re-indexing all snapshots...")
 			err = index.reindex(repository)
-			if err == nil {
-				if len(index.Chunks) > 0 {
-					fmt.Println("Successfully re-indexed snapshots.")
-				}
+			if err != nil {
+				return index, err
 			}
+			fmt.Println("Successfully re-indexed snapshots.")
 		}
 
 		err = index.Save(repository)
+		return index, err
 	}
+
+	pipe, err := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
+	if err != nil {
+		return index, err
+	}
+	err = pipe.Decode(b, &index)
 	return index, err
 }
 
