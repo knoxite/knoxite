@@ -133,9 +133,10 @@ func OpenRepository(path, password string, rw bool) (Repository, error) {
 	return repository, err
 }
 
+// Close needs to be called after the last access on a repository.
 func (r *Repository) Close() error {
 	if r.rwLock {
-		return r.unlock()
+		return r.Unlock()
 	}
 
 	return nil
@@ -146,7 +147,8 @@ func (r *Repository) lock() error {
 	return lock.Save(r)
 }
 
-func (r *Repository) unlock() error {
+// Unlock forcefully unlocks a repository.
+func (r *Repository) Unlock() error {
 	return r.backend.UnlockRepository()
 }
 

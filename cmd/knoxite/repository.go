@@ -35,6 +35,14 @@ var (
 			return executeRepoInit()
 		},
 	}
+	repoUnlockCmd = &cobra.Command{
+		Use:   "unlock",
+		Short: "forcefully unlocks a repository",
+		Long:  `The unlock command removes stale locks from a repository`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return executeRepoUnlock()
+		},
+	}
 	repoChangePasswordCmd = &cobra.Command{
 		Use:   "passwd",
 		Short: "changes the password of a repository",
@@ -82,6 +90,7 @@ var (
 
 func init() {
 	repoCmd.AddCommand(repoInitCmd)
+	repoCmd.AddCommand(repoUnlockCmd)
 	repoCmd.AddCommand(repoChangePasswordCmd)
 	repoCmd.AddCommand(repoCatCmd)
 	repoCmd.AddCommand(repoInfoCmd)
@@ -104,6 +113,28 @@ func executeRepoInit() error {
 	}
 
 	fmt.Printf("Created new repository at %s\n", (*r.BackendManager().Backends[0]).Location())
+	return r.Close()
+}
+
+func executeRepoUnlock() error {
+	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	lock := shutdown.Lock()
+	if lock == nil {
+		return nil
+	}
+	defer lock()
+
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password, false)
+	if err != nil {
+		return err
+	}
+
+	err = r.Unlock()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Unlocked repository at %s\n", (*r.BackendManager().Backends[0]).Location())
 	return r.Close()
 }
 
