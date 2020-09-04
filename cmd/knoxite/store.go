@@ -36,6 +36,7 @@ type StoreOptions struct {
 	Encryption       string
 	FailureTolerance uint
 	Excludes         []string
+	Pedantic         bool
 }
 
 var (
@@ -86,6 +87,7 @@ func initStoreFlags(f func() *pflag.FlagSet, opts *StoreOptions) {
 	f().StringVarP(&opts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
 	f().UintVarP(&opts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
 	f().StringArrayVarP(&opts.Excludes, "excludes", "x", []string{}, "list of excludes")
+	f().BoolVar(&opts.Pedantic, "pedantic", false, "exit on first error")
 }
 
 func init() {
@@ -143,6 +145,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	lastPath := ""
 
 	items := int64(1)
+	errs := make(map[string]error)
 	for p := range progress {
 		select {
 		case n := <-cancel:
@@ -152,8 +155,12 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 
 		default:
 			if p.Error != nil {
-				fmt.Println()
-				return p.Error
+				if storeOpts.Pedantic {
+					fmt.Println()
+					return p.Error
+				}
+				errs[p.Path] = p.Error
+				snapshot.Stats.Errors++
 			}
 			if p.Path != lastPath && lastPath != "" {
 				items++
@@ -183,6 +190,9 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	}
 
 	fmt.Printf("\nSnapshot %s created: %s\n", snapshot.ID, snapshot.Stats.String())
+	for file, err := range errs {
+		fmt.Printf("'%s': failed to store: %v\n", file, err)
+	}
 	return nil
 }
 
