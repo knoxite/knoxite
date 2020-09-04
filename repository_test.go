@@ -131,3 +131,54 @@ func TestRepositoryChangePassword(t *testing.T) {
 	}
 	repo.Close()
 }
+
+func TestRepositoryLock(t *testing.T) {
+	testPassword := "this_is_a_password"
+
+	dir, err := ioutil.TempDir("", "knoxite")
+	if err != nil {
+		t.Errorf("Failed creating temporary dir for repository: %s", err)
+		return
+	}
+	defer os.RemoveAll(dir)
+
+	// create a new repo, which will acquire a lock on it
+	repo, err := NewRepository(dir, testPassword)
+	if err != nil {
+		t.Errorf("Failed creating repository: %s", err)
+		return
+	}
+
+	// try opening the repo r/w while it's locked
+	_, err = OpenRepository(dir, testPassword, true)
+	if err == nil {
+		t.Error("Repository should have been locked!")
+		return
+	}
+
+	// but r/o access should still work
+	_, err = OpenRepository(dir, testPassword, false)
+	if err != nil {
+		t.Errorf("Failed opening repository: %s", err)
+		return
+	}
+
+	err = repo.Close()
+	if err != nil {
+		t.Errorf("Failed closing repository: %s", err)
+		return
+	}
+
+	// try opening the repo after the lock has been released
+	repo, err = OpenRepository(dir, testPassword, true)
+	if err != nil {
+		t.Errorf("Failed opening repository: %s", err)
+		return
+	}
+
+	err = repo.Close()
+	if err != nil {
+		t.Errorf("Failed closing repository: %s", err)
+		return
+	}
+}
