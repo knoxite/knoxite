@@ -66,7 +66,7 @@ func (e *DataReconstructionError) Error() string {
 }
 
 // DecodeSnapshot restores an entire snapshot to dst.
-func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string, excludes []string) (chan Progress, error) {
+func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string, excludes []string, pedantic bool) (chan Progress, error) {
 	prog := make(chan Progress)
 	go func() {
 		for _, arc := range snapshot.Archives {
@@ -94,7 +94,10 @@ func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string, exclu
 				p := newProgressError(err)
 				p.Path = arc.Path
 				prog <- p
-				break
+				if pedantic {
+					break
+				}
+				continue
 			}
 		}
 		close(prog)
