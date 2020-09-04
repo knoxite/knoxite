@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2020, Nicolas Martin <penguwin@penguwin.eu>
  *
  *   For license see LICENSE
  */
@@ -25,6 +26,7 @@ var (
 
 type RestoreOptions struct {
 	Excludes []string
+	Pedantic bool
 }
 
 var (
@@ -62,6 +64,7 @@ func configureRestoreOpts(cmd *cobra.Command, opts *RestoreOptions) {
 
 func initRestoreFlags(f func() *pflag.FlagSet) {
 	f().StringArrayVarP(&restoreOpts.Excludes, "excludes", "x", []string{}, "list of excludes")
+	f().BoolVar(&restoreOpts.Pedantic, "pedantic", false, "exit on first error")
 }
 
 func init() {
@@ -86,10 +89,15 @@ func executeRestore(snapshotID, target string, opts RestoreOptions) error {
 		stats := knoxite.Stats{}
 		lastPath := ""
 
+		errs := make(map[string]error)
 		for p := range progress {
 			if p.Error != nil {
-				fmt.Println()
-				return p.Error
+				if restoreOpts.Pedantic {
+					fmt.Println()
+					return p.Error
+				}
+				errs[p.Path] = p.Error
+				stats.Errors++
 			}
 
 			pb.Total = int64(p.CurrentItemStats.Size)
@@ -116,6 +124,10 @@ func executeRestore(snapshotID, target string, opts RestoreOptions) error {
 		}
 		fmt.Println()
 		fmt.Println("Restore done:", stats.String())
+		for file, err := range errs {
+			fmt.Printf("'%s' failed to restore: %v\n", file, err)
+		}
+
 		return nil
 	}
 
