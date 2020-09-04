@@ -192,3 +192,17 @@ func PathToUrl(u string) (*url.URL, error) {
 	}
 	return url, nil
 }
+
+// VerbosityTypeFromString returns the verbosity type from a user-specified string.
+func VerbosityTypeFromString(s string) knoxite.Verbosity {
+	switch strings.ToLower(s) {
+	case "warning":
+		return knoxite.LogLevelWarning
+	case "info":
+		return knoxite.LogLevelInfo
+	case "debug":
+		return knoxite.LogLevelDebug
+	default:
+		return knoxite.LogLevelWarning
+	}
+}

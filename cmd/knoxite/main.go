@@ -18,7 +18,9 @@ import (
 	shutdown "github.com/klauspost/shutdown2"
 	"github.com/spf13/cobra"
 
+	"github.com/knoxite/knoxite"
 	"github.com/knoxite/knoxite/cmd/knoxite/config"
+	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 	_ "github.com/knoxite/knoxite/storage/azure"
 	_ "github.com/knoxite/knoxite/storage/backblaze"
 	_ "github.com/knoxite/knoxite/storage/dropbox"
@@ -37,6 +39,7 @@ type GlobalOptions struct {
 	Alias     string
 	Password  string
 	ConfigURL string
+	Verbosity string
 }
 
 var (
@@ -55,6 +58,8 @@ var (
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
+
+	logger knoxite.Logger
 )
 
 func main() {
@@ -67,6 +72,7 @@ func main() {
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Alias, "alias", "R", "", "Repository alias to backup to/restore from")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Password, "password", "p", "", "Password to use for data encryption")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.ConfigURL, "configURL", "C", config.DefaultPath(), "Path to the configuration file")
+	RootCmd.PersistentFlags().StringVarP(&globalOpts.Verbosity, "verbose", "v", "Warning", "Verbose output: possible levels are debug, info and warning while warning is default")
 
 	globalOpts.Repo = os.Getenv("KNOXITE_REPOSITORY")
 	globalOpts.Password = os.Getenv("KNOXITE_PASSWORD")
@@ -78,6 +84,7 @@ func main() {
 }
 
 func init() {
+	cobra.OnInitialize(initLogger)
 	cobra.OnInitialize(initConfig)
 	if CommitSHA != "" {
 		vt := RootCmd.VersionTemplate()
@@ -88,6 +95,10 @@ func init() {
 	}
 
 	RootCmd.Version = Version
+}
+
+func initLogger() {
+	logger.VerbosityLevel = utils.VerbosityTypeFromString(globalOpts.Verbosity)
 }
 
 // initConfig initializes the configuration for knoxite.
@@ -101,15 +112,20 @@ func initConfig() {
 	}
 
 	var err error
+	//logger.Info("Initialising config with ConfigURL")
 	cfg, err = config.New(globalOpts.ConfigURL)
 	if err != nil {
 		log.Fatalf("error reading the config file: %v\n", err)
 		return
 	}
+	//logger.Info("Initialised config")
+
+	//logger.Info("Loading config")
 	if err = cfg.Load(); err != nil {
 		log.Fatalf("error loading the config file: %v\n", err)
 		return
 	}
+	//logger.Info("Loaded config")
 
 	// There can occur a panic due to an entry assigment in nil map when theres
 	// no map initialized to store the RepoConfigs. This will prevent this from
