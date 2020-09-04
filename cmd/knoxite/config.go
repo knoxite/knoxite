@@ -148,6 +148,13 @@ func executeConfigSet(option string, values []string) error {
 		repo.StoreExcludes = values
 	case "restore_excludes":
 		repo.RestoreExcludes = values
+	case "pedantic":
+		b, err := strconv.ParseBool(values[0])
+		if err != nil {
+			return err
+		}
+		repo.Pedantic = b
+
 	default:
 		return fmt.Errorf("Unknown configuration option: %s", opt)
 	}
