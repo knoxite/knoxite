@@ -227,6 +227,19 @@ func (backend *S3Storage) InitRepository() error {
 		return knoxite.ErrRepositoryExists
 	}
 
+	lockBucketExist, err := backend.client.BucketExists(backend.lockBucket)
+	if err != nil {
+		return err
+	}
+	if !lockBucketExist {
+		err = backend.client.MakeBucket(backend.lockBucket, backend.region)
+		if err != nil {
+			return err
+		}
+	} else {
+		return knoxite.ErrRepositoryExists
+	}
+
 	return nil
 }
 
