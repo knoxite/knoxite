@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/knoxite/knoxite/config"
+	"github.com/knoxite/knoxite/cmd/knoxite/config"
 	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
 )

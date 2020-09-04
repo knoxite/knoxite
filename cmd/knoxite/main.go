@@ -18,7 +18,7 @@ import (
 	shutdown "github.com/klauspost/shutdown2"
 	"github.com/spf13/cobra"
 
-	"github.com/knoxite/knoxite/config"
+	"github.com/knoxite/knoxite/cmd/knoxite/config"
 	_ "github.com/knoxite/knoxite/storage/azure"
 	_ "github.com/knoxite/knoxite/storage/backblaze"
 	_ "github.com/knoxite/knoxite/storage/dropbox"
