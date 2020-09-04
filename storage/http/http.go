@@ -273,12 +273,53 @@ func (backend *HTTPStorage) SaveRepository(data []byte) error {
 // LockRepository locks the repository and prevents other instances from
 // concurrent access.
 func (backend *HTTPStorage) LockRepository(data []byte) ([]byte, error) {
-	// TODO: implement
-	return nil, nil
+	res, err := http.Get(backend.URL.String() + "/lock")
+	if err == nil {
+		defer res.Body.Close()
+
+		l, err := ioutil.ReadAll(res.Body)
+		if err == nil {
+			return l, nil
+		}
+	}
+
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+
+	// this step is very important
+	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", "lock")
+	if err != nil {
+		fmt.Println("error writing to buffer")
+		return nil, err
+	}
+
+	_, err = fileWriter.Write(data)
+	if err != nil {
+		return nil, err
+	}
+
+	contentType := bodyWriter.FormDataContentType()
+	bodyWriter.Close()
+
+	resp, err := http.Post(backend.URL.String()+"/lock", contentType, bodyBuf)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, knoxite.ErrStoreLockFailed
+	}
+	//	fmt.Printf("Uploaded lock: %d bytes\n", len(data))
+	return nil, err
+
 }
 
 // UnlockRepository releases the lock.
 func (backend *HTTPStorage) UnlockRepository() error {
 	// TODO: implement
-	return nil
+	return knoxite.ErrDeleteLockFailed
 }

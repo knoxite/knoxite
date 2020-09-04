@@ -26,6 +26,7 @@ type BackblazeStorage struct {
 	url            url.URL
 	repositoryFile string
 	chunkIndexFile string
+	lockFile       string
 	Bucket         *backblaze.Bucket
 	backblaze      *backblaze.B2
 }
@@ -75,6 +76,7 @@ func (*BackblazeStorage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		url:            URL,
 		repositoryFile: bucketPrefix[1] + "-repository",
 		chunkIndexFile: bucketPrefix[1] + "-chunkindex",
+		lockFile:       bucketPrefix[1] + "-lock",
 		Bucket:         bucket,
 		backblaze:      cl,
 	}, nil
@@ -236,14 +238,34 @@ func (backend *BackblazeStorage) SaveRepository(data []byte) error {
 // LockRepository locks the repository and prevents other instances from
 // concurrent access.
 func (backend *BackblazeStorage) LockRepository(data []byte) ([]byte, error) {
-	// TODO: implement
-	return nil, nil
+	_, obj, err := backend.Bucket.DownloadFileByName(backend.lockFile)
+	if err == nil {
+		defer obj.Close()
+
+		l, err := ioutil.ReadAll(obj)
+		if err == nil {
+			return l, nil
+		}
+	}
+
+	buf := bytes.NewBuffer(data)
+	metadata := make(map[string]string)
+	_, err = backend.upload(backend.lockFile, metadata, buf)
+	return nil, err
 }
 
 // UnlockRepository releases the lock.
 func (backend *BackblazeStorage) UnlockRepository() error {
-	// TODO: implement
-	return nil
+	files, err := backend.findLatestFileVersion(backend.lockFile)
+	if err != nil {
+		return err
+	}
+	if len(files) == 0 {
+		return nil
+	}
+
+	_, err = backend.Bucket.DeleteFileVersion(backend.lockFile, files[0].ID)
+	return err
 }
 
 func (backend *BackblazeStorage) findLatestFileVersion(fileName string) ([]backblaze.FileStatus, error) {

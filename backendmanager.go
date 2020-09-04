@@ -25,10 +25,12 @@ var (
 	ErrLoadChunkIndexFailed  = errors.New("Unable to load chunk-index from any storage backend")
 	ErrLoadRepositoryFailed  = errors.New("Unable to load repository from any storage backend")
 	ErrDeleteChunkFailed     = errors.New("Unable to delete chunk from any storage backend")
+	ErrDeleteLockFailed      = errors.New("Unable to delete lock")
 	ErrStoreChunkFailed      = errors.New("Storing chunk failed")
 	ErrStoreSnapshotFailed   = errors.New("Storing snapshot failed")
 	ErrStoreChunkIndexFailed = errors.New("Storing chunk-index failed")
 	ErrStoreRepositoryFailed = errors.New("Storing repository failed")
+	ErrStoreLockFailed       = errors.New("Storing lock failed")
 )
 
 // AddBackend adds a backend.

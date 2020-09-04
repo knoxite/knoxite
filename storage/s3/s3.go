@@ -28,6 +28,7 @@ type S3Storage struct {
 	chunkBucket      string
 	snapshotBucket   string
 	repositoryBucket string
+	lockBucket       string
 	region           string
 	client           *minio.Client
 }
@@ -82,6 +83,7 @@ func (*S3Storage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		chunkBucket:      regionAndBucketPrefix[2] + "-chunks",
 		snapshotBucket:   regionAndBucketPrefix[2] + "-snapshots",
 		repositoryBucket: regionAndBucketPrefix[2] + "-repository",
+		lockBucket:       regionAndBucketPrefix[2] + "-lock",
 	}, nil
 }
 
@@ -249,12 +251,22 @@ func (backend *S3Storage) SaveRepository(data []byte) error {
 // LockRepository locks the repository and prevents other instances from
 // concurrent access.
 func (backend *S3Storage) LockRepository(data []byte) ([]byte, error) {
-	// TODO: implement
-	return nil, nil
+	obj, err := backend.client.GetObject(backend.lockBucket, knoxite.LockFilename, minio.GetObjectOptions{})
+	if err == nil {
+		defer obj.Close()
+
+		l, err := ioutil.ReadAll(obj)
+		if err == nil {
+			return l, nil
+		}
+	}
+
+	buf := bytes.NewBuffer(data)
+	_, err = backend.client.PutObject(backend.lockBucket, knoxite.LockFilename, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
+	return nil, err
 }
 
 // UnlockRepository releases the lock.
 func (backend *S3Storage) UnlockRepository() error {
-	// TODO: implement
-	return nil
+	return backend.client.RemoveObject(backend.lockBucket, knoxite.LockFilename)
 }
