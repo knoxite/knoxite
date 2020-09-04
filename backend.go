@@ -71,7 +71,6 @@ type Backend interface {
 // Error declarations
 var (
 	ErrRepositoryExists        = errors.New("Repository seems to already exist")
-	ErrRepositoryLocked        = errors.New("Repository is locked by another process")
 	ErrInvalidRepositoryURL    = errors.New("Invalid repository url specified")
 	ErrAvailableSpaceUnknown   = errors.New("Available space is unknown or undefined")
 	ErrAvailableSpaceUnlimited = errors.New("Available space is unlimited")

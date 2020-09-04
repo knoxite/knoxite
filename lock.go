@@ -1,19 +1,38 @@
 package knoxite
 
 import (
+	"fmt"
+	"os"
+	"os/user"
 	"time"
+
+	"github.com/dustin/go-humanize"
 )
 
 type Lock struct {
 	Timestamp time.Time `json:"timestamp"` // timestamp the lock was acquired at
-	User      string    `json:"user"`      // user@machine that acquired the lock
+	User      string    `json:"user"`      // user that acquired the lock
+	Host      string    `json:"host"`      // host that the lock got acquired on
+}
+
+type RepositoryLockedError struct {
+	ExistingLock Lock
+}
+
+func (e *RepositoryLockedError) Error() string {
+	return fmt.Sprintf("Repository has been locked by another user: %s@%s (%s)",
+		e.ExistingLock.User,
+		e.ExistingLock.Host,
+		humanize.Time(e.ExistingLock.Timestamp),
+	)
 }
 
 // NewLock creates a new repository lock.
 func NewLock() Lock {
 	lock := Lock{
 		Timestamp: time.Now(),
-		User:      "alice@bob",
+		User:      CurrentUser(),
+		Host:      CurrentHost(),
 	}
 
 	return lock
@@ -30,14 +49,44 @@ func (lock Lock) Save(repository *Repository) error {
 		return err
 	}
 
-	l, err := repository.backend.LockRepository(b)
+	lb, err := repository.backend.LockRepository(b)
 	if err != nil {
 		return err
 	}
 
-	if l != nil {
-		return ErrRepositoryLocked
+	if lb != nil {
+		var l Lock
+		pipe, err := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
+		if err != nil {
+			return err
+		}
+		err = pipe.Decode(lb, &l)
+		if err != nil {
+			return err
+		}
+
+		return &RepositoryLockedError{
+			ExistingLock: l,
+		}
 	}
 
 	return nil
+}
+
+func CurrentUser() string {
+	usr, err := user.Current()
+	if err != nil {
+		return "unknown"
+	}
+
+	return usr.Username
+}
+
+func CurrentHost() string {
+	h, err := os.Hostname()
+	if err != nil {
+		return "unknown"
+	}
+
+	return h
 }
