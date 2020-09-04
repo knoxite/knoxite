@@ -92,6 +92,7 @@ func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string, exclu
 			err := DecodeArchive(prog, repository, *arc, path)
 			if err != nil {
 				p := newProgressError(err)
+				p.Path = arc.Path
 				prog <- p
 				break
 			}
