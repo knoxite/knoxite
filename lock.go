@@ -2,8 +2,6 @@ package knoxite
 
 import (
 	"fmt"
-	"os"
-	"os/user"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -71,22 +69,4 @@ func (lock Lock) Save(repository *Repository) error {
 	}
 
 	return nil
-}
-
-func CurrentUser() string {
-	usr, err := user.Current()
-	if err != nil {
-		return "unknown"
-	}
-
-	return usr.Username
-}
-
-func CurrentHost() string {
-	h, err := os.Hostname()
-	if err != nil {
-		return "unknown"
-	}
-
-	return h
 }
