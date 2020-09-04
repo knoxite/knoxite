@@ -78,6 +78,9 @@ func configureStoreOpts(cmd *cobra.Command, opts *StoreOptions) {
 		if !cmd.Flags().Changed("excludes") {
 			opts.Excludes = rep.StoreExcludes
 		}
+		if !cmd.Flags().Changed("pedantic") {
+			opts.Pedantic = rep.Pedantic
+		}
 	}
 }
 

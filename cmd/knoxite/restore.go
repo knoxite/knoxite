@@ -59,6 +59,9 @@ func configureRestoreOpts(cmd *cobra.Command, opts *RestoreOptions) {
 		if !cmd.Flags().Changed("excludes") {
 			opts.Excludes = rep.RestoreExcludes
 		}
+		if !cmd.Flags().Changed("pedantic") {
+			opts.Pedantic = rep.Pedantic
+		}
 	}
 }
 
