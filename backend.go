@@ -63,7 +63,7 @@ type Backend interface {
 
 	// LockRepository locks the repository and prevents other instances from
 	// concurrent access
-	LockRepository() error
+	LockRepository(data []byte) ([]byte, error)
 	// UnlockRepository releases the lock
 	UnlockRepository() error
 }

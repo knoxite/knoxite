@@ -66,7 +66,7 @@ func NewRepository(path, password string) (Repository, error) {
 		return repository, err
 	}
 
-	err = repository.backend.LockRepository()
+	err = repository.lock()
 	return repository, err
 }
 
@@ -97,12 +97,6 @@ func OpenRepository(path, password string, rw bool) (Repository, error) {
 	if err != nil {
 		return repository, err
 	}
-	if rw {
-		err = backend.LockRepository()
-		if err != nil {
-			return repository, err
-		}
-	}
 
 	pipe, err := NewDecodingPipeline(CompressionNone, EncryptionAES, password)
 	if err != nil {
@@ -111,13 +105,6 @@ func OpenRepository(path, password string, rw bool) (Repository, error) {
 	err = pipe.Decode(b, &repository)
 	if err != nil {
 		return repository, ErrOpenRepositoryFailed
-	}
-	if repository.Version < RepositoryVersion {
-		// migrate to current version
-		err = repository.Migrate()
-		if err != nil {
-			return repository, err
-		}
 	}
 
 	for _, url := range repository.Paths {
@@ -128,15 +115,39 @@ func OpenRepository(path, password string, rw bool) (Repository, error) {
 		repository.backend.AddBackend(&backend)
 	}
 
+	if rw {
+		err = repository.lock()
+		if err != nil {
+			return repository, err
+		}
+	}
+
+	if repository.Version < RepositoryVersion {
+		// migrate to current version
+		err = repository.Migrate()
+		if err != nil {
+			return repository, err
+		}
+	}
+
 	return repository, err
 }
 
 func (r *Repository) Close() error {
 	if r.rwLock {
-		return r.backend.UnlockRepository()
+		return r.unlock()
 	}
 
 	return nil
+}
+
+func (r *Repository) lock() error {
+	lock := NewLock()
+	return lock.Save(r)
+}
+
+func (r *Repository) unlock() error {
+	return r.backend.UnlockRepository()
 }
 
 // AddVolume adds a volume to a repository.

@@ -7,7 +7,9 @@
 
 package knoxite
 
-import "errors"
+import (
+	"errors"
+)
 
 // BackendManager stores data on multiple backends.
 type BackendManager struct {
@@ -176,15 +178,18 @@ func (backend *BackendManager) SaveRepository(b []byte) error {
 	return nil
 }
 
-func (backend *BackendManager) LockRepository() error {
+func (backend *BackendManager) LockRepository(b []byte) ([]byte, error) {
 	for _, be := range backend.Backends {
-		err := (*be).LockRepository()
+		lock, err := (*be).LockRepository(b)
 		if err != nil {
-			return err
+			return nil, err
+		}
+		if lock != nil {
+			return lock, nil
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (backend *BackendManager) UnlockRepository() error {

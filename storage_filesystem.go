@@ -172,14 +172,14 @@ func (backend StorageFilesystem) SaveRepository(b []byte) error {
 
 // LockRepository locks the repository and prevents other instances from
 // concurrent access.
-func (backend StorageFilesystem) LockRepository() error {
+func (backend StorageFilesystem) LockRepository(b []byte) ([]byte, error) {
 	b, err := (*backend.storage).ReadFile(backend.lockPath)
 	if err == nil {
-		return ErrRepositoryLocked
+		return b, ErrRepositoryLocked
 	}
 
 	_, err = (*backend.storage).WriteFile(backend.lockPath, b)
-	return err
+	return nil, err
 }
 
 // UnlockRepository releases the lock.

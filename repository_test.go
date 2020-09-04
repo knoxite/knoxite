@@ -100,7 +100,11 @@ func TestRepositoryChangePassword(t *testing.T) {
 		t.Errorf("Failed creating repository: %s", err)
 		return
 	}
-	repo.Close()
+	err = repo.Close()
+	if err != nil {
+		t.Errorf("Failed closing repository: %s", err)
+		return
+	}
 
 	repo, err = OpenRepository(dir, testPassword, true)
 	if err != nil {

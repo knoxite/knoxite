@@ -235,9 +235,9 @@ func (backend *BackblazeStorage) SaveRepository(data []byte) error {
 
 // LockRepository locks the repository and prevents other instances from
 // concurrent access.
-func (backend *BackblazeStorage) LockRepository() error {
+func (backend *BackblazeStorage) LockRepository(data []byte) ([]byte, error) {
 	// TODO: implement
-	return nil
+	return nil, nil
 }
 
 // UnlockRepository releases the lock.
