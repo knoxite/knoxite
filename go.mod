@@ -24,7 +24,7 @@ require (
 	github.com/muesli/goprogressbar v0.0.0-20200829150239-abc87a99d0c4
 	github.com/muesli/gotable v0.0.0-20190807045009-bcaa6df995ab
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/pkg/sftp v1.11.0
+	github.com/pkg/sftp v1.12.0
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7 // indirect
 	github.com/restic/chunker v0.4.0
 	github.com/segmentio/go-env v1.1.0 // indirect
@@ -37,7 +37,7 @@ require (
 	github.com/tj/go-dropy v0.0.0-20151223190506-225699a12156
 	github.com/ulikunitz/xz v0.5.8
 	github.com/ungerik/go-dry v0.0.0-20180411133923-654ae31114c8 // indirect
-	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
+	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2
 	golang.org/x/sys v0.0.0-20200523222454-059865788121
 	google.golang.org/api v0.28.0
