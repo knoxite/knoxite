@@ -122,6 +122,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 		Excludes:    opts.Excludes,
 		Compress:    compression,
 		Encrypt:     encryption,
+		Pedantic:    opts.Pedantic,
 		DataParts:   uint(len(repository.BackendManager().Backends) - int(opts.FailureTolerance)),
 		ParityParts: opts.FailureTolerance,
 	}

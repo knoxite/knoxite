@@ -36,6 +36,7 @@ type StoreOptions struct {
 	Excludes    []string
 	Compress    uint16
 	Encrypt     uint16
+	Pedantic    bool
 	DataParts   uint
 	ParityParts uint
 }
@@ -129,8 +130,12 @@ func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opt
 		for result := range ch {
 			if result.Error != nil {
 				p := newProgressError(result.Error)
+				p.Path = result.Archive.Path
 				progress <- p
-				break
+				if opts.Pedantic {
+					break
+				}
+				continue
 			}
 
 			archive := result.Archive
@@ -157,8 +162,12 @@ func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opt
 						continue
 					}
 					p = newProgressError(err)
+					p.Path = archive.Path
 					progress <- p
-					break
+					if opts.Pedantic {
+						break
+					}
+					continue
 				}
 				archive.Encrypted = opts.Encrypt
 				archive.Compressed = opts.Compress
@@ -166,9 +175,13 @@ func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opt
 				for cd := range chunkchan {
 					if cd.Error != nil {
 						p = newProgressError(err)
+						p.Path = archive.Path
 						progress <- p
-						close(progress)
-						return
+						if opts.Pedantic {
+							close(progress)
+							return
+						}
+						continue
 					}
 					chunk := cd.Chunk
 					// fmt.Printf("\tSplit %s (#%d, %d bytes), compression: %s, encryption: %s, hash: %s\n", id.Path, cd.Num, cd.Size, CompressionText(cd.Compressed), EncryptionText(cd.Encrypted), cd.Hash)
@@ -177,9 +190,13 @@ func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opt
 					n, err := repository.backend.StoreChunk(chunk)
 					if err != nil {
 						p = newProgressError(err)
+						p.Path = archive.Path
 						progress <- p
-						close(progress)
-						return
+						if opts.Pedantic {
+							close(progress)
+							return
+						}
+						continue
 					}
 
 					// release the memory, we don't need the data anymore
