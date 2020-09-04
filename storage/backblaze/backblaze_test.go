@@ -84,7 +84,7 @@ func TestStorageSaveRepository(t *testing.T) {
 	backendTest.SaveRepositoryTest(t)
 }
 
-func TestAvailableSpace(t *testing.T) {
+func TestStorageAvailableSpace(t *testing.T) {
 	backendTest.AvailableSpaceTest(t)
 }
 
