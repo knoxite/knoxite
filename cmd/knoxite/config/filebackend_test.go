@@ -58,6 +58,9 @@ func TestFileLoad(t *testing.T) {
 	if !reflect.DeepEqual(repo.RestoreExcludes, excludes) {
 		t.Errorf("Restore Excludes did not match:\nExpected: %v\nGot: %v", excludes, repo.RestoreExcludes)
 	}
+	if !repo.Pedantic {
+		t.Errorf("Expected 'pedantic' to be true, got: %v", repo.Pedantic)
+	}
 
 	// try to load the config from an absolute path using a URI
 	cwd, _ := os.Getwd()
