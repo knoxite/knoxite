@@ -82,3 +82,7 @@ func TestStorageStoreChunk(t *testing.T) {
 func TestStorageDeleteChunk(t *testing.T) {
 	backendTest.DeleteChunkTest(t)
 }
+
+func TestStorageLocking(t *testing.T) {
+	backendTest.LockingTest(t)
+}

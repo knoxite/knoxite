@@ -207,3 +207,47 @@ func (b *BackendTest) DeleteChunkTest(t *testing.T) {
 		t.Errorf("%s: Expected error, got nil", b.Description)
 	}
 }
+
+func (b *BackendTest) LockingTest(t *testing.T) {
+	lock := []byte("lock")
+
+	// test locking repository
+	l, err := b.Backend.LockRepository(lock)
+	if err != nil {
+		t.Errorf("%s: %s", b.Description, err)
+	}
+	if len(l) > 0 {
+		t.Errorf("%s: Expected empty lock, got %d bytes", b.Description, len(l))
+	}
+
+	// try locking while already locked
+	lnew, err := b.Backend.LockRepository(lock)
+	if err != nil {
+		t.Errorf("%s: %s", b.Description, err)
+	}
+	// should return the old lock
+	if !reflect.DeepEqual(lock, lnew) {
+		t.Errorf("%s: Data mismatch %s %s", b.Description)
+	}
+
+	// unlock
+	err = b.Backend.UnlockRepository()
+	if err != nil {
+		t.Errorf("%s: %s", b.Description, err)
+	}
+
+	// lock again
+	l, err = b.Backend.LockRepository(lock)
+	if err != nil {
+		t.Errorf("%s: %s", b.Description, err)
+	}
+	if len(l) > 0 {
+		t.Errorf("%s: Expected empty lock, got %d bytes", b.Description, len(l))
+	}
+
+	// clean up lock
+	err = b.Backend.UnlockRepository()
+	if err != nil {
+		t.Errorf("%s: %s", b.Description, err)
+	}
+}
