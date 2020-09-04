@@ -197,17 +197,41 @@ func (backend *MegaStorage) DeleteFile(path string) error {
 		return err
 	}
 
-	return backend.mega.Delete(fileToDelete, true)
+	err = backend.mega.Delete(fileToDelete, false)
+	if err != nil {
+		return err
+	}
+
+	fileToDelete, err = backend.getNodeFromFS(backend.mega.FS.GetTrash(), fileToDelete.GetName())
+	if err != nil {
+		// fmt.Println("not found in trash!", err)
+		return err
+	}
+
+	err = backend.mega.Delete(fileToDelete, true)
+	if err != nil {
+		// fmt.Println("can't delete in trash!", err)
+	}
+
+	// time.Sleep(time.Second)
+	return nil
 }
 
-// getNodeFromPath() returns the last node in a path on mega. It may be a file or a directory node.
+// getNodeFromPath() returns the last node in a path on mega.
+// It may be a file or a directory node.
 func (backend *MegaStorage) getNodeFromPath(path string) (*mega.Node, error) {
+	return backend.getNodeFromFS(backend.mega.FS.GetRoot(), path)
+}
+
+// getNodeFromFS() returns the last node in a path on mega, under the base node.
+// It may be a file or a directory node.
+func (backend *MegaStorage) getNodeFromFS(base *mega.Node, path string) (*mega.Node, error) {
 	path = strings.TrimPrefix(path, "/")
 	path = strings.TrimSuffix(path, "/")
 	slicedPath := strings.Split(path, "/")
 
 	// initially get mega filesystem root node to start our lookup from
-	currentRoot := backend.mega.FS.GetRoot()
+	currentRoot := base
 	for i, pathSlice := range slicedPath {
 		// get all nodes in current root directory
 		nodesInCurrentRoot, err := backend.mega.FS.PathLookup(currentRoot, []string{pathSlice})

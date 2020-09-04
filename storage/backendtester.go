@@ -227,7 +227,7 @@ func (b *BackendTest) LockingTest(t *testing.T) {
 	}
 	// should return the old lock
 	if !reflect.DeepEqual(lock, lnew) {
-		t.Errorf("%s: Data mismatch %s %s", b.Description)
+		t.Errorf("%s: Data mismatch", b.Description)
 	}
 
 	// unlock
