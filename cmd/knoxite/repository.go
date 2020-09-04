@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
-	"github.com/knoxite/knoxite/utils"
+	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 )
 
 var (

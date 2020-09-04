@@ -14,7 +14,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/knoxite/knoxite/utils"
+	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 	gap "github.com/muesli/go-app-paths"
 )
 

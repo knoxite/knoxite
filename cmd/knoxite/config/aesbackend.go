@@ -18,7 +18,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/knoxite/knoxite/utils"
+	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 	"golang.org/x/crypto/scrypt"
 )
 

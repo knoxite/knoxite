@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/knoxite/knoxite"
-	"github.com/knoxite/knoxite/utils"
+	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 )
 
 // Error declarations
