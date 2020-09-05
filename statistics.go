@@ -20,7 +20,7 @@ type Stats struct {
 	StorageSize uint64 `json:"stored_size"`
 	Transferred uint64 `json:"transferred"`
 	Errors      uint64 `json:"errors"`
-	Excluded    uint64 `json:"non_included_symlinks"`
+	Excluded    uint64 `json:"excluded"`
 }
 
 // Add accumulates other into s.

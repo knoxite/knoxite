@@ -66,7 +66,6 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 				rel, err := filepath.Rel(cwd, result.Archive.Path)
 				if err == nil && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 					result.Archive.Path = rel
-
 				}
 				if isSpecialPath(result.Archive.Path) {
 					continue
@@ -114,7 +113,6 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 					snapshot.Stats.SymLinks++
 				}
 				snapshot.mut.Unlock()
-
 			}
 
 			wg.Add(1)
