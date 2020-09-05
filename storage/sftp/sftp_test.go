@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 
 	backendTest = &storage.BackendTest{
 		URL:         sftpurl,
-		Protocols:   []string{"sftp"},
+		Protocols:   []string{"sftp", "ssh"},
 		Description: "SSH/SFTP Storage",
 		TearDown: func(tb *storage.BackendTest) {
 			u, err := url.Parse(tb.URL)

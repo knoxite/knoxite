@@ -98,7 +98,7 @@ func (*SFTPStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 }
 
 func (backend *SFTPStorage) Protocols() []string {
-	return []string{"sftp"}
+	return []string{"sftp", "ssh"}
 }
 
 func (backend *SFTPStorage) AvailableSpace() (uint64, error) {
