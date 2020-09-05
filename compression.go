@@ -20,7 +20,7 @@ import (
 	"github.com/ulikunitz/xz"
 )
 
-// Available compression algos
+// Available compression algos.
 const (
 	CompressionNone = iota
 	CompressionGZip
@@ -30,12 +30,12 @@ const (
 	CompressionZstd
 )
 
-// Compressor is a pipeline processor that compresses data
+// Compressor is a pipeline processor that compresses data.
 type Compressor struct {
 	Method uint16
 }
 
-// Process compresses the data
+// Process compresses the data.
 func (c Compressor) Process(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	var w io.WriteCloser
@@ -74,12 +74,12 @@ func (c Compressor) Process(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// Decompressor is a pipeline processor that decompresses data
+// Decompressor is a pipeline processor that decompresses data.
 type Decompressor struct {
 	Method uint16
 }
 
-// Process decompresses the data
+// Process decompresses the data.
 func (c Decompressor) Process(data []byte) ([]byte, error) {
 	var zr io.ReadCloser
 	var err error

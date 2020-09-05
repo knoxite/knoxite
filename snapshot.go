@@ -18,8 +18,7 @@ import (
 	uuid "github.com/nu7hatch/gouuid"
 )
 
-// A Snapshot is a compilation of one or many archives
-// MUST BE encrypted
+// A Snapshot is a compilation of one or many archives.
 type Snapshot struct {
 	mut sync.Mutex
 
@@ -30,7 +29,7 @@ type Snapshot struct {
 	Archives    map[string]*Archive `json:"items"`
 }
 
-// NewSnapshot creates a new snapshot
+// NewSnapshot creates a new snapshot.
 func NewSnapshot(description string) (*Snapshot, error) {
 	snapshot := Snapshot{
 		Date:        time.Now(),
@@ -65,7 +64,7 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 		for result := range c {
 			if result.Error == nil {
 				rel, err := filepath.Rel(cwd, result.Archive.Path)
-				if err == nil && !strings.HasPrefix(rel, "../") {
+				if err == nil && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 					result.Archive.Path = rel
 
 				}
@@ -147,7 +146,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 
 			archive := result.Archive
 			rel, err := filepath.Rel(cwd, archive.Path)
-			if err == nil && !strings.HasPrefix(rel, "../") {
+			if err == nil && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 				archive.Path = rel
 			}
 			if isSpecialPath(archive.Path) {
@@ -162,7 +161,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 
 			if archive.Type == File {
 				dataParts = uint(math.Max(1, float64(dataParts)))
-				chunkchan, err := chunkFile(archive.Path, compress, encrypt, repository.password, int(dataParts), int(parityParts))
+				chunkchan, err := chunkFile(archive.Path, compress, encrypt, repository.Key, int(dataParts), int(parityParts))
 				if err != nil {
 					if os.IsNotExist(err) {
 						// if this file has already been deleted before we could backup it, we can gracefully ignore it and continue
@@ -221,7 +220,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 	return progress
 }
 
-// Clone clones a snapshot
+// Clone clones a snapshot.
 func (snapshot *Snapshot) Clone() (*Snapshot, error) {
 	s, err := NewSnapshot(snapshot.Description)
 	if err != nil {
@@ -234,7 +233,7 @@ func (snapshot *Snapshot) Clone() (*Snapshot, error) {
 	return s, nil
 }
 
-// openSnapshot opens an existing snapshot
+// openSnapshot opens an existing snapshot.
 func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
 	snapshot := Snapshot{
 		Archives: make(map[string]*Archive),
@@ -243,7 +242,7 @@ func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
 	if err != nil {
 		return &snapshot, err
 	}
-	pipe, err := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
+	pipe, err := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
 	if err != nil {
 		return &snapshot, err
 	}
@@ -251,9 +250,9 @@ func openSnapshot(id string, repository *Repository) (*Snapshot, error) {
 	return &snapshot, err
 }
 
-// Save writes a snapshot's metadata
+// Save writes a snapshot's metadata.
 func (snapshot *Snapshot) Save(repository *Repository) error {
-	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
+	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
 	if err != nil {
 		return err
 	}
@@ -264,7 +263,7 @@ func (snapshot *Snapshot) Save(repository *Repository) error {
 	return repository.backend.SaveSnapshot(snapshot.ID, b)
 }
 
-// AddArchive adds an archive to a snapshot
+// AddArchive adds an archive to a snapshot.
 func (snapshot *Snapshot) AddArchive(archive *Archive) {
 	snapshot.Archives[archive.Path] = archive
 }

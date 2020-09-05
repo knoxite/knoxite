@@ -28,6 +28,6 @@ _testmain.go
 
 *~
 
-knoxite
-server/server
+cmd/knoxite/knoxite
+cmd/server/server
 dist/

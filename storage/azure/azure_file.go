@@ -19,7 +19,7 @@ import (
 	"github.com/knoxite/knoxite"
 )
 
-// AzureFileStorage stores data on an Azure File Storage
+// AzureFileStorage stores data on an Azure File Storage.
 type AzureFileStorage struct {
 	knoxite.StorageFilesystem
 	url        url.URL
@@ -31,8 +31,9 @@ func init() {
 	knoxite.RegisterStorageBackend(&AzureFileStorage{})
 }
 
-// NewBackend returns a AzureFileStorage backend
-// URL needs to be the Storage account file service URL endpoint (get it from the Azure portal)
+// NewBackend returns a AzureFileStorage backend.
+// URL needs to be the Storage account file service URL endpoint (get it from
+// the Azure portal).
 func (*AzureFileStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	if u.User == nil || u.User.Username() == "" {
 		return &AzureFileStorage{}, knoxite.ErrInvalidUsername
@@ -77,27 +78,27 @@ func (*AzureFileStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	return &backend, nil
 }
 
-// Location returns the type and location of the repository
+// Location returns the type and location of the repository.
 func (backend *AzureFileStorage) Location() string {
 	return backend.url.String()
 }
 
-// Close the backend
+// Close the backend.
 func (backend *AzureFileStorage) Close() error {
 	return nil
 }
 
-// Protocols returns the Protocol Schemes supported by this backend
+// Protocols returns the Protocol Schemes supported by this backend.
 func (backend *AzureFileStorage) Protocols() []string {
 	return []string{"azurefile"}
 }
 
-// Description returns a user-friendly description for this backend
+// Description returns a user-friendly description for this backend.
 func (backend *AzureFileStorage) Description() string {
 	return "Azure file storage"
 }
 
-// AvailableSpace returns the free space on this backend
+// AvailableSpace returns the free space on this backend.
 func (backend *AzureFileStorage) AvailableSpace() (uint64, error) {
 	shareUrl := azfile.NewShareURL(backend.endpoint, azfile.NewPipeline(&backend.credential, azfile.PipelineOptions{}))
 	props, err := shareUrl.GetProperties(context.Background())
@@ -114,7 +115,7 @@ func (backend *AzureFileStorage) AvailableSpace() (uint64, error) {
 	return uint64(props.Quota())*gb - uint64(stats.ShareUsageBytes), nil
 }
 
-// CreatePath creates a dir including all its parent dirs, when required
+// CreatePath creates a dir including all its parent dirs, when required.
 func (backend *AzureFileStorage) CreatePath(p string) error {
 	p = strings.TrimPrefix(p, "/")
 	p = strings.TrimSuffix(p, "/")
@@ -136,7 +137,7 @@ func (backend *AzureFileStorage) CreatePath(p string) error {
 	return nil
 }
 
-// Stat returns the size of a file
+// Stat returns the size of a file.
 func (backend *AzureFileStorage) Stat(p string) (uint64, error) {
 	u := backend.endpoint
 	u.Path = path.Join(u.Path, p)
@@ -151,7 +152,7 @@ func (backend *AzureFileStorage) Stat(p string) (uint64, error) {
 	return uint64(props.ContentLength()), nil
 }
 
-// ReadFile reads a file from Azure file storage
+// ReadFile reads a file from Azure file storage.
 func (backend *AzureFileStorage) ReadFile(p string) ([]byte, error) {
 	u := backend.endpoint
 	u.Path = path.Join(u.Path, p)
@@ -172,7 +173,7 @@ func (backend *AzureFileStorage) ReadFile(p string) ([]byte, error) {
 	return bytes, nil
 }
 
-// WriteFile writes a file on Azure file storage
+// WriteFile writes a file on Azure file storage.
 func (backend *AzureFileStorage) WriteFile(p string, data []byte) (size uint64, err error) {
 	u := backend.endpoint
 	u.Path = path.Join(u.Path, p)
@@ -191,7 +192,7 @@ func (backend *AzureFileStorage) WriteFile(p string, data []byte) (size uint64, 
 	return uint64(len(data)), nil
 }
 
-// DeleteFile deletes a file from Azure file storage
+// DeleteFile deletes a file from Azure file storage.
 func (backend *AzureFileStorage) DeleteFile(p string) error {
 	u := backend.endpoint
 	u.Path = path.Join(u.Path, p)

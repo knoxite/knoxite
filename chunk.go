@@ -19,8 +19,7 @@ const (
 	preferredChunkSize = 1 * (1 << 20) // 1 MiB
 )
 
-// Chunk stores an encrypted chunk alongside with its metadata
-// MUST BE encrypted
+// Chunk stores an encrypted chunk alongside with its metadata.
 type Chunk struct {
 	Data          *[][]byte `json:"-"`
 	DataParts     uint      `json:"data_parts"`
@@ -32,7 +31,7 @@ type Chunk struct {
 	Num           uint      `json:"num"`
 }
 
-// ChunkResult is used to transfer either a chunk or an error down the channel
+// ChunkResult is used to transfer either a chunk or an error down the channel.
 type ChunkResult struct {
 	Chunk Chunk
 	Error error
@@ -43,7 +42,7 @@ type inputChunk struct {
 	Num  uint
 }
 
-func processChunk(id int, compress, encrypt uint16, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- ChunkResult, wg *sync.WaitGroup) {
+func processChunk(_ int, compress, encrypt uint16, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- ChunkResult, wg *sync.WaitGroup) {
 	pipe, _ := NewEncodingPipeline(compress, encrypt, password)
 
 	for j := range jobs {
@@ -87,7 +86,7 @@ func processChunk(id int, compress, encrypt uint16, password string, dataParts, 
 	}
 }
 
-// chunkFile divides filename into chunks of 1MiB each
+// chunkFile divides filename into chunks of 1MiB each.
 func chunkFile(filename string, compress, encrypt uint16, password string, dataParts, parityParts int) (chan ChunkResult, error) {
 	c := make(chan ChunkResult)
 

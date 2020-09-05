@@ -8,39 +8,49 @@
 package knoxite
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 )
 
-// A Repository is a collection of backup snapshots
-// MUST BE encrypted
+// A Repository is a collection of backup snapshots.
 type Repository struct {
 	Version uint      `json:"version"`
 	Volumes []*Volume `json:"volumes"`
 	Paths   []string  `json:"storage"`
+	Key     string    `json:"key"` // key for encrypting data stored with knoxite
 	// Owner   string    `json:"owner"`
 
 	backend  BackendManager
-	password string
+	password string // password for knoxite repository file
 }
 
 // Const declarations
 const (
-	RepositoryVersion = 3
+	RepositoryVersion = 4
 )
 
 // Error declarations
 var (
-	ErrRepositoryIncompatible = errors.New("The repository is not compatible with this version of Knoxite")
-	ErrOpenRepositoryFailed   = errors.New("Wrong password or corrupted repository")
-	ErrVolumeNotFound         = errors.New("Volume not found")
-	ErrSnapshotNotFound       = errors.New("Snapshot not found")
+	ErrRepositoryIncompatible  = errors.New("The repository is not compatible with this version of Knoxite")
+	ErrOpenRepositoryFailed    = errors.New("Wrong password or corrupted repository")
+	ErrVolumeNotFound          = errors.New("Volume not found")
+	ErrSnapshotNotFound        = errors.New("Snapshot not found")
+	ErrGenerateRandomKeyFailed = errors.New("Failed to generate a random encryption key for new repository")
 )
 
-// NewRepository returns a new repository
+// NewRepository returns a new repository.
 func NewRepository(path, password string) (Repository, error) {
+	// A random key of 32 is considered safe right now and may be increased later
+	key, err := generateRandomKey(32)
+	if err != nil {
+		return Repository{}, ErrGenerateRandomKeyFailed
+	}
+
 	repository := Repository{
 		Version:  RepositoryVersion,
 		password: password,
+		Key:      key,
 	}
 
 	backend, err := BackendFromURL(path)
@@ -53,7 +63,19 @@ func NewRepository(path, password string) (Repository, error) {
 	return repository, err
 }
 
-// OpenRepository opens an existing repository
+// generateRandomKey generates a random key with a specific length.
+func generateRandomKey(length int) (string, error) {
+	b := make([]byte, length)
+
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+// OpenRepository opens an existing repository and migrates it if possible.
 func OpenRepository(path, password string) (Repository, error) {
 	repository := Repository{
 		password: password,
@@ -77,7 +99,11 @@ func OpenRepository(path, password string) (Repository, error) {
 		return repository, ErrOpenRepositoryFailed
 	}
 	if repository.Version < RepositoryVersion {
-		return repository, ErrRepositoryIncompatible
+		// migrate to current version
+		err = repository.Migrate()
+		if err != nil {
+			return repository, err
+		}
 	}
 
 	for _, url := range repository.Paths {
@@ -91,13 +117,13 @@ func OpenRepository(path, password string) (Repository, error) {
 	return repository, err
 }
 
-// AddVolume adds a volume to a repository
+// AddVolume adds a volume to a repository.
 func (r *Repository) AddVolume(volume *Volume) error {
 	r.Volumes = append(r.Volumes, volume)
 	return nil
 }
 
-// FindVolume finds a volume within a repository
+// FindVolume finds a volume within a repository.
 func (r *Repository) FindVolume(id string) (*Volume, error) {
 	if id == "latest" && len(r.Volumes) > 0 {
 		return r.Volumes[len(r.Volumes)-1], nil
@@ -112,7 +138,7 @@ func (r *Repository) FindVolume(id string) (*Volume, error) {
 	return &Volume{}, ErrVolumeNotFound
 }
 
-// FindSnapshot finds a snapshot within a repository
+// FindSnapshot finds a snapshot within a repository.
 func (r *Repository) FindSnapshot(id string) (*Volume, *Snapshot, error) {
 	if id == "latest" {
 		latestVolume := &Volume{}
@@ -146,7 +172,7 @@ func (r *Repository) FindSnapshot(id string) (*Volume, *Snapshot, error) {
 	return &Volume{}, &Snapshot{}, ErrSnapshotNotFound
 }
 
-// IsEmpty returns true if there a no snapshots stored in a repository
+// IsEmpty returns true if there a no snapshots stored in a repository.
 func (r *Repository) IsEmpty() bool {
 	for _, volume := range r.Volumes {
 		if len(volume.Snapshots) > 0 {
@@ -157,12 +183,12 @@ func (r *Repository) IsEmpty() bool {
 	return true
 }
 
-// BackendManager returns the repository's BackendManager
+// BackendManager returns the repository's BackendManager.
 func (r *Repository) BackendManager() *BackendManager {
 	return &r.backend
 }
 
-// Init creates a new repository
+// Init creates a new repository.
 func (r *Repository) init() error {
 	err := r.backend.InitRepository()
 	if err != nil {
@@ -172,7 +198,7 @@ func (r *Repository) init() error {
 	return r.Save()
 }
 
-// Save writes a repository's metadata
+// Save writes a repository's metadata.
 func (r *Repository) Save() error {
 	r.Paths = r.backend.Locations()
 
@@ -185,4 +211,31 @@ func (r *Repository) Save() error {
 		return err
 	}
 	return r.backend.SaveRepository(b)
+}
+
+// Changes password of repository.
+func (r *Repository) ChangePassword(newPassword string) error {
+	r.password = newPassword
+
+	return r.Save()
+}
+
+// Migrates a repository to the current version, if possible.
+func (r *Repository) Migrate() error {
+	switch v := r.Version; {
+	case v < 3:
+		return ErrRepositoryIncompatible
+	case v == 3:
+		// since the introduction of the repo passwd command there are two keys:
+		// - Key is for encryption of the data and will be stored in encrypted repo file
+		// - password is for the encryption of the repository (which holds Key)
+		// to migrate we need to use the existing repository password as key
+		if r.Key == "" {
+			r.Key = r.password
+			r.Version = 4
+
+			return r.Save()
+		}
+	}
+	return ErrRepositoryIncompatible
 }

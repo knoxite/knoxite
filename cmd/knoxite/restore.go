@@ -41,10 +41,24 @@ var (
 			if len(args) < 2 {
 				return ErrTargetMissing
 			}
+
+			configureRestoreOpts(cmd, &restoreOpts)
 			return executeRestore(args[0], args[1], restoreOpts)
 		},
 	}
 )
+
+// configureRestoreOpts will compare the values from the configuration file and
+// the user set command line flags.
+// Values set via the command line flags will overwrite settings stored in the
+// configuration file.
+func configureRestoreOpts(cmd *cobra.Command, opts *RestoreOptions) {
+	if rep, ok := cfg.Repositories[globalOpts.Repo]; ok {
+		if !cmd.Flags().Changed("excludes") {
+			opts.Excludes = rep.RestoreExcludes
+		}
+	}
+}
 
 func initRestoreFlags(f func() *pflag.FlagSet) {
 	f().StringArrayVarP(&restoreOpts.Excludes, "excludes", "x", []string{}, "list of excludes")

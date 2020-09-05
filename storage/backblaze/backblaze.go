@@ -10,6 +10,7 @@ package backblaze
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"net/url"
 	"strconv"
@@ -20,7 +21,7 @@ import (
 	"github.com/knoxite/knoxite"
 )
 
-// BackblazeStorage stores data on a remote Backblaze
+// BackblazeStorage stores data on a remote Backblaze.
 type BackblazeStorage struct {
 	url            url.URL
 	repositoryFile string
@@ -33,7 +34,7 @@ func init() {
 	knoxite.RegisterStorageBackend(&BackblazeStorage{})
 }
 
-// NewBackend returns a BackblazeStorage backend
+// NewBackend returns a BackblazeStorage backend.
 func (*BackblazeStorage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	// Checking username and password
 	if URL.User == nil || URL.User.Username() == "" {
@@ -77,36 +78,35 @@ func (*BackblazeStorage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		Bucket:         bucket,
 		backblaze:      cl,
 	}, nil
-
 }
 
-// Location returns the type and location of the repository
+// Location returns the type and location of the repository.
 func (backend *BackblazeStorage) Location() string {
 	return backend.url.String()
 }
 
-// Close the backend
+// Close the backend.
 func (backend *BackblazeStorage) Close() error {
 	return nil
 }
 
-// Protocols returns the Protocol Schemes supported by this backend
+// Protocols returns the Protocol Schemes supported by this backend.
 func (backend *BackblazeStorage) Protocols() []string {
 	return []string{"backblaze"}
 }
 
-// Description returns a user-friendly description for this backend
+// Description returns a user-friendly description for this backend.
 func (backend *BackblazeStorage) Description() string {
 	return "Backblaze Storage"
 }
 
-// AvailableSpace returns the free space on this backend
+// AvailableSpace returns the free space on this backend.
 func (backend *BackblazeStorage) AvailableSpace() (uint64, error) {
 	// Currently not supported
-	return 0, knoxite.ErrAvailableSpaceUnknown
+	return 0, knoxite.ErrAvailableSpaceUnlimited
 }
 
-// LoadChunk loads a Chunk from backblaze
+// LoadChunk loads a Chunk from backblaze.
 func (backend *BackblazeStorage) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 	_, obj, err := backend.Bucket.DownloadFileByName(fileName)
@@ -118,7 +118,7 @@ func (backend *BackblazeStorage) LoadChunk(shasum string, part, totalParts uint)
 	return ioutil.ReadAll(obj)
 }
 
-// StoreChunk stores a single Chunk on backblaze
+// StoreChunk stores a single Chunk on backblaze.
 func (backend *BackblazeStorage) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
@@ -131,14 +131,14 @@ func (backend *BackblazeStorage) StoreChunk(shasum string, part, totalParts uint
 
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	file, err := backend.Bucket.UploadFile(fileName, metadata, buf)
+	file, err := backend.upload(fileName, metadata, buf)
 	if err != nil {
 		return 0, err
 	}
 	return uint64(file.ContentLength), nil
 }
 
-// DeleteChunk deletes a single Chunk
+// DeleteChunk deletes a single Chunk.
 func (backend *BackblazeStorage) DeleteChunk(shasum string, part, totalParts uint) error {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
@@ -154,7 +154,7 @@ func (backend *BackblazeStorage) DeleteChunk(shasum string, part, totalParts uin
 	return err
 }
 
-// LoadSnapshot loads a snapshot
+// LoadSnapshot loads a snapshot.
 func (backend *BackblazeStorage) LoadSnapshot(id string) ([]byte, error) {
 	_, obj, err := backend.Bucket.DownloadFileByName("snapshot-" + id)
 	if err != nil {
@@ -165,15 +165,15 @@ func (backend *BackblazeStorage) LoadSnapshot(id string) ([]byte, error) {
 	return ioutil.ReadAll(obj)
 }
 
-// SaveSnapshot stores a snapshot
+// SaveSnapshot stores a snapshot.
 func (backend *BackblazeStorage) SaveSnapshot(id string, data []byte) error {
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	_, err := backend.Bucket.UploadFile("snapshot-"+id, metadata, buf)
+	_, err := backend.upload("snapshot-"+id, metadata, buf)
 	return err
 }
 
-// LoadChunkIndex reads the chunk-index
+// LoadChunkIndex reads the chunk-index.
 func (backend *BackblazeStorage) LoadChunkIndex() ([]byte, error) {
 	_, obj, err := backend.Bucket.DownloadFileByName(backend.chunkIndexFile)
 	if err != nil {
@@ -184,15 +184,15 @@ func (backend *BackblazeStorage) LoadChunkIndex() ([]byte, error) {
 	return ioutil.ReadAll(obj)
 }
 
-// SaveChunkIndex stores the chunk-index
+// SaveChunkIndex stores the chunk-index.
 func (backend *BackblazeStorage) SaveChunkIndex(data []byte) error {
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	_, err := backend.Bucket.UploadFile(backend.chunkIndexFile, metadata, buf)
+	_, err := backend.upload(backend.chunkIndexFile, metadata, buf)
 	return err
 }
 
-// InitRepository creates a new repository
+// InitRepository creates a new repository.
 func (backend *BackblazeStorage) InitRepository() error {
 	var placeholder []byte
 	buf := bytes.NewBuffer(placeholder)
@@ -200,13 +200,13 @@ func (backend *BackblazeStorage) InitRepository() error {
 	// Creating the files on backblaze
 	metadata := make(map[string]string)
 
-	if _, err := backend.Bucket.UploadFile(backend.repositoryFile, metadata, buf); err != nil {
+	if _, err := backend.upload(backend.repositoryFile, metadata, buf); err != nil {
 		return err
 	}
 	return nil
 }
 
-// LoadRepository reads the metadata for a repository
+// LoadRepository reads the metadata for a repository.
 func (backend *BackblazeStorage) LoadRepository() ([]byte, error) {
 	files, err := backend.findLatestFileVersion(backend.repositoryFile)
 	if err != nil {
@@ -225,11 +225,11 @@ func (backend *BackblazeStorage) LoadRepository() ([]byte, error) {
 	return ioutil.ReadAll(obj)
 }
 
-// SaveRepository stores the metadata for a repository
+// SaveRepository stores the metadata for a repository.
 func (backend *BackblazeStorage) SaveRepository(data []byte) error {
 	buf := bytes.NewBuffer(data)
 	metadata := make(map[string]string)
-	_, err := backend.Bucket.UploadFile(backend.repositoryFile, metadata, buf)
+	_, err := backend.upload(backend.repositoryFile, metadata, buf)
 	return err
 }
 
@@ -250,4 +250,21 @@ func (backend *BackblazeStorage) findLatestFileVersion(fileName string) ([]backb
 	}
 
 	return files, nil
+}
+
+func (backend *BackblazeStorage) upload(name string, meta map[string]string, file io.Reader) (*backblaze.File, error) {
+	// delete existing versions of a file, before reuploading
+	files, err := backend.findLatestFileVersion(backend.repositoryFile)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range files {
+		_, err := backend.Bucket.DeleteFileVersion(v.Name, v.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return backend.Bucket.UploadFile(name, meta, file)
 }

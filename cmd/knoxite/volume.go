@@ -17,7 +17,7 @@ import (
 	"github.com/knoxite/knoxite"
 )
 
-// VolumeInitOptions holds all the options that can be set for the 'volume init' command
+// VolumeInitOptions holds all the options that can be set for the 'volume init' command.
 type VolumeInitOptions struct {
 	Description string
 }

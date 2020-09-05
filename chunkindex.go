@@ -11,7 +11,7 @@ import (
 	"fmt"
 )
 
-// A ChunkIndexItem links a chunk with one or many snapshots
+// A ChunkIndexItem links a chunk with one or many snapshots.
 type ChunkIndexItem struct {
 	Hash        string   `json:"hash"`
 	DataParts   uint     `json:"data_parts"`
@@ -20,46 +20,43 @@ type ChunkIndexItem struct {
 	Snapshots   []string `json:"snapshots"`
 }
 
-// A ChunkIndex links chunks with snapshots
-// MUST BE encrypted
+// A ChunkIndex links chunks with snapshots.
 type ChunkIndex struct {
 	Chunks map[string]*ChunkIndexItem `json:"chunks"`
 }
 
-// OpenChunkIndex opens an existing chunkindex
+// OpenChunkIndex opens an existing chunkindex.
 func OpenChunkIndex(repository *Repository) (ChunkIndex, error) {
 	index := ChunkIndex{
 		Chunks: make(map[string]*ChunkIndexItem),
 	}
+
 	b, err := repository.backend.LoadChunkIndex()
-	if err == nil {
-		pipe, errp := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
-		if errp != nil {
-			return index, errp
-		}
-		errp = pipe.Decode(b, &index)
-		if errp != nil {
-			return index, errp
-		}
-	} else {
+	if err != nil {
 		if !repository.IsEmpty() {
 			fmt.Println("Chunk-Index is empty, re-indexing all snapshots...")
 			err = index.reindex(repository)
-			if err == nil {
-				if len(index.Chunks) > 0 {
-					fmt.Println("Successfully re-indexed snapshots.")
-				}
+			if err != nil {
+				return index, err
 			}
+			fmt.Println("Successfully re-indexed snapshots.")
 		}
 
 		err = index.Save(repository)
+		return index, err
 	}
+
+	pipe, err := NewDecodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
+	if err != nil {
+		return index, err
+	}
+	err = pipe.Decode(b, &index)
 	return index, err
 }
 
-// Save writes a chunk-index
+// Save writes a chunk-index.
 func (index *ChunkIndex) Save(repository *Repository) error {
-	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.password)
+	pipe, err := NewEncodingPipeline(CompressionLZMA, EncryptionAES, repository.Key)
 	if err != nil {
 		return err
 	}
@@ -70,7 +67,7 @@ func (index *ChunkIndex) Save(repository *Repository) error {
 	return repository.backend.SaveChunkIndex(b)
 }
 
-// Pack deletes unreferenced chunks and removes them from the index
+// Pack deletes unreferenced chunks and removes them from the index.
 func (index *ChunkIndex) Pack(repository *Repository) (freedSize uint64, err error) {
 	chunks := make(map[string]*ChunkIndexItem)
 
@@ -112,7 +109,7 @@ func (index *ChunkIndex) reindex(repository *Repository) error {
 	return nil
 }
 
-// AddArchive updates chunk-index with the new chunks
+// AddArchive updates chunk-index with the new chunks.
 func (index *ChunkIndex) AddArchive(archive *Archive, snapshot string) {
 	for _, chunk := range archive.Chunks {
 		c, ok := index.Chunks[chunk.Hash]
@@ -131,7 +128,7 @@ func (index *ChunkIndex) AddArchive(archive *Archive, snapshot string) {
 	}
 }
 
-// RemoveSnapshot removes all references to snapshot from the chunk-index
+// RemoveSnapshot removes all references to snapshot from the chunk-index.
 func (index *ChunkIndex) RemoveSnapshot(snapshot string) {
 	for _, chunk := range index.Chunks {
 		snapshots := []string{}

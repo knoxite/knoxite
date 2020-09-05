@@ -19,8 +19,7 @@ const (
 	SymLink          // A SymLink
 )
 
-// Archive contains all metadata belonging to a file/directory
-// MUST BE encrypted
+// Archive contains all metadata belonging to a file/directory.
 type Archive struct {
 	Path        string      `json:"path"`               // Where in filesystem does this belong to
 	PointsTo    string      `json:"pointsto,omitempty"` // If this is a SymLink, where does it point to
@@ -36,14 +35,14 @@ type Archive struct {
 	Type        uint8       `json:"type"`               // Is this a File, Directory or SymLink
 }
 
-// ArchiveResult wraps Archive and an error
-// Either Archive or Error is nil
+// ArchiveResult wraps Archive and an error.
+// Either Archive or Error is nil.
 type ArchiveResult struct {
 	Archive *Archive
 	Error   error
 }
 
-// IndexOfChunk returns the slice-index for a specific chunk number
+// IndexOfChunk returns the slice-index for a specific chunk number.
 func (arc *Archive) IndexOfChunk(chunkNum uint) (int, error) {
 	for i, chunk := range arc.Chunks {
 		if chunk.Num == chunkNum {
@@ -54,8 +53,8 @@ func (arc *Archive) IndexOfChunk(chunkNum uint) (int, error) {
 	return 0, &ChunkError{chunkNum}
 }
 
-// ChunkForOffset returns the chunk containing data beginning at offset
-// Returns chunk-number, offset inside this chunk, error
+// ChunkForOffset returns the chunk containing data beginning at offset.
+// Returns chunk-number, offset inside this chunk, error.
 func (arc *Archive) ChunkForOffset(offset int) (uint, int, error) {
 	size := 0
 	for i := 0; i < len(arc.Chunks); i++ {

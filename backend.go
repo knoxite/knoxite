@@ -14,13 +14,13 @@ import (
 	"strings"
 )
 
-// BackendFactory is used to initialize a new backend
+// BackendFactory is used to initialize a new backend.
 type BackendFactory interface {
 	NewBackend(url url.URL) (Backend, error)
 	Protocols() []string
 }
 
-// Backend is used to store and access data
+// Backend is used to store and access data.
 type Backend interface {
 	// Location returns the type and location of the repository
 	Location() string
@@ -64,15 +64,17 @@ type Backend interface {
 
 // Error declarations
 var (
-	ErrRepositoryExists      = errors.New("Repository seems to already exist")
-	ErrInvalidRepositoryURL  = errors.New("Invalid repository url specified")
-	ErrAvailableSpaceUnknown = errors.New("Available space is unknown or undefined")
-	ErrInvalidUsername       = errors.New("Username wrong or missing")
+	ErrRepositoryExists        = errors.New("Repository seems to already exist")
+	ErrInvalidRepositoryURL    = errors.New("Invalid repository url specified")
+	ErrAvailableSpaceUnknown   = errors.New("Available space is unknown or undefined")
+	ErrAvailableSpaceUnlimited = errors.New("Available space is unlimited")
+	ErrInvalidUsername         = errors.New("Username wrong or missing")
 
 	backends = []BackendFactory{}
 )
 
-// RegisterStorageBackend needs to be called by storage backends to register themselves
+// RegisterStorageBackend needs to be called by storage backends to register
+// themselves.
 func RegisterStorageBackend(factory BackendFactory) {
 	backends = append(backends, factory)
 }
@@ -89,7 +91,7 @@ func newBackendFromProtocol(url url.URL) (Backend, error) {
 	return nil, ErrInvalidRepositoryURL
 }
 
-// BackendFromURL returns the matching backend for path
+// BackendFromURL returns the matching backend for path.
 func BackendFromURL(path string) (Backend, error) {
 	if !strings.Contains(path, "://") {
 		if !filepath.IsAbs(path) {
@@ -98,6 +100,9 @@ func BackendFromURL(path string) (Backend, error) {
 			if err != nil {
 				return nil, err
 			}
+		}
+		if !strings.HasPrefix(path, "/") {
+			path = "/" + path
 		}
 		path = "file://" + path
 	}

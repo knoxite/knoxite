@@ -22,7 +22,7 @@ import (
 	"github.com/knoxite/knoxite"
 )
 
-// S3Storage stores data on a remote AmazonS3
+// S3Storage stores data on a remote AmazonS3.
 type S3Storage struct {
 	url              url.URL
 	chunkBucket      string
@@ -36,7 +36,7 @@ func init() {
 	knoxite.RegisterStorageBackend(&S3Storage{})
 }
 
-// NewBackend returns a S3Storage backend
+// NewBackend returns a S3Storage backend.
 func (*S3Storage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	var ssl bool
 	switch URL.Scheme {
@@ -85,32 +85,32 @@ func (*S3Storage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	}, nil
 }
 
-// Location returns the type and location of the repository
+// Location returns the type and location of the repository.
 func (backend *S3Storage) Location() string {
 	return backend.url.String()
 }
 
-// Close the backend
+// Close the backend.
 func (backend *S3Storage) Close() error {
 	return nil
 }
 
-// Protocols returns the Protocol Schemes supported by this backend
+// Protocols returns the Protocol Schemes supported by this backend.
 func (backend *S3Storage) Protocols() []string {
 	return []string{"s3", "s3s"}
 }
 
-// Description returns a user-friendly description for this backend
+// Description returns a user-friendly description for this backend.
 func (backend *S3Storage) Description() string {
 	return "Amazon S3 Storage"
 }
 
-// AvailableSpace returns the free space on this backend
+// AvailableSpace returns the free space on this backend.
 func (backend *S3Storage) AvailableSpace() (uint64, error) {
-	return uint64(0), knoxite.ErrAvailableSpaceUnknown
+	return uint64(0), knoxite.ErrAvailableSpaceUnlimited
 }
 
-// LoadChunk loads a Chunk from network
+// LoadChunk loads a Chunk from network.
 func (backend *S3Storage) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 	obj, err := backend.client.GetObject(backend.chunkBucket, fileName, minio.GetObjectOptions{})
@@ -122,7 +122,7 @@ func (backend *S3Storage) LoadChunk(shasum string, part, totalParts uint) ([]byt
 	return ioutil.ReadAll(obj)
 }
 
-// StoreChunk stores a single Chunk on network
+// StoreChunk stores a single Chunk on network.
 func (backend *S3Storage) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
@@ -136,7 +136,7 @@ func (backend *S3Storage) StoreChunk(shasum string, part, totalParts uint, data 
 	return uint64(i), err
 }
 
-// DeleteChunk deletes a single Chunk
+// DeleteChunk deletes a single Chunk.
 func (backend *S3Storage) DeleteChunk(shasum string, part, totalParts uint) error {
 	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
 
@@ -148,7 +148,7 @@ func (backend *S3Storage) DeleteChunk(shasum string, part, totalParts uint) erro
 	return nil
 }
 
-// LoadSnapshot loads a snapshot
+// LoadSnapshot loads a snapshot.
 func (backend *S3Storage) LoadSnapshot(id string) ([]byte, error) {
 	obj, err := backend.client.GetObject(backend.snapshotBucket, id, minio.GetObjectOptions{})
 	if err != nil {
@@ -159,14 +159,14 @@ func (backend *S3Storage) LoadSnapshot(id string) ([]byte, error) {
 	return ioutil.ReadAll(obj)
 }
 
-// SaveSnapshot stores a snapshot
+// SaveSnapshot stores a snapshot.
 func (backend *S3Storage) SaveSnapshot(id string, data []byte) error {
 	buf := bytes.NewBuffer(data)
 	_, err := backend.client.PutObject(backend.snapshotBucket, id, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
 	return err
 }
 
-// LoadChunkIndex reads the chunk-index
+// LoadChunkIndex reads the chunk-index.
 func (backend *S3Storage) LoadChunkIndex() ([]byte, error) {
 	obj, err := backend.client.GetObject(backend.chunkBucket, knoxite.ChunkIndexFilename, minio.GetObjectOptions{})
 	if err != nil {
@@ -177,14 +177,14 @@ func (backend *S3Storage) LoadChunkIndex() ([]byte, error) {
 	return ioutil.ReadAll(obj)
 }
 
-// SaveChunkIndex stores the chunk-index
+// SaveChunkIndex stores the chunk-index.
 func (backend *S3Storage) SaveChunkIndex(data []byte) error {
 	buf := bytes.NewBuffer(data)
 	_, err := backend.client.PutObject(backend.chunkBucket, knoxite.ChunkIndexFilename, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
 	return err
 }
 
-// InitRepository creates a new repository
+// InitRepository creates a new repository.
 func (backend *S3Storage) InitRepository() error {
 	chunkBucketExist, err := backend.client.BucketExists(backend.chunkBucket)
 	if err != nil {
@@ -228,7 +228,7 @@ func (backend *S3Storage) InitRepository() error {
 	return nil
 }
 
-// LoadRepository reads the metadata for a repository
+// LoadRepository reads the metadata for a repository.
 func (backend *S3Storage) LoadRepository() ([]byte, error) {
 	obj, err := backend.client.GetObject(backend.repositoryBucket, knoxite.RepoFilename, minio.GetObjectOptions{})
 	if err != nil {
@@ -239,7 +239,7 @@ func (backend *S3Storage) LoadRepository() ([]byte, error) {
 	return ioutil.ReadAll(obj)
 }
 
-// SaveRepository stores the metadata for a repository
+// SaveRepository stores the metadata for a repository.
 func (backend *S3Storage) SaveRepository(data []byte) error {
 	buf := bytes.NewBuffer(data)
 	_, err := backend.client.PutObject(backend.repositoryBucket, knoxite.RepoFilename, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})

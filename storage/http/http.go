@@ -20,7 +20,7 @@ import (
 	"github.com/knoxite/knoxite"
 )
 
-// HTTPStorage stores data on a remote HTTP server
+// HTTPStorage stores data on a remote HTTP server.
 type HTTPStorage struct {
 	URL url.URL
 }
@@ -29,39 +29,39 @@ func init() {
 	knoxite.RegisterStorageBackend(&HTTPStorage{})
 }
 
-// NewBackend returns a HTTPStorage backend
+// NewBackend returns a HTTPStorage backend.
 func (*HTTPStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	return &HTTPStorage{
 		URL: u,
 	}, nil
 }
 
-// Location returns the type and location of the repository
+// Location returns the type and location of the repository.
 func (backend *HTTPStorage) Location() string {
 	return backend.URL.String()
 }
 
-// Close the backend
+// Close the backend.
 func (backend *HTTPStorage) Close() error {
 	return nil
 }
 
-// Protocols returns the Protocol Schemes supported by this backend
+// Protocols returns the Protocol Schemes supported by this backend.
 func (backend *HTTPStorage) Protocols() []string {
 	return []string{"http", "https"}
 }
 
-// Description returns a user-friendly description for this backend
+// Description returns a user-friendly description for this backend.
 func (backend *HTTPStorage) Description() string {
 	return "HTTP(S) Storage"
 }
 
-// AvailableSpace returns the free space on this backend
+// AvailableSpace returns the free space on this backend.
 func (backend *HTTPStorage) AvailableSpace() (uint64, error) {
 	return uint64(0), knoxite.ErrAvailableSpaceUnknown
 }
 
-// LoadChunk loads a Chunk from network
+// LoadChunk loads a Chunk from network.
 func (backend *HTTPStorage) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
 	//	fmt.Printf("Fetching from: %s.\n", backend.URL+"/download/"+chunk.ShaSum)
 	res, err := http.Get(backend.URL.String() + "/download/" + shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10))
@@ -77,7 +77,7 @@ func (backend *HTTPStorage) LoadChunk(shasum string, part, totalParts uint) ([]b
 	return ioutil.ReadAll(res.Body)
 }
 
-// StoreChunk stores a single Chunk on network
+// StoreChunk stores a single Chunk on network.
 func (backend *HTTPStorage) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
@@ -115,13 +115,13 @@ func (backend *HTTPStorage) StoreChunk(shasum string, part, totalParts uint, dat
 	return uint64(len(data)), err
 }
 
-// DeleteChunk deletes a single Chunk
+// DeleteChunk deletes a single Chunk.
 func (backend *HTTPStorage) DeleteChunk(shasum string, parts, totalParts uint) error {
 	// FIXME: implement this
 	return knoxite.ErrDeleteChunkFailed
 }
 
-// LoadSnapshot loads a snapshot
+// LoadSnapshot loads a snapshot.
 func (backend *HTTPStorage) LoadSnapshot(id string) ([]byte, error) {
 	//	fmt.Printf("Fetching snapshot from: %s.\n", backend.URL+"/snapshot/"+id)
 	res, err := http.Get(backend.URL.String() + "/snapshot/" + id)
@@ -133,7 +133,7 @@ func (backend *HTTPStorage) LoadSnapshot(id string) ([]byte, error) {
 	return ioutil.ReadAll(res.Body)
 }
 
-// SaveSnapshot stores a snapshot
+// SaveSnapshot stores a snapshot.
 func (backend *HTTPStorage) SaveSnapshot(id string, data []byte) error {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
@@ -169,7 +169,7 @@ func (backend *HTTPStorage) SaveSnapshot(id string, data []byte) error {
 	return err
 }
 
-// LoadChunkIndex reads the chunk-index
+// LoadChunkIndex reads the chunk-index.
 func (backend *HTTPStorage) LoadChunkIndex() ([]byte, error) {
 	//	fmt.Printf("Fetching chunk-index from: %s.\n", backend.URL+"/chunkindex")
 	res, err := http.Get(backend.URL.String() + "/chunkindex")
@@ -181,7 +181,7 @@ func (backend *HTTPStorage) LoadChunkIndex() ([]byte, error) {
 	return ioutil.ReadAll(res.Body)
 }
 
-// SaveChunkIndex stores the chunk-index
+// SaveChunkIndex stores the chunk-index.
 func (backend *HTTPStorage) SaveChunkIndex(data []byte) error {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
@@ -217,12 +217,12 @@ func (backend *HTTPStorage) SaveChunkIndex(data []byte) error {
 	return err
 }
 
-// InitRepository creates a new repository
+// InitRepository creates a new repository.
 func (backend *HTTPStorage) InitRepository() error {
 	return nil
 }
 
-// LoadRepository reads the metadata for a repository
+// LoadRepository reads the metadata for a repository.
 func (backend *HTTPStorage) LoadRepository() ([]byte, error) {
 	//	fmt.Printf("Fetching repository from: %s.\n", backend.URL+"/repository")
 	res, err := http.Get(backend.URL.String() + "/repository")
@@ -234,7 +234,7 @@ func (backend *HTTPStorage) LoadRepository() ([]byte, error) {
 	return ioutil.ReadAll(res.Body)
 }
 
-// SaveRepository stores the metadata for a repository
+// SaveRepository stores the metadata for a repository.
 func (backend *HTTPStorage) SaveRepository(data []byte) error {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)

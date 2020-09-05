@@ -109,7 +109,7 @@ func executeMount(snapshotID, mountpoint string) error {
 	}
 }
 
-// Node in our virtual filesystem
+// Node in our virtual filesystem.
 type Node struct {
 	Items      map[string]*Node
 	Archive    knoxite.Archive
@@ -174,7 +174,7 @@ func updateIndex(repository *knoxite.Repository, snapshot *knoxite.Snapshot) {
 	}
 }
 
-// Attr returns this node's filesystem attr's
+// Attr returns this node's filesystem attributes.
 func (node *Node) Attr(ctx context.Context, a *fuse.Attr) error {
 	// fmt.Println("Attr:", node.Item.Path)
 	// a.Inode = node.Inode
@@ -191,8 +191,8 @@ func (node *Node) Attr(ctx context.Context, a *fuse.Attr) error {
 	return nil
 }
 
-// Lookup is used to stat items
-func (node *Node) Lookup(ctx context.Context, name string) (fs.Node, error) {
+// Lookup is used to stat items.
+func (node *Node) Lookup(_ context.Context, name string) (fs.Node, error) {
 	// fmt.Println("Lookup:", name)
 	item, ok := node.Items[name]
 	if ok {
@@ -202,8 +202,8 @@ func (node *Node) Lookup(ctx context.Context, name string) (fs.Node, error) {
 	return nil, fuse.ENOENT
 }
 
-// ReadDirAll returns all items directly below this node
-func (node *Node) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
+// ReadDirAll returns all items directly below this node.
+func (node *Node) ReadDirAll(_ context.Context) ([]fuse.Dirent, error) {
 	// fmt.Println("ReadDirAll:", node.Item.Path)
 	entries := []fuse.Dirent{}
 
@@ -224,8 +224,8 @@ func (node *Node) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
 	return entries, nil
 }
 
-// Open opens a file
-func (node *Node) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
+// Open opens a file.
+func (node *Node) Open(_ context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
 	if !req.Flags.IsReadOnly() {
 		return nil, fuse.Errno(syscall.EACCES)
 	}
@@ -233,8 +233,8 @@ func (node *Node) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.Op
 	return node, nil
 }
 
-// Read reads from a file
-func (node *Node) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
+// Read reads from a file.
+func (node *Node) Read(_ context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
 	d, err := knoxite.ReadArchive(*node.Repository, node.Archive, int(req.Offset), req.Size)
 	if err != nil {
 		if err != io.EOF {
@@ -248,13 +248,13 @@ func (node *Node) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.Re
 	return nil
 }
 
-// Readlink returns the target a symlink is pointing to
-func (node *Node) Readlink(ctx context.Context, req *fuse.ReadlinkRequest) (string, error) {
+// Readlink returns the target a symlink is pointing to.
+func (node *Node) Readlink(_ context.Context, _ *fuse.ReadlinkRequest) (string, error) {
 	return node.Archive.PointsTo, nil
 }
 
-// ReadAll reads an entire archive's content
-/*func (node *Node) ReadAll(ctx context.Context) ([]byte, error) {
+// ReadAll reads an entire archive's content.
+/*func (node *Node) ReadAll(_ context.Context) ([]byte, error) {
 	d, _, err := knoxite.DecodeArchiveData(*node.Repository, node.Item)
 	if err != nil {
 		return d, err

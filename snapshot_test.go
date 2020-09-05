@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2016-2018, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2020, Nicolas Martin <penguwin@penguwin.eu>
  *
  *   For license see LICENSE
  */
@@ -15,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/minio/highwayhash"
+	"github.com/muesli/combinator"
 )
 
 func hashFile(path string) (string, error) {
@@ -36,19 +38,39 @@ func hashFile(path string) (string, error) {
 func TestSnapshotCreate(t *testing.T) {
 	testPassword := "this_is_a_password"
 
-	tests := []struct {
-		compression uint16
-		parityParts uint
-	}{
-		{CompressionNone, 0},
-		{CompressionFlate, 0},
-		{CompressionGZip, 0},
-		{CompressionLZMA, 0},
-		{CompressionZlib, 0},
-		{CompressionZstd, 0},
-		{CompressionNone, 1},
-		{CompressionGZip, 1},
+	type testOptions struct {
+		Compression     uint16
+		ParityParts     uint
+		ExcludesStore   []string
+		ExcludesRestore []string
 	}
+	testData := struct {
+		Compression     []uint16
+		ParityParts     []uint
+		ExcludesStore   [][]string
+		ExcludesRestore [][]string
+	}{
+		Compression: []uint16{CompressionNone, CompressionFlate, CompressionGZip, CompressionLZMA, CompressionZstd},
+		ParityParts: []uint{0, 1},
+		ExcludesStore: [][]string{
+			{},
+			{"snapshot.go"},
+			{"snapshot_test.go"},
+			{"snapshot.go", "snapshot_test.go"}},
+		ExcludesRestore: [][]string{
+			{},
+			{"snapshot.go"},
+			{"snapshot_test.go"},
+			{"snapshot.go", "snapshot_test.go"}},
+	}
+
+	var tests []testOptions
+	err := combinator.Generate(&tests, testData)
+	if err != nil {
+		t.Errorf("Failed to generate all testcases: %v", err)
+		return
+	}
+
 	for _, tt := range tests {
 		dir, err := ioutil.TempDir("", "knoxite")
 		if err != nil {
@@ -90,7 +112,7 @@ func TestSnapshotCreate(t *testing.T) {
 				t.Errorf("Failed getting working dir: %s", err)
 				return
 			}
-			progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, []string{}, r, &index, tt.compression, EncryptionAES, 1, tt.parityParts, false)
+			progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, tt.ExcludesStore, r, &index, tt.Compression, EncryptionAES, 1, tt.ParityParts, false)
 			for p := range progress {
 				if p.Error != nil {
 					t.Errorf("Failed adding to snapshot: %s", p.Error)
@@ -114,6 +136,16 @@ func TestSnapshotCreate(t *testing.T) {
 			if err != nil {
 				t.Errorf("Failed saving chunk-index: %s", err)
 				return
+			}
+
+			// Check if we have excluded all the paths in tt.excludes
+			for _, v := range snapshot.Archives {
+				for _, e := range tt.ExcludesStore {
+					if e == v.Path {
+						t.Errorf("Failed excluding specified files from snapshot store operation: %s", e)
+						continue
+					}
+				}
 			}
 
 			snapshotOriginal = snapshot
@@ -156,16 +188,39 @@ func TestSnapshotCreate(t *testing.T) {
 			}
 			defer os.RemoveAll(targetdir)
 
-			progress, err := DecodeSnapshot(r, snapshot, targetdir, []string{})
+			progress, err := DecodeSnapshot(r, snapshot, targetdir, tt.ExcludesRestore)
 			if err != nil {
 				t.Errorf("Failed restoring snapshot: %s", err)
 				return
 			}
-			for range progress {
+			for p := range progress {
+				if p.Error != nil {
+					t.Errorf("Failed restoring snapshot: %s", p.Error)
+				}
 			}
 
 			for i, archive := range snapshot.Archives {
 				file1 := filepath.Join(targetdir, archive.Path)
+
+				// Check if the file is a (successfully) excluded one
+				isExcluded := false
+				for _, excl := range tt.ExcludesRestore {
+					excludedFile := filepath.Join(targetdir, excl)
+
+					if _, err := os.Stat(excludedFile); os.IsNotExist(err) {
+						if excludedFile == file1 {
+							isExcluded = true
+							break
+						}
+					} else if err != nil { // Some other error occured
+						t.Errorf("Failed to stat file %s: %v", excl, err)
+						continue
+					}
+				}
+				if isExcluded {
+					continue
+				}
+
 				hash1, err := hashFile(file1)
 				if err != nil {
 					t.Errorf("Failed generating shasum for %s: %s", file1, err)

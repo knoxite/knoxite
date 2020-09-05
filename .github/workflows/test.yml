@@ -1,17 +1,18 @@
-name: build
-on: [push, pull_request]
+name: test
+on: [push]
+
 jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.11.x, 1.12.x, 1.13.x, 1.14.x]
-        platform: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.platform }}
+        go-version: [1.15.x]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     env:
       GO111MODULE: "on"
     steps:
       - name: Install Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -21,19 +22,12 @@ jobs:
       - name: Download Go modules
         run: go mod download
 
-      - name: Build
-        run: go build -v ./...
-
-      - name: Test
-        run: go test -v -tags ci ./...
-
       - name: Storage S3 Backend Tests
         env:
           KNOXITE_AMAZONS3_URL: ${{ secrets.KNOXITE_AMAZONS3_URL }}
         run: |
           ./admin/setup_s3_test_environment.sh
           go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=s3.cov ./storage/s3
-        if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest' && github.event_name == 'push'
 
       - name: Storage SFTP Backend Tests
         env:
@@ -41,7 +35,6 @@ jobs:
         run: |
           ./admin/setup_sftp_test_environment.sh
           go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=sftp.cov ./storage/sftp
-        if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest' && github.event_name == 'push'
 
       - name: Storage FTP Backend Tests
         env:
@@ -49,7 +42,6 @@ jobs:
         run: |
           ./admin/setup_ftp_test_environment.sh
           go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=ftp.cov ./storage/ftp
-        if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest' && github.event_name == 'push'
 
       - name: Storage WebDav Backend Tests
         env:
@@ -57,19 +49,37 @@ jobs:
         run: |
           ./admin/setup_webdav_test_environment.sh
           go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=webdav.cov ./storage/webdav
-        if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest' && github.event_name == 'push'
 
       - name: Storage Dropbox Backend Tests
         env:
           KNOXITE_DROPBOX_URL: ${{ secrets.KNOXITE_DROPBOX_URL }}
         run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=dropbox.cov ./storage/dropbox
-        if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest' && github.event_name == 'push'
+
+      - name: Storage Azure File Backend Tests
+        env:
+          KNOXITE_AZURE_FILE_URL: ${{ secrets.KNOXITE_AZURE_FILE_URL }}
+        run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=azure.cov ./storage/azure
+
+      - name: Storage Mega Backend Tests
+        env:
+          KNOXITE_MEGA_URL: ${{ secrets.KNOXITE_MEGA_URL }}
+        run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=mega.cov ./storage/mega
+
+      - name: Storage Google Cloud Backend Tests
+        env:
+          KNOXITE_GOOGLECLOUD_URL: ${{ secrets.KNOXITE_GOOGLECLOUD_URL }}
+          KNOXITE_GC_KEY_CLIENT_EMAIL: ${{ secrets.KNOXITE_GC_KEY_CLIENT_EMAIL }}
+          KNOXITE_GC_KEY_CLIENT_ID: ${{ secrets.KNOXITE_GC_KEY_CLIENT_ID }}
+          KNOXITE_GC_KEY_CLIENT_X509_CERT_URL: ${{ secrets.KNOXITE_GC_KEY_CLIENT_X509_CERT_URL }}
+          KNOXITE_GC_KEY_PRIVATE_KEY_ID: ${{ secrets.KNOXITE_GC_KEY_PRIVATE_KEY_ID }}
+          KNOXITE_GC_KEY_PRIVATE_KEY: ${{ secrets.KNOXITE_GC_KEY_PRIVATE_KEY }}
+          KNOXITE_GC_KEY_PROJECT_ID: ${{ secrets.KNOXITE_GC_KEY_PROJECT_ID }}
+        run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=googlecloud.cov ./storage/googlecloud
 
       - name: Storage Backblaze B2 Backend Tests
         env:
           KNOXITE_BACKBLAZE_URL: ${{ secrets.KNOXITE_BACKBLAZE_URL }}
         run: go test -v -count=1 -tags "ci backend" -covermode atomic -coverprofile=backblaze.cov ./storage/backblaze
-        if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest' && github.event_name == 'push'
 
       - name: Coverage
         env:
@@ -81,4 +91,3 @@ jobs:
 
           $(go env GOPATH)/bin/gocovmerge *.cov > combined.cov
           $(go env GOPATH)/bin/goveralls -coverprofile=combined.cov -service=github
-        if: matrix.go-version == '1.14.x' && matrix.platform == 'ubuntu-latest'

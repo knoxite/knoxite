@@ -44,7 +44,7 @@ func authPath(w http.ResponseWriter, r *http.Request) (string, error) {
 	return dir, nil
 }
 
-// upload logic
+// upload logic.
 func upload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Receiving upload")
 	if r.Method == "POST" {
@@ -76,7 +76,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// download logic
+// download logic.
 func download(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Serving chunk", r.URL.Path[10:])
 
@@ -91,7 +91,7 @@ func download(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// uploadRepo logic
+// uploadRepo logic.
 func uploadRepo(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Receiving repository")
 
@@ -122,7 +122,7 @@ func uploadRepo(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Stored repository", filepath.Join(path, "repository.knoxite"))
 }
 
-// downloadRepo logic
+// downloadRepo logic.
 func downloadRepo(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Serving repository")
 
@@ -144,7 +144,7 @@ func repository(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// uploadSnapshot logic
+// uploadSnapshot logic.
 func uploadSnapshot(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Receiving snapshot")
 
@@ -175,7 +175,7 @@ func uploadSnapshot(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Stored snapshot", filepath.Join(path, "snapshots", handler.Filename))
 }
 
-// downloadRepo logic
+// downloadRepo logic.
 func downloadSnapshot(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Serving snapshot", r.URL.Path[10:])
 

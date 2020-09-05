@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2020,      Nicolas Martin <penguwin@penguwin.eu>
  *
  *   For license see LICENSE
  */
@@ -17,6 +18,7 @@ import (
 	shutdown "github.com/klauspost/shutdown2"
 	"github.com/spf13/cobra"
 
+	"github.com/knoxite/knoxite/cmd/knoxite/config"
 	_ "github.com/knoxite/knoxite/storage/azure"
 	_ "github.com/knoxite/knoxite/storage/backblaze"
 	_ "github.com/knoxite/knoxite/storage/dropbox"
@@ -29,10 +31,11 @@ import (
 	_ "github.com/knoxite/knoxite/storage/webdav"
 )
 
-// GlobalOptions holds all those options that can be set for every command
+// GlobalOptions holds all those options that can be set for every command.
 type GlobalOptions struct {
-	Repo     string
-	Password string
+	Repo      string
+	Password  string
+	ConfigURL string
 }
 
 var (
@@ -40,8 +43,9 @@ var (
 	CommitSHA = ""
 
 	globalOpts = GlobalOptions{}
+	cfg        = &config.Config{}
 
-	// RootCmd is the core command used for cli-arg parsing
+	// RootCmd is the core command used for cli-arg parsing.
 	RootCmd = &cobra.Command{
 		Use:   "knoxite",
 		Short: "Knoxite is a data storage & backup tool",
@@ -60,6 +64,7 @@ func main() {
 
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Repo, "repo", "r", "", "Repository directory to backup to/restore from (default: current working dir)")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Password, "password", "p", "", "Password to use for data encryption")
+	RootCmd.PersistentFlags().StringVarP(&globalOpts.ConfigURL, "configURL", "C", config.DefaultPath(), "Path to the configuration file")
 
 	globalOpts.Repo = os.Getenv("KNOXITE_REPOSITORY")
 	globalOpts.Password = os.Getenv("KNOXITE_PASSWORD")
@@ -71,6 +76,7 @@ func main() {
 }
 
 func init() {
+	cobra.OnInitialize(initConfig)
 	if CommitSHA != "" {
 		vt := RootCmd.VersionTemplate()
 		RootCmd.SetVersionTemplate(vt[:len(vt)-1] + " (" + CommitSHA + ")\n")
@@ -80,4 +86,27 @@ func init() {
 	}
 
 	RootCmd.Version = Version
+}
+
+// initConfig initializes the configuration for knoxite.
+// It'll use the the default config url unless specified otherwise via the
+// ConfigURL flag.
+func initConfig() {
+	var err error
+	cfg, err = config.New(globalOpts.ConfigURL)
+	if err != nil {
+		log.Fatalf("error reading the config file: %v\n", err)
+		return
+	}
+	if err = cfg.Load(); err != nil {
+		log.Fatalf("error loading the config file: %v\n", err)
+		return
+	}
+
+	// There can occur a panic due to an entry assigment in nil map when theres
+	// no map initialized to store the RepoConfigs. This will prevent this from
+	// happening:
+	if cfg.Repositories == nil {
+		cfg.Repositories = make(map[string]config.RepoConfig)
+	}
 }
