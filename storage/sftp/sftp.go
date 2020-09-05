@@ -9,7 +9,6 @@
 package sftp
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net"
 	"net/url"
@@ -132,7 +131,7 @@ func (backend *SFTPStorage) DeleteFile(path string) error {
 }
 
 func (backend *SFTPStorage) DeletePath(path string) error {
-	fmt.Println("Deleting path", path)
+	// fmt.Println("Deleting path", path)
 	files, err := backend.sftp.ReadDir(path)
 	if err != nil {
 		return err
@@ -167,10 +166,12 @@ func (backend *SFTPStorage) ReadFile(path string) ([]byte, error) {
 }
 
 func (backend *SFTPStorage) WriteFile(path string, data []byte) (size uint64, err error) {
-	file, err := backend.sftp.Create(path)
+	file, err := backend.sftp.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
 	if err != nil {
 		return 0, err
 	}
+	defer file.Close()
+
 	length, err := file.Write(data)
 	return uint64(length), err
 }
