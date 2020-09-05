@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2018, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
  *
  *   For license see LICENSE
  */
@@ -8,6 +8,10 @@
 package knoxite
 
 import "errors"
+
+const (
+	retries = 3
+)
 
 // BackendManager stores data on multiple backends.
 type BackendManager struct {
@@ -47,9 +51,11 @@ func (backend *BackendManager) Locations() []string {
 // LoadChunk loads a Chunk from backends.
 func (backend *BackendManager) LoadChunk(chunk Chunk, part uint) ([]byte, error) {
 	for _, be := range backend.Backends {
-		b, err := (*be).LoadChunk(chunk.Hash, part, chunk.DataParts)
-		if err == nil {
-			return b, err
+		for i := 0; i < retries; i++ {
+			b, err := (*be).LoadChunk(chunk.Hash, part, chunk.DataParts)
+			if err == nil {
+				return b, err
+			}
 		}
 	}
 
@@ -66,15 +72,24 @@ func (backend *BackendManager) StoreChunk(chunk Chunk) (size uint64, err error) 
 		}
 
 		be := backend.Backends[backend.lastUsedBackend]
-		//	for _, be := range backend.Backends {
-		n, err := (*be).StoreChunk(chunk.Hash, uint(i), chunk.DataParts, data)
+
+		var n uint64
+		var err error
+		for j := 0; j < retries; j++ {
+			n, err = (*be).StoreChunk(chunk.Hash, uint(i), chunk.DataParts, data)
+			if err != nil {
+				// retry
+				continue
+			}
+
+			if n > size {
+				size = n
+			}
+			break
+		}
 		if err != nil {
 			return 0, err
 		}
-		if n > size {
-			size = n
-		}
-		//	}
 	}
 
 	return size, nil
@@ -83,9 +98,11 @@ func (backend *BackendManager) StoreChunk(chunk Chunk) (size uint64, err error) 
 // DeleteChunk deletes a single Chunk.
 func (backend *BackendManager) DeleteChunk(shasum string, part, totalParts uint) error {
 	for _, be := range backend.Backends {
-		err := (*be).DeleteChunk(shasum, part, totalParts)
-		if err == nil {
-			return nil
+		for i := 0; i < retries; i++ {
+			err := (*be).DeleteChunk(shasum, part, totalParts)
+			if err == nil {
+				return nil
+			}
 		}
 	}
 
@@ -95,9 +112,11 @@ func (backend *BackendManager) DeleteChunk(shasum string, part, totalParts uint)
 // LoadSnapshot loads a snapshot.
 func (backend *BackendManager) LoadSnapshot(id string) ([]byte, error) {
 	for _, be := range backend.Backends {
-		b, err := (*be).LoadSnapshot(id)
-		if err == nil {
-			return b, err
+		for i := 0; i < retries; i++ {
+			b, err := (*be).LoadSnapshot(id)
+			if err == nil {
+				return b, err
+			}
 		}
 	}
 
@@ -107,7 +126,13 @@ func (backend *BackendManager) LoadSnapshot(id string) ([]byte, error) {
 // SaveSnapshot stores a snapshot on all storage backends.
 func (backend *BackendManager) SaveSnapshot(id string, b []byte) error {
 	for _, be := range backend.Backends {
-		err := (*be).SaveSnapshot(id, b)
+		var err error
+		for i := 0; i < retries; i++ {
+			err = (*be).SaveSnapshot(id, b)
+			if err == nil {
+				break
+			}
+		}
 		if err != nil {
 			return err
 		}
@@ -119,9 +144,11 @@ func (backend *BackendManager) SaveSnapshot(id string, b []byte) error {
 // LoadChunkIndex loads the chunk-index.
 func (backend *BackendManager) LoadChunkIndex() ([]byte, error) {
 	for _, be := range backend.Backends {
-		b, err := (*be).LoadChunkIndex()
-		if err == nil {
-			return b, err
+		for i := 0; i < retries; i++ {
+			b, err := (*be).LoadChunkIndex()
+			if err == nil {
+				return b, err
+			}
 		}
 	}
 
@@ -131,7 +158,13 @@ func (backend *BackendManager) LoadChunkIndex() ([]byte, error) {
 // SaveChunkIndex stores the chunk-index on all storage backends.
 func (backend *BackendManager) SaveChunkIndex(b []byte) error {
 	for _, be := range backend.Backends {
-		err := (*be).SaveChunkIndex(b)
+		var err error
+		for i := 0; i < retries; i++ {
+			err = (*be).SaveChunkIndex(b)
+			if err == nil {
+				break
+			}
+		}
 		if err != nil {
 			return err
 		}
@@ -155,9 +188,11 @@ func (backend *BackendManager) InitRepository() error {
 // LoadRepository reads the metadata for a repository.
 func (backend *BackendManager) LoadRepository() ([]byte, error) {
 	for _, be := range backend.Backends {
-		b, err := (*be).LoadRepository()
-		if err == nil {
-			return b, err
+		for i := 0; i < retries; i++ {
+			b, err := (*be).LoadRepository()
+			if err == nil {
+				return b, err
+			}
 		}
 	}
 
@@ -167,7 +202,13 @@ func (backend *BackendManager) LoadRepository() ([]byte, error) {
 // SaveRepository stores the metadata for a repository.
 func (backend *BackendManager) SaveRepository(b []byte) error {
 	for _, be := range backend.Backends {
-		err := (*be).SaveRepository(b)
+		var err error
+		for i := 0; i < retries; i++ {
+			err = (*be).SaveRepository(b)
+			if err == nil {
+				break
+			}
+		}
 		if err != nil {
 			return err
 		}
