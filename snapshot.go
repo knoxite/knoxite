@@ -54,7 +54,7 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 		for result := range c {
 			if result.Error == nil {
 				rel, err := filepath.Rel(cwd, result.Archive.Path)
-				if err == nil && !strings.HasPrefix(rel, "../") {
+				if err == nil && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 					result.Archive.Path = rel
 				}
 				if isSpecialPath(result.Archive.Path) {
@@ -103,7 +103,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 
 			archive := result.Archive
 			rel, err := filepath.Rel(cwd, archive.Path)
-			if err == nil && !strings.HasPrefix(rel, "../") {
+			if err == nil && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 				archive.Path = rel
 			}
 			if isSpecialPath(archive.Path) {
