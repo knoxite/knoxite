@@ -20,6 +20,7 @@ type Stats struct {
 	StorageSize uint64 `json:"stored_size"`
 	Transferred uint64 `json:"transferred"`
 	Errors      uint64 `json:"errors"`
+	Excluded    uint64 `json:"excluded"`
 }
 
 // Add accumulates other into s.
@@ -59,6 +60,6 @@ func SizeToString(size uint64) (str string) {
 
 // String returns human-readable Stats.
 func (s Stats) String() string {
-	return fmt.Sprintf("%d files, %d dirs, %d symlinks, %d errors, %v Original Size, %v Storage Size",
-		s.Files, s.Dirs, s.SymLinks, s.Errors, SizeToString(s.Size), SizeToString(s.StorageSize))
+	return fmt.Sprintf("%d files, %d dirs, %d symlinks, %d excluded, %d errors, %v Original Size, %v Storage Size",
+		s.Files, s.Dirs, s.SymLinks, s.Excluded, s.Errors, SizeToString(s.Size), SizeToString(s.StorageSize))
 }

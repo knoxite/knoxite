@@ -16,6 +16,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/klauspost/reedsolomon"
@@ -186,10 +187,19 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 		p.TotalStatistics.Dirs++
 		progress <- p
 	} else if arc.Type == SymLink {
-		//fmt.Printf("Creating symlink %s -> %s\n", path, arc.PointsTo)
-		err := os.Symlink(arc.PointsTo, path)
-		if err != nil {
-			return err
+		_, ferr := os.Stat(arc.PointsTo)
+
+		if os.IsNotExist(ferr) {
+			// syscall.Symlink is able to create symlinks to non-existing files
+			err := syscall.Symlink(arc.PointsTo, path)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := os.Symlink(arc.PointsTo, path)
+			if err != nil {
+				return err
+			}
 		}
 		p.TotalStatistics.SymLinks++
 		progress <- p
@@ -252,6 +262,11 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 		if err != nil {
 			return err
 		}
+	}
+
+	if arc.Type == SymLink {
+		// Restore ownerships
+		return nil
 	}
 
 	if runtime.GOOS == "windows" {

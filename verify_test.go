@@ -105,7 +105,7 @@ func TestVerifyRepo(t *testing.T) {
 				return
 			}
 
-			progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, []string{}, r, &index, CompressionGZip, EncryptionAES, 1, 0)
+			progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, []string{}, r, &index, CompressionGZip, EncryptionAES, 1, 0, false)
 			for p := range progress {
 				if p.Error != nil {
 					t.Errorf("Failed adding to snapshot: %s", p.Error)
@@ -206,7 +206,7 @@ func TestVerifyVolume(t *testing.T) {
 				return
 			}
 
-			progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, []string{}, r, &index, CompressionGZip, EncryptionAES, 1, 0)
+			progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, []string{}, r, &index, CompressionGZip, EncryptionAES, 1, 0, false)
 			for p := range progress {
 				if p.Error != nil {
 					t.Errorf("Failed adding to snapshot: %s", p.Error)
@@ -309,7 +309,7 @@ func TestVerifySnapshot(t *testing.T) {
 				return
 			}
 
-			progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, []string{}, r, &index, CompressionGZip, EncryptionAES, 1, 0)
+			progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, []string{}, r, &index, CompressionGZip, EncryptionAES, 1, 0, false)
 			for p := range progress {
 				if p.Error != nil {
 					t.Errorf("Failed adding to snapshot: %s", p.Error)

@@ -38,13 +38,13 @@ func TestStatisticsString(t *testing.T) {
 		storageSize uint64
 		result      string
 	}{
-		{1, 1, "1 files, 2 dirs, 3 symlinks, 6 errors, 1B Original Size, 1B Storage Size"},
-		{1024, 1024, "1 files, 2 dirs, 3 symlinks, 6 errors, 1.00 KiB Original Size, 1.00 KiB Storage Size"},
-		{1024 * (1 << 10), 1024 * (1 << 10), "1 files, 2 dirs, 3 symlinks, 6 errors, 1.00 MiB Original Size, 1.00 MiB Storage Size"},
-		{1024 * (1 << 20), 1024 * (1 << 20), "1 files, 2 dirs, 3 symlinks, 6 errors, 1.00 GiB Original Size, 1.00 GiB Storage Size"},
-		{1024 * (1 << 30), 1024 * (1 << 30), "1 files, 2 dirs, 3 symlinks, 6 errors, 1.00 TiB Original Size, 1.00 TiB Storage Size"},
-		{1024 * (1 << 40), 1024 * (1 << 40), "1 files, 2 dirs, 3 symlinks, 6 errors, 1.00 PiB Original Size, 1.00 PiB Storage Size"},
-		{1024 * (1 << 50), 1024 * (1 << 50), "1 files, 2 dirs, 3 symlinks, 6 errors, 1.00 EiB Original Size, 1.00 EiB Storage Size"},
+		{1, 1, "1 files, 2 dirs, 3 symlinks, 0 excluded, 6 errors, 1B Original Size, 1B Storage Size"},
+		{1024, 1024, "1 files, 2 dirs, 3 symlinks, 0 excluded, 6 errors, 1.00 KiB Original Size, 1.00 KiB Storage Size"},
+		{1024 * (1 << 10), 1024 * (1 << 10), "1 files, 2 dirs, 3 symlinks, 0 excluded, 6 errors, 1.00 MiB Original Size, 1.00 MiB Storage Size"},
+		{1024 * (1 << 20), 1024 * (1 << 20), "1 files, 2 dirs, 3 symlinks, 0 excluded, 6 errors, 1.00 GiB Original Size, 1.00 GiB Storage Size"},
+		{1024 * (1 << 30), 1024 * (1 << 30), "1 files, 2 dirs, 3 symlinks, 0 excluded, 6 errors, 1.00 TiB Original Size, 1.00 TiB Storage Size"},
+		{1024 * (1 << 40), 1024 * (1 << 40), "1 files, 2 dirs, 3 symlinks, 0 excluded, 6 errors, 1.00 PiB Original Size, 1.00 PiB Storage Size"},
+		{1024 * (1 << 50), 1024 * (1 << 50), "1 files, 2 dirs, 3 symlinks, 0 excluded, 6 errors, 1.00 EiB Original Size, 1.00 EiB Storage Size"},
 	}
 	for _, tt := range tests {
 		s := Stats{
