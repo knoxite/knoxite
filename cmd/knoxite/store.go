@@ -64,7 +64,7 @@ var (
 // Values set via the command line flags will overwrite settings stored in the
 // configuration file.
 func configureStoreOpts(cmd *cobra.Command, opts *StoreOptions) {
-	if rep, ok := cfg.Repositories[globalOpts.Repo]; ok {
+	if rep, ok := cfg.Repositories[globalOpts.Alias]; ok {
 		if !cmd.Flags().Changed("compression") {
 			opts.Compression = rep.Compression
 		}
