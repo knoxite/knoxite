@@ -53,7 +53,7 @@ var (
 // Values set via the command line flags will overwrite settings stored in the
 // configuration file.
 func configureRestoreOpts(cmd *cobra.Command, opts *RestoreOptions) {
-	if rep, ok := cfg.Repositories[globalOpts.Repo]; ok {
+	if rep, ok := cfg.Repositories[globalOpts.Alias]; ok {
 		if !cmd.Flags().Changed("excludes") {
 			opts.Excludes = rep.RestoreExcludes
 		}

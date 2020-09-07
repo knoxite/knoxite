@@ -228,9 +228,6 @@ func openRepository(path, password string) (knoxite.Repository, error) {
 		}
 	}
 
-	if rep, ok := cfg.Repositories[path]; ok {
-		return knoxite.OpenRepository(rep.Url, password)
-	}
 	return knoxite.OpenRepository(path, password)
 }
 

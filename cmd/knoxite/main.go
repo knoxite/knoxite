@@ -34,6 +34,7 @@ import (
 // GlobalOptions holds all those options that can be set for every command.
 type GlobalOptions struct {
 	Repo      string
+	Alias     string
 	Password  string
 	ConfigURL string
 }
@@ -63,6 +64,7 @@ func main() {
 	// shutdown.SetTimeout(0)
 
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Repo, "repo", "r", "", "Repository directory to backup to/restore from (default: current working dir)")
+	RootCmd.PersistentFlags().StringVarP(&globalOpts.Alias, "alias", "R", "", "Repository alias to backup to/restore from")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Password, "password", "p", "", "Password to use for data encryption")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.ConfigURL, "configURL", "C", config.DefaultPath(), "Path to the configuration file")
 
@@ -92,6 +94,12 @@ func init() {
 // It'll use the the default config url unless specified otherwise via the
 // ConfigURL flag.
 func initConfig() {
+	// We dont allow both flags to be set as this can lead to unclear instructions.
+	if RootCmd.PersistentFlags().Changed("repo") && RootCmd.PersistentFlags().Changed("alias") {
+		log.Fatalf("Specify either repository directory '-r' or an alias '-R'")
+		return
+	}
+
 	var err error
 	cfg, err = config.New(globalOpts.ConfigURL)
 	if err != nil {
@@ -108,5 +116,15 @@ func initConfig() {
 	// happening:
 	if cfg.Repositories == nil {
 		cfg.Repositories = make(map[string]config.RepoConfig)
+	}
+
+	if globalOpts.Alias != "" {
+		rep, ok := cfg.Repositories[globalOpts.Alias]
+		if !ok {
+			log.Fatalf("error loading the specified alias\n")
+			return
+		}
+
+		globalOpts.Repo = rep.Url
 	}
 }
