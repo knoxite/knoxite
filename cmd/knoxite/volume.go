@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2020,      Nicolas Martin <penguwin@penguwin.eu>
  *
  *   For license see LICENSE
  */
@@ -42,6 +43,17 @@ var (
 			return executeVolumeInit(args[0], volumeInitOpts.Description)
 		},
 	}
+	volumeRemoveCmd = &cobra.Command{
+		Use:   "remove <volume>",
+		Short: "remove a volume from a repository",
+		Long:  `The remove command removes a volume from a repository`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("remove needs a volume to work on")
+			}
+			return executeVolumeRemove(args[0])
+		},
+	}
 	volumeListCmd = &cobra.Command{
 		Use:   "list",
 		Short: "list all volumes inside a repository",
@@ -56,6 +68,7 @@ func init() {
 	volumeInitCmd.Flags().StringVarP(&volumeInitOpts.Description, "desc", "d", "", "a description or comment for this volume")
 
 	volumeCmd.AddCommand(volumeInitCmd)
+	volumeCmd.AddCommand(volumeRemoveCmd)
 	volumeCmd.AddCommand(volumeListCmd)
 	RootCmd.AddCommand(volumeCmd)
 }
@@ -86,6 +99,47 @@ func executeVolumeInit(name, description string) error {
 		}
 	}
 	return err
+}
+
+func executeVolumeRemove(volumeID string) error {
+	repo, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	if err != nil {
+		return err
+	}
+
+	chunkIndex, err := knoxite.OpenChunkIndex(&repo)
+	if err != nil {
+		return err
+	}
+
+	vol, err := repo.FindVolume(volumeID)
+	if err != nil {
+		return err
+	}
+
+	for _, s := range vol.Snapshots {
+		if err := vol.RemoveSnapshot(s); err != nil {
+			return err
+		}
+
+		chunkIndex.RemoveSnapshot(s)
+	}
+
+	if err := repo.RemoveVolume(vol); err != nil {
+		return err
+	}
+
+	if err := chunkIndex.Save(&repo); err != nil {
+		return err
+	}
+
+	if err := repo.Save(); err != nil {
+		return err
+	}
+
+	fmt.Printf("Volume %s '%s' successfully removed\n", vol.ID, vol.Name)
+	fmt.Println("Do not forget to run 'repo pack' to delete un-referenced chunks and free up storage space!")
+	return nil
 }
 
 func executeVolumeList() error {

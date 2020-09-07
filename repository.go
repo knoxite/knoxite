@@ -123,6 +123,17 @@ func (r *Repository) AddVolume(volume *Volume) error {
 	return nil
 }
 
+// RemoveVolume removes a volume from a repository.
+func (r *Repository) RemoveVolume(volume *Volume) error {
+	for i, v := range r.Volumes {
+		if v == volume {
+			r.Volumes = append(r.Volumes[:i], r.Volumes[i+1:]...)
+			return nil
+		}
+	}
+	return ErrVolumeNotFound
+}
+
 // FindVolume finds a volume within a repository.
 func (r *Repository) FindVolume(id string) (*Volume, error) {
 	if id == "latest" && len(r.Volumes) > 0 {
