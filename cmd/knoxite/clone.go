@@ -39,7 +39,7 @@ var (
 )
 
 func init() {
-	initStoreFlags(cloneCmd.Flags)
+	initStoreFlags(cloneCmd.Flags, &cloneOpts)
 	RootCmd.AddCommand(cloneCmd)
 }
 

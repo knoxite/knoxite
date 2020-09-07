@@ -80,16 +80,16 @@ func configureStoreOpts(cmd *cobra.Command, opts *StoreOptions) {
 	}
 }
 
-func initStoreFlags(f func() *pflag.FlagSet) {
-	f().StringVarP(&storeOpts.Description, "desc", "d", "", "a description or comment for this volume")
-	f().StringVarP(&storeOpts.Compression, "compression", "c", "", "compression algo to use: none (default), flate, gzip, lzma, zlib, zstd")
-	f().StringVarP(&storeOpts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
-	f().UintVarP(&storeOpts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
-	f().StringArrayVarP(&storeOpts.Excludes, "excludes", "x", []string{}, "list of excludes")
+func initStoreFlags(f func() *pflag.FlagSet, opts *StoreOptions) {
+	f().StringVarP(&opts.Description, "desc", "d", "", "a description or comment for this volume")
+	f().StringVarP(&opts.Compression, "compression", "c", "", "compression algo to use: none (default), flate, gzip, lzma, zlib, zstd")
+	f().StringVarP(&opts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
+	f().UintVarP(&opts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
+	f().StringArrayVarP(&opts.Excludes, "excludes", "x", []string{}, "list of excludes")
 }
 
 func init() {
-	initStoreFlags(storeCmd.Flags)
+	initStoreFlags(storeCmd.Flags, &storeOpts)
 	RootCmd.AddCommand(storeCmd)
 }
 
