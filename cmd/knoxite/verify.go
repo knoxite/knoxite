@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2020, Fabian Siegel <fabians1999@gmail.com>
+ *                   2020, Christian Muehlhaeuser <muesli@gmail.com>
  *
  *   For license see LICENSE
  */
@@ -32,7 +33,7 @@ var (
 			} else if len(args) == 1 {
 				return executeVerifyVolume(args[0], verifyOpts)
 			} else if len(args) == 2 {
-				return executeVerifySnapshot(args[0], args[1], verifyOpts)
+				return executeVerifySnapshot(args[1], verifyOpts)
 			}
 			return nil
 		},
@@ -49,133 +50,88 @@ func init() {
 }
 
 func executeVerifyRepo(opts VerifyOptions) error {
-	errors := make([]error, 0)
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
-	if err == nil {
-		progress, err := knoxite.VerifyRepo(repository, opts.Percentage)
-		if err != nil {
-			errors = append(errors, err)
-			return err
-		}
-
-		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
-		lastPath := ""
-
-		for p := range progress {
-			if p.Error != nil {
-				fmt.Println()
-				errors = append(errors, p.Error)
-			}
-
-			pb.Total = int64(p.CurrentItemStats.Size)
-			pb.Current = int64(p.CurrentItemStats.Transferred)
-			pb.PrependText = fmt.Sprintf("%s / %s",
-				knoxite.SizeToString(uint64(pb.Current)),
-				knoxite.SizeToString(uint64(pb.Total)))
-
-			if p.Path != lastPath {
-				// We have just started restoring a new item
-				if len(lastPath) > 0 {
-					fmt.Println()
-				}
-				lastPath = p.Path
-				pb.Text = p.Path
-			}
-
-			pb.LazyPrint()
-		}
-
-		fmt.Println()
-		fmt.Printf("Verify done: %d errors\n", len(errors))
-		return nil
+	if err != nil {
+		return err
 	}
-	return err
+
+	progress, err := knoxite.VerifyRepo(repository, opts.Percentage)
+	if err != nil {
+		return err
+	}
+
+	errors := verify(progress)
+
+	fmt.Println()
+	fmt.Printf("Verify repository done: %d errors\n", len(errors))
+	return nil
 }
 
 func executeVerifyVolume(volumeId string, opts VerifyOptions) error {
-	errors := make([]error, 0)
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
-	if err == nil {
-		progress, err := knoxite.VerifyVolume(repository, volumeId, opts.Percentage)
-		if err != nil {
-			errors = append(errors, err)
-			return err
-		}
-
-		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
-		lastPath := ""
-
-		for p := range progress {
-			if p.Error != nil {
-				fmt.Println()
-				errors = append(errors, p.Error)
-			}
-
-			pb.Total = int64(p.CurrentItemStats.Size)
-			pb.Current = int64(p.CurrentItemStats.Transferred)
-			pb.PrependText = fmt.Sprintf("%s / %s",
-				knoxite.SizeToString(uint64(pb.Current)),
-				knoxite.SizeToString(uint64(pb.Total)))
-
-			if p.Path != lastPath {
-				// We have just started restoring a new item
-				if len(lastPath) > 0 {
-					fmt.Println()
-				}
-				lastPath = p.Path
-				pb.Text = p.Path
-			}
-
-			pb.LazyPrint()
-		}
-
-		fmt.Println()
-		fmt.Printf("Verify done: %d errors\n", len(errors))
-		return nil
+	if err != nil {
+		return err
 	}
-	return err
+
+	progress, err := knoxite.VerifyVolume(repository, volumeId, opts.Percentage)
+	if err != nil {
+		return err
+	}
+
+	errors := verify(progress)
+
+	fmt.Println()
+	fmt.Printf("Verify volume done: %d errors\n", len(errors))
+	return nil
 }
 
-func executeVerifySnapshot(volumeId string, snapshotId string, opts VerifyOptions) error {
-	errors := make([]error, 0)
+func executeVerifySnapshot(snapshotId string, opts VerifyOptions) error {
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
-	if err == nil {
-		progress, err := knoxite.VerifySnapshot(repository, snapshotId, opts.Percentage)
-		if err != nil {
-			errors = append(errors, err)
-			return err
-		}
-
-		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
-		lastPath := ""
-
-		for p := range progress {
-			if p.Error != nil {
-				fmt.Println()
-				errors = append(errors, p.Error)
-			}
-
-			pb.Total = int64(p.CurrentItemStats.Size)
-			pb.Current = int64(p.CurrentItemStats.Transferred)
-			pb.PrependText = fmt.Sprintf("%s / %s",
-				knoxite.SizeToString(uint64(pb.Current)),
-				knoxite.SizeToString(uint64(pb.Total)))
-
-			if p.Path != lastPath {
-				// We have just started restoring a new item
-				if len(lastPath) > 0 {
-					fmt.Println()
-				}
-				lastPath = p.Path
-				pb.Text = p.Path
-			}
-
-			pb.LazyPrint()
-		}
-
-		fmt.Println()
-		fmt.Printf("Verify done: %d errors\n", len(errors))
-		return nil
+	if err != nil {
+		return err
 	}
-	return err
+
+	progress, err := knoxite.VerifySnapshot(repository, snapshotId, opts.Percentage)
+	if err != nil {
+		return err
+	}
+
+	errors := verify(progress)
+
+	fmt.Println()
+	fmt.Printf("Verify snapshot done: %d errors\n", len(errors))
+	return nil
+}
+
+func verify(progress chan knoxite.Progress) []error {
+	var errors []error
+
+	pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
+	lastPath := ""
+
+	for p := range progress {
+		if p.Error != nil {
+			fmt.Println()
+			errors = append(errors, p.Error)
+		}
+
+		pb.Total = int64(p.CurrentItemStats.Size)
+		pb.Current = int64(p.CurrentItemStats.Transferred)
+		pb.PrependText = fmt.Sprintf("%s / %s",
+			knoxite.SizeToString(uint64(pb.Current)),
+			knoxite.SizeToString(uint64(pb.Total)))
+
+		if p.Path != lastPath {
+			// We have just started restoring a new item
+			if len(lastPath) > 0 {
+				fmt.Println()
+			}
+			lastPath = p.Path
+			pb.Text = p.Path
+		}
+
+		pb.LazyPrint()
+	}
+
+	return errors
 }
