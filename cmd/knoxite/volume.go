@@ -82,23 +82,26 @@ func executeVolumeInit(name, description string) error {
 	defer lock()
 
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
-	if err == nil {
-		vol, verr := knoxite.NewVolume(name, description)
-		if verr == nil {
-			verr = repository.AddVolume(vol)
-			if verr != nil {
-				return fmt.Errorf("Creating volume %s failed: %v", name, verr)
-			}
-
-			annotation := "Name: " + vol.Name
-			if len(vol.Description) > 0 {
-				annotation += ", Description: " + vol.Description
-			}
-			fmt.Printf("Volume %s (%s) created\n", vol.ID, annotation)
-			return repository.Save()
-		}
+	if err != nil {
+		return err
 	}
-	return err
+
+	vol, err := knoxite.NewVolume(name, description)
+	if err != nil {
+		return err
+	}
+
+	err = repository.AddVolume(vol)
+	if err != nil {
+		return fmt.Errorf("Creating volume %s failed: %v", name, err)
+	}
+
+	annotation := "Name: " + vol.Name
+	if len(vol.Description) > 0 {
+		annotation += ", Description: " + vol.Description
+	}
+	fmt.Printf("Volume %s (%s) created\n", vol.ID, annotation)
+	return repository.Save()
 }
 
 func executeVolumeRemove(volumeID string) error {
