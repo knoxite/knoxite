@@ -12,8 +12,8 @@ import (
 	"math/rand"
 )
 
-func VerifyRepo(repository Repository, percentage int) (prog chan Progress, err error) {
-	prog = make(chan Progress)
+func VerifyRepo(repository Repository, percentage int) (chan Progress, error) {
+	prog := make(chan Progress)
 
 	go func() {
 		archiveToSnapshot := make(map[string]*Snapshot)
@@ -31,12 +31,12 @@ func VerifyRepo(repository Repository, percentage int) (prog chan Progress, err 
 			}
 		}
 
+		// get all keys of the snapshot Archives
 		archives := make([]string, 0)
 		for archiveHash := range archiveToSnapshot {
 			archives = append(archives, archiveHash)
 		}
 
-		// get all keys of the snapshot Archives
 		if percentage > 100 {
 			percentage = 100
 		} else if percentage < 0 {
@@ -72,13 +72,13 @@ func VerifyRepo(repository Repository, percentage int) (prog chan Progress, err 
 	return prog, nil
 }
 
-func VerifyVolume(repository Repository, volumeId string, percentage int) (prog chan Progress, err error) {
-	prog = make(chan Progress)
+func VerifyVolume(repository Repository, volumeId string, percentage int) (chan Progress, error) {
+	prog := make(chan Progress)
 
 	go func() {
-		volume, ferr := repository.FindVolume(volumeId)
-		if ferr != nil {
-			prog <- newProgressError(ferr)
+		volume, err := repository.FindVolume(volumeId)
+		if err != nil {
+			prog <- newProgressError(err)
 		}
 
 		archiveToSnapshot := make(map[string]*Snapshot)
@@ -94,12 +94,12 @@ func VerifyVolume(repository Repository, volumeId string, percentage int) (prog 
 			}
 		}
 
+		// get all keys of the snapshot Archives
 		archives := make([]string, 0)
 		for archiveHash := range archiveToSnapshot {
 			archives = append(archives, archiveHash)
 		}
 
-		// get all keys of the snapshot Archives
 		if percentage > 100 {
 			percentage = 100
 		} else if percentage < 0 {
@@ -135,13 +135,13 @@ func VerifyVolume(repository Repository, volumeId string, percentage int) (prog 
 	return prog, nil
 }
 
-func VerifySnapshot(repository Repository, snapshotId string, percentage int) (prog chan Progress, err error) {
-	prog = make(chan Progress)
+func VerifySnapshot(repository Repository, snapshotId string, percentage int) (chan Progress, error) {
+	prog := make(chan Progress)
 
 	go func() {
-		_, snapshot, ferr := repository.FindSnapshot(snapshotId)
-		if ferr != nil {
-			prog <- newProgressError(ferr)
+		_, snapshot, err := repository.FindSnapshot(snapshotId)
+		if err != nil {
+			prog <- newProgressError(err)
 		}
 
 		// get all keys of the snapshot Archives
