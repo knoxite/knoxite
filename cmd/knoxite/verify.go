@@ -41,7 +41,7 @@ var (
 )
 
 func initVerifyFlags(f func() *pflag.FlagSet) {
-	f().IntVar(&verifyOpts.Percentage, "percentage", 70, "How many archives to be checked between 0 and 100")
+	f().IntVar(&verifyOpts.Percentage, "percentage", 25, "How many archives to be checked between 0 and 100")
 }
 
 func init() {
