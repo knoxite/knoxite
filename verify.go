@@ -185,21 +185,23 @@ func VerifySnapshot(repository Repository, snapshotId string, percentage int) (p
 }
 
 func VerifyArchive(repository Repository, arc Archive) error {
-	if arc.Type == File {
-		parts := uint(len(arc.Chunks))
-		for i := uint(0); i < parts; i++ {
-			idx, erri := arc.IndexOfChunk(i)
-			if erri != nil {
-				return erri
-			}
-
-			chunk := arc.Chunks[idx]
-			_, errc := loadChunk(repository, arc, chunk)
-			if errc != nil {
-				return errc
-			}
-		}
+	if arc.Type != File {
 		return nil
 	}
+
+	parts := uint(len(arc.Chunks))
+	for i := uint(0); i < parts; i++ {
+		idx, err := arc.IndexOfChunk(i)
+		if err != nil {
+			return err
+		}
+
+		chunk := arc.Chunks[idx]
+		_, err = loadChunk(repository, arc, chunk)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
