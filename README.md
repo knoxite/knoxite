@@ -1,5 +1,4 @@
-knoxite
-=======
+# ![knoxite](/assets/knoxite-logo.svg "knoxite")
 
 [![Build Status](https://github.com/knoxite/knoxite/workflows/build/badge.svg)](https://github.com/knoxite/knoxite/actions)
 [![Coverage Status](https://coveralls.io/repos/github/knoxite/knoxite/badge.svg?branch=master)](https://coveralls.io/github/knoxite/knoxite?branch=master)
