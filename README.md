@@ -1,4 +1,4 @@
-# ![knoxite](/assets/knoxite-logo.svg "knoxite")
+# ![knoxite](/assets/knoxite-logo.svg)
 
 [![Build Status](https://github.com/knoxite/knoxite/workflows/build/badge.svg)](https://github.com/knoxite/knoxite/actions)
 [![Coverage Status](https://coveralls.io/repos/github/knoxite/knoxite/badge.svg?branch=master)](https://coveralls.io/github/knoxite/knoxite?branch=master)
@@ -7,7 +7,7 @@
 
 knoxite is a secure data storage & backup system.
 
-Join the discussion in #knoxite (irc.freenode.net) or our [Gitter room](https://gitter.im/knoxite/chat)!
+Join the discussion on IRC in #knoxite (on irc.freenode.net) or our [Gitter chat room](https://gitter.im/knoxite/chat)!
 
 ### It's secure
 knoxite uses AES-encryption to safely store your data.
