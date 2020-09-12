@@ -23,7 +23,12 @@ func TestVolumeCreate(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	vol, verr := NewVolume("test_name", "test_description")
+	vol, err := NewVolume("test_name", "test_description")
+	if err != nil {
+		t.Errorf("Failed creating volume: %s", err)
+		return
+	}
+
 	{
 		r, err := NewRepository(dir, testPassword)
 		if err != nil {
@@ -31,18 +36,16 @@ func TestVolumeCreate(t *testing.T) {
 			return
 		}
 
-		if verr == nil {
-			verr = r.AddVolume(vol)
-			if verr != nil {
-				t.Errorf("Failed creating volume: %s", verr)
-				return
-			}
+		err = r.AddVolume(vol)
+		if err != nil {
+			t.Errorf("Failed creating volume: %s", err)
+			return
+		}
 
-			serr := r.Save()
-			if serr != nil {
-				t.Errorf("Failed saving volume: %s", serr)
-				return
-			}
+		err = r.Save()
+		if err != nil {
+			t.Errorf("Failed saving volume: %s", err)
+			return
 		}
 	}
 
