@@ -57,7 +57,7 @@ func executeMount(snapshotID, mountpoint string) error {
 		return err
 	}
 
-	if _, serr := os.Stat(mountpoint); os.IsNotExist(serr) {
+	if _, err := os.Stat(mountpoint); os.IsNotExist(err) {
 		fmt.Printf("Mountpoint %s doesn't exist, creating it\n", mountpoint)
 		err = os.Mkdir(mountpoint, os.ModeDir|0700)
 		if err != nil {

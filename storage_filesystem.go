@@ -133,7 +133,7 @@ func (backend StorageFilesystem) InitRepository() error {
 	}
 	paths := []string{backend.chunkPath, backend.snapshotPath}
 	for _, path := range paths {
-		if _, serr := (*backend.storage).Stat(path); serr == nil {
+		if _, err := (*backend.storage).Stat(path); err == nil {
 			return ErrRepositoryExists
 			/*
 				if !stat.IsDir() {

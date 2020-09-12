@@ -39,15 +39,15 @@ func executeCat(snapshotID string, file string) error {
 	if err != nil {
 		return err
 	}
-	_, snapshot, ferr := repository.FindSnapshot(snapshotID)
-	if ferr != nil {
-		return ferr
+	_, snapshot, err := repository.FindSnapshot(snapshotID)
+	if err != nil {
+		return err
 	}
 
 	if archive, ok := snapshot.Archives[file]; ok {
-		b, _, erra := knoxite.DecodeArchiveData(repository, *archive)
-		if erra != nil {
-			return erra
+		b, _, err := knoxite.DecodeArchiveData(repository, *archive)
+		if err != nil {
+			return err
 		}
 
 		_, err = os.Stdout.Write(b)

@@ -69,9 +69,9 @@ func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 				// FileInfo: fi,
 			}
 			if isSymLink(fi) {
-				symlink, lerr := os.Readlink(path)
-				if lerr != nil {
-					fmt.Fprintf(os.Stderr, "error resolving symlink for: %v - %v\n", path, lerr)
+				symlink, err := os.Readlink(path)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "\n\nerror resolving symlink for: %v - %v\n\n", path, err)
 					return nil
 				}
 

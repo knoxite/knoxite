@@ -97,9 +97,9 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	// we want to be notified during the first phase of a shutdown
 	cancel := shutdown.First()
 
-	wd, gerr := os.Getwd()
-	if gerr != nil {
-		return gerr
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
 	}
 
 	if len(repository.BackendManager().Backends)-int(opts.FailureTolerance) <= 0 {

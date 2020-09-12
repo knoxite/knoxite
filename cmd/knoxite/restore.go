@@ -72,14 +72,14 @@ func init() {
 func executeRestore(snapshotID, target string, opts RestoreOptions) error {
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err == nil {
-		_, snapshot, ferr := repository.FindSnapshot(snapshotID)
-		if ferr != nil {
-			return ferr
+		_, snapshot, err := repository.FindSnapshot(snapshotID)
+		if err != nil {
+			return err
 		}
 
-		progress, derr := knoxite.DecodeSnapshot(repository, snapshot, target, opts.Excludes)
-		if derr != nil {
-			return derr
+		progress, err := knoxite.DecodeSnapshot(repository, snapshot, target, opts.Excludes)
+		if err != nil {
+			return err
 		}
 
 		pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}

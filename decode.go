@@ -132,9 +132,9 @@ func loadChunk(repository Repository, archive Archive, chunk Chunk) ([]byte, err
 
 		// try to load all parts until we can successfully combine/reconstruct the chunk
 		for i := 0; i < int(chunk.DataParts+chunk.ParityParts); i++ {
-			var cerr error
-			pars[i], cerr = repository.backend.LoadChunk(chunk, uint(i))
-			if cerr != nil {
+			var err error
+			pars[i], err = repository.backend.LoadChunk(chunk, uint(i))
+			if err != nil {
 				pars[i] = nil
 				parsMissing++
 				continue
@@ -216,15 +216,15 @@ func DecodeArchive(progress chan Progress, repository Repository, arc Archive, p
 		}
 
 		for i := uint(0); i < parts; i++ {
-			idx, erri := arc.IndexOfChunk(i)
-			if erri != nil {
-				return erri
+			idx, err := arc.IndexOfChunk(i)
+			if err != nil {
+				return err
 			}
 
 			chunk := arc.Chunks[idx]
-			b, errc := loadChunk(repository, arc, chunk)
-			if errc != nil {
-				return errc
+			b, err := loadChunk(repository, arc, chunk)
+			if err != nil {
+				return err
 			}
 
 			_, err = f.Write(b)

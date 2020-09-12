@@ -78,15 +78,15 @@ func (backend *HTTPStorage) LoadChunk(shasum string, part, totalParts uint) ([]b
 }
 
 // StoreChunk stores a single Chunk on network.
-func (backend *HTTPStorage) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
+func (backend *HTTPStorage) StoreChunk(shasum string, part, totalParts uint, data []byte) (uint64, error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
 	// this step is very important
-	fileWriter, werr := bodyWriter.CreateFormFile("uploadfile", shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
-	if werr != nil {
+	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10))
+	if err != nil {
 		fmt.Println("error writing to buffer")
-		return 0, werr
+		return 0, err
 	}
 
 	_, err = fileWriter.Write(data)

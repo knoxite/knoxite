@@ -107,9 +107,9 @@ func OpenRepository(path, password string) (Repository, error) {
 	}
 
 	for _, url := range repository.Paths {
-		backend, berr := BackendFromURL(url)
-		if berr != nil {
-			return repository, berr
+		backend, err := BackendFromURL(url)
+		if err != nil {
+			return repository, err
 		}
 		repository.backend.AddBackend(&backend)
 	}

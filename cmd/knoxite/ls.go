@@ -46,15 +46,15 @@ func executeLs(snapshotID string) error {
 			[]int64{-10, -8, -5, 12, -19, -48},
 			"No files found.")
 
-		_, snapshot, ferr := repository.FindSnapshot(snapshotID)
-		if ferr != nil {
-			return ferr
+		_, snapshot, err := repository.FindSnapshot(snapshotID)
+		if err != nil {
+			return err
 		}
 
 		for _, archive := range snapshot.Archives {
 			username := strconv.FormatInt(int64(archive.UID), 10)
-			u, uerr := user.LookupId(username)
-			if uerr == nil {
+			u, err := user.LookupId(username)
+			if err == nil {
 				username = u.Username
 			}
 			groupname := strconv.FormatInt(int64(archive.GID), 10)

@@ -41,9 +41,9 @@ func TestMain(m *testing.M) {
 			}
 
 			for _, v := range list.Files {
-				ids, lerr := db.Bucket.ListFileVersions(v.Name, "", 128)
-				if lerr != nil {
-					panic(lerr)
+				ids, err := db.Bucket.ListFileVersions(v.Name, "", 128)
+				if err != nil {
+					panic(err)
 				}
 				for _, id := range ids.Files {
 					db.Bucket.DeleteFileVersion(v.Name, id.ID)
