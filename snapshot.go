@@ -29,6 +29,17 @@ type Snapshot struct {
 	Archives    map[string]*Archive `json:"items"`
 }
 
+// StoreOptions holds all the storage settings for a snapshot operation.
+type StoreOptions struct {
+	CWD         string
+	Paths       []string
+	Excludes    []string
+	Compress    uint16
+	Encrypt     uint16
+	DataParts   uint
+	ParityParts uint
+}
+
 // NewSnapshot creates a new snapshot.
 func NewSnapshot(description string) (*Snapshot, error) {
 	snapshot := Snapshot{
@@ -109,10 +120,10 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 }
 
 // Add adds a path to a Snapshot.
-func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt uint16, dataParts, parityParts uint) chan Progress {
+func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opts StoreOptions) chan Progress {
 	progress := make(chan Progress)
 
-	ch := snapshot.gatherTargetInformation(cwd, paths, excludes)
+	ch := snapshot.gatherTargetInformation(opts.CWD, opts.Paths, opts.Excludes)
 
 	go func() {
 		for result := range ch {
@@ -123,7 +134,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 			}
 
 			archive := result.Archive
-			rel, err := filepath.Rel(cwd, archive.Path)
+			rel, err := filepath.Rel(opts.CWD, archive.Path)
 			if err == nil && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 				archive.Path = rel
 			}
@@ -138,8 +149,8 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 			progress <- p
 
 			if archive.Type == File {
-				dataParts = uint(math.Max(1, float64(dataParts)))
-				chunkchan, err := chunkFile(archive.Path, compress, encrypt, repository.Key, int(dataParts), int(parityParts))
+				opts.DataParts = uint(math.Max(1, float64(opts.DataParts)))
+				chunkchan, err := chunkFile(archive.Path, repository.Key, opts)
 				if err != nil {
 					if os.IsNotExist(err) {
 						// if this file has already been deleted before we could backup it, we can gracefully ignore it and continue
@@ -149,8 +160,8 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 					progress <- p
 					break
 				}
-				archive.Encrypted = encrypt
-				archive.Compressed = compress
+				archive.Encrypted = opts.Encrypt
+				archive.Compressed = opts.Compress
 
 				for cd := range chunkchan {
 					if cd.Error != nil {
