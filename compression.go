@@ -87,24 +87,39 @@ func (c Decompressor) Process(data []byte) ([]byte, error) {
 	switch c.Method {
 	case CompressionNone:
 		return data, nil
+
 	case CompressionFlate:
 		zr = flate.NewReader(bytes.NewReader(data))
+
 	case CompressionGZip:
 		zr, err = gzip.NewReader(bytes.NewReader(data))
+		if err != nil {
+			return nil, err
+		}
+
 	case CompressionLZMA:
-		zri, erri := xz.NewReader(bytes.NewReader(data))
+		zri, err := xz.NewReader(bytes.NewReader(data))
+		if err != nil {
+			return nil, err
+		}
+
 		zr = ioutil.NopCloser(zri)
-		err = erri
+
 	case CompressionZlib:
 		zr, err = zlib.NewReader(bytes.NewReader(data))
+		if err != nil {
+			return nil, err
+		}
+
 	case CompressionZstd:
-		zri, erri := zstd.NewReader(bytes.NewReader(data))
+		zri, err := zstd.NewReader(bytes.NewReader(data))
+		if err != nil {
+			return nil, err
+		}
+
 		zr = ioutil.NopCloser(zri)
-		err = erri
 	}
-	if err != nil {
-		return []byte{}, err
-	}
+
 	defer zr.Close()
 
 	return ioutil.ReadAll(zr)
