@@ -8,7 +8,6 @@
 package knoxite
 
 import (
-	"fmt"
 	"path/filepath"
 	"strconv"
 )
@@ -96,12 +95,7 @@ func (backend StorageFilesystem) DeleteChunk(shasum string, part, totalParts uin
 
 // LoadSnapshot loads a snapshot.
 func (backend StorageFilesystem) LoadSnapshot(id string) ([]byte, error) {
-	b, err := (*backend.storage).ReadFile(filepath.Join(backend.snapshotPath, id))
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return b, err
+	return (*backend.storage).ReadFile(filepath.Join(backend.snapshotPath, id))
 }
 
 // SaveSnapshot stores a snapshot.
@@ -112,11 +106,7 @@ func (backend StorageFilesystem) SaveSnapshot(id string, b []byte) error {
 
 // LoadChunkIndex reads the chunk-index.
 func (backend StorageFilesystem) LoadChunkIndex() ([]byte, error) {
-	b, err := (*backend.storage).ReadFile(backend.chunkIndexPath)
-	if err != nil {
-		return []byte{}, err
-	}
-	return b, err
+	return (*backend.storage).ReadFile(backend.chunkIndexPath)
 }
 
 // SaveChunkIndex stores the chunk-index.
@@ -152,12 +142,7 @@ func (backend StorageFilesystem) InitRepository() error {
 
 // LoadRepository reads the metadata for a repository.
 func (backend StorageFilesystem) LoadRepository() ([]byte, error) {
-	b, err := (*backend.storage).ReadFile(backend.repositoryPath)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	return b, err
+	return (*backend.storage).ReadFile(backend.repositoryPath)
 }
 
 // SaveRepository stores the metadata for a repository.
