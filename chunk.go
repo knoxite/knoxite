@@ -42,8 +42,8 @@ type inputChunk struct {
 	Num  uint
 }
 
-func processChunk(_ int, compress, encrypt uint16, password string, dataParts, parityParts int, jobs <-chan inputChunk, chunks chan<- ChunkResult, wg *sync.WaitGroup) {
-	pipe, _ := NewEncodingPipeline(compress, encrypt, password)
+func processChunk(password string, opts StoreOptions, jobs <-chan inputChunk, chunks chan<- ChunkResult, wg *sync.WaitGroup) {
+	pipe, _ := NewEncodingPipeline(opts.Compress, opts.Encrypt, password)
 
 	for j := range jobs {
 		// fmt.Println("\tWorker", id, "processing job", j.Num, len(j.Data))
@@ -59,8 +59,8 @@ func processChunk(_ int, compress, encrypt uint16, password string, dataParts, p
 		orighashsum := Hash(j.Data, HashHighway256)
 
 		c := Chunk{
-			DataParts:     uint(dataParts),
-			ParityParts:   uint(parityParts),
+			DataParts:     opts.DataParts,
+			ParityParts:   opts.ParityParts,
 			OriginalSize:  len(j.Data),
 			Size:          len(b),
 			DecryptedHash: orighashsum,
@@ -68,8 +68,8 @@ func processChunk(_ int, compress, encrypt uint16, password string, dataParts, p
 			Num:           j.Num,
 		}
 
-		if parityParts > 0 {
-			pars, err := redundantData(b, dataParts, parityParts)
+		if opts.ParityParts > 0 {
+			pars, err := redundantData(b, int(opts.DataParts), int(opts.ParityParts))
 			if err != nil {
 				chunks <- ChunkResult{Error: err}
 				wg.Done()
@@ -87,7 +87,7 @@ func processChunk(_ int, compress, encrypt uint16, password string, dataParts, p
 }
 
 // chunkFile divides filename into chunks of 1MiB each.
-func chunkFile(filename string, compress, encrypt uint16, password string, dataParts, parityParts int) (chan ChunkResult, error) {
+func chunkFile(filename string, password string, opts StoreOptions) (chan ChunkResult, error) {
 	c := make(chan ChunkResult)
 
 	file, err := os.Open(filename)
@@ -98,7 +98,7 @@ func chunkFile(filename string, compress, encrypt uint16, password string, dataP
 	wg := &sync.WaitGroup{}
 	jobs := make(chan inputChunk)
 	for w := 1; w <= 4; w++ {
-		go processChunk(w, compress, encrypt, password, dataParts, parityParts, jobs, c, wg)
+		go processChunk(password, opts, jobs, c, wg)
 	}
 
 	wg.Add(1)

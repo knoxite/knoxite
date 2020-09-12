@@ -114,12 +114,18 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 		return err
 	}
 
-	tol := uint(len(repository.BackendManager().Backends) - int(opts.FailureTolerance))
+	so := knoxite.StoreOptions{
+		CWD:         wd,
+		Paths:       targets,
+		Excludes:    opts.Excludes,
+		Compress:    compression,
+		Encrypt:     encryption,
+		DataParts:   uint(len(repository.BackendManager().Backends) - int(opts.FailureTolerance)),
+		ParityParts: opts.FailureTolerance,
+	}
 
 	startTime := time.Now()
-	progress := snapshot.Add(wd, targets, opts.Excludes, *repository, chunkIndex,
-		compression, encryption,
-		tol, opts.FailureTolerance)
+	progress := snapshot.Add(*repository, chunkIndex, so)
 
 	fileProgressBar := &goprogressbar.ProgressBar{Width: 40}
 	overallProgressBar := &goprogressbar.ProgressBar{

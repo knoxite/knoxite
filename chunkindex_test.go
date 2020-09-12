@@ -30,7 +30,18 @@ func TestChunkIndexReindex(t *testing.T) {
 	snapshot, _ := NewSnapshot("test_snapshot")
 	index, _ := OpenChunkIndex(&r)
 	wd, _ := os.Getwd()
-	progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, []string{}, r, &index, CompressionNone, EncryptionAES, 1, 0)
+
+	opts := StoreOptions{
+		CWD:         wd,
+		Paths:       []string{"snapshot_test.go", "snapshot.go"},
+		Excludes:    []string{},
+		Compress:    CompressionNone,
+		Encrypt:     EncryptionAES,
+		DataParts:   1,
+		ParityParts: 0,
+	}
+
+	progress := snapshot.Add(r, &index, opts)
 	for p := range progress {
 		if p.Error != nil {
 			t.Errorf("Failed adding to snapshot: %s", p.Error)
@@ -78,7 +89,18 @@ func TestChunkIndexPack(t *testing.T) {
 		t.Errorf("Failed getting working dir: %s", err)
 		return
 	}
-	progress := snapshot.Add(wd, []string{"snapshot_test.go", "snapshot.go"}, []string{}, r, &index, CompressionNone, EncryptionAES, 1, 0)
+
+	opts := StoreOptions{
+		CWD:         wd,
+		Paths:       []string{"snapshot_test.go", "snapshot.go"},
+		Excludes:    []string{},
+		Compress:    CompressionNone,
+		Encrypt:     EncryptionAES,
+		DataParts:   1,
+		ParityParts: 0,
+	}
+
+	progress := snapshot.Add(r, &index, opts)
 	for p := range progress {
 		if p.Error != nil {
 			t.Errorf("Failed adding to snapshot: %s", p.Error)
