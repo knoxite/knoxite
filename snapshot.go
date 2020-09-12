@@ -46,55 +46,76 @@ func NewSnapshot(description string) (*Snapshot, error) {
 	return &snapshot, nil
 }
 
-func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, excludes []string, out chan ArchiveResult) {
+func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, excludes []string) chan ArchiveResult {
+	ch := make(chan ArchiveResult)
 	var wg sync.WaitGroup
-	for _, path := range paths {
-		c := findFiles(path, excludes)
 
-		for result := range c {
-			if result.Error == nil {
-				rel, err := filepath.Rel(cwd, result.Archive.Path)
-				if err == nil && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
-					result.Archive.Path = rel
-				}
-				if isSpecialPath(result.Archive.Path) {
-					continue
-				}
-
-				snapshot.mut.Lock()
-				snapshot.Stats.Size += result.Archive.Size
-				switch result.Archive.Type {
-				case Directory:
-					snapshot.Stats.Dirs++
-				case File:
-					snapshot.Stats.Files++
-				case SymLink:
-					snapshot.Stats.SymLinks++
-				}
-				snapshot.mut.Unlock()
-			}
-
-			wg.Add(1)
-			go func(r ArchiveResult) {
-				out <- r
+	results := func(rr []ArchiveResult) {
+		go func() {
+			for _, r := range rr {
+				ch <- r
 				wg.Done()
-			}(result)
-		}
+			}
+		}()
 	}
 
-	wg.Wait()
-	close(out)
+	go func() {
+		var archives []ArchiveResult
+
+		for _, path := range paths {
+			ff := findFiles(path, excludes)
+
+			for result := range ff {
+				if result.Error == nil {
+					rel, err := filepath.Rel(cwd, result.Archive.Path)
+					if err == nil && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+						result.Archive.Path = rel
+					}
+					if isSpecialPath(result.Archive.Path) {
+						continue
+					}
+
+					// update scan statistics
+					snapshot.mut.Lock()
+					snapshot.Stats.Size += result.Archive.Size
+					switch result.Archive.Type {
+					case Directory:
+						snapshot.Stats.Dirs++
+					case File:
+						snapshot.Stats.Files++
+					case SymLink:
+						snapshot.Stats.SymLinks++
+					}
+					snapshot.mut.Unlock()
+				}
+
+				wg.Add(1)
+				archives = append(archives, result)
+
+				if len(archives) >= 128 {
+					results(archives)
+					archives = []ArchiveResult{}
+				}
+			}
+		}
+
+		results(archives)
+
+		wg.Wait()
+		close(ch)
+	}()
+
+	return ch
 }
 
 // Add adds a path to a Snapshot.
 func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, repository Repository, chunkIndex *ChunkIndex, compress, encrypt uint16, dataParts, parityParts uint) chan Progress {
 	progress := make(chan Progress)
-	fwd := make(chan ArchiveResult)
 
-	go snapshot.gatherTargetInformation(cwd, paths, excludes, fwd)
+	ch := snapshot.gatherTargetInformation(cwd, paths, excludes)
 
 	go func() {
-		for result := range fwd {
+		for result := range ch {
 			if result.Error != nil {
 				p := newProgressError(result.Error)
 				progress <- p
@@ -171,6 +192,7 @@ func (snapshot *Snapshot) Add(cwd string, paths []string, excludes []string, rep
 			snapshot.AddArchive(archive)
 			chunkIndex.AddArchive(archive, snapshot.ID)
 		}
+
 		close(progress)
 	}()
 
