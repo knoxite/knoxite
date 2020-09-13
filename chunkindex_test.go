@@ -37,6 +37,7 @@ func TestChunkIndexReindex(t *testing.T) {
 		Excludes:    []string{},
 		Compress:    CompressionNone,
 		Encrypt:     EncryptionAES,
+		Pedantic:    false,
 		DataParts:   1,
 		ParityParts: 0,
 	}
@@ -96,6 +97,7 @@ func TestChunkIndexPack(t *testing.T) {
 		Excludes:    []string{},
 		Compress:    CompressionNone,
 		Encrypt:     EncryptionAES,
+		Pedantic:    false,
 		DataParts:   1,
 		ParityParts: 0,
 	}

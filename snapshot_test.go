@@ -120,6 +120,7 @@ func TestSnapshotCreate(t *testing.T) {
 				Compress:    tt.Compression,
 				Encrypt:     EncryptionAES,
 				DataParts:   1,
+				Pedantic:    false,
 				ParityParts: tt.ParityParts,
 			}
 
@@ -199,7 +200,7 @@ func TestSnapshotCreate(t *testing.T) {
 			}
 			defer os.RemoveAll(targetdir)
 
-			progress, err := DecodeSnapshot(r, snapshot, targetdir, tt.ExcludesRestore)
+			progress, err := DecodeSnapshot(r, snapshot, targetdir, tt.ExcludesRestore, false)
 			if err != nil {
 				t.Errorf("Failed restoring snapshot: %s", err)
 				return
