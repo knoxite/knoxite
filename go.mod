@@ -6,6 +6,7 @@ require (
 	bazil.org/fuse v0.0.0-20191225233854-3a99aca11732
 	cloud.google.com/go/storage v1.10.0
 	github.com/Azure/azure-storage-file-go v0.8.0
+	github.com/BurntSushi/toml v0.3.1
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-ini/ini v1.51.1 // indirect
