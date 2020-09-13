@@ -8,16 +8,17 @@
 package config
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
 
+	"github.com/BurntSushi/toml"
 	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 	"golang.org/x/crypto/scrypt"
 )
@@ -113,7 +114,7 @@ func (b *AESBackend) Load(u *url.URL) (*Config, error) {
 		return nil, err
 	}
 
-	err = json.Unmarshal(plaintext, config)
+	_, err = toml.Decode(string(plaintext), &config)
 	if err != nil {
 		return nil, err
 	}
@@ -140,8 +141,8 @@ func (b *AESBackend) Save(config *Config) error {
 		}
 	}
 
-	j, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
+	buf := new(bytes.Buffer)
+	if err := toml.NewEncoder(buf).Encode(config); err != nil {
 		return err
 	}
 
@@ -150,7 +151,7 @@ func (b *AESBackend) Save(config *Config) error {
 		return err
 	}
 
-	ciphertext, err := encrypt(j, []byte(p))
+	ciphertext, err := encrypt(buf.Bytes(), []byte(p))
 	if err != nil {
 		return err
 	}

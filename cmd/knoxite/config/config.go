@@ -30,17 +30,17 @@ var cfgFileName = "knoxite.conf"
 
 // The RepoConfig struct contains all the default values for a a repository.
 type RepoConfig struct {
-	Url             string   `json:"url"`
-	Compression     string   `json:"compression"`
-	Tolerance       uint     `json:"tolerance"`
-	Encryption      string   `json:"encryption"`
-	Pedantic        bool     `json:"pedantic"`
-	StoreExcludes   []string `json:"store_excludes"`
-	RestoreExcludes []string `json:"restore_excludes"`
+	Url             string   `toml:"url"`
+	Compression     string   `toml:"compression"`
+	Tolerance       uint     `toml:"tolerance"`
+	Encryption      string   `toml:"encryption"`
+	Pedantic        bool     `toml:"pedantic"`
+	StoreExcludes   []string `toml:"store_excludes"`
+	RestoreExcludes []string `toml:"restore_excludes"`
 }
 
 type Config struct {
-	Repositories map[string]RepoConfig `json:"repositories"`
+	Repositories map[string]RepoConfig `toml:"repositories"`
 	backend      ConfigBackend
 	url          *url.URL
 }

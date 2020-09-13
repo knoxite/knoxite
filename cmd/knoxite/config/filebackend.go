@@ -8,11 +8,13 @@
 package config
 
 import (
-	"encoding/json"
+	"bytes"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
+
+	"github.com/BurntSushi/toml"
 )
 
 // FileBackend implements a filesystem backend for the configuration.
@@ -42,12 +44,7 @@ func (fs *FileBackend) Load(u *url.URL) (*Config, error) {
 		return &Config{url: u}, nil
 	}
 
-	j, err := ioutil.ReadFile(u.Path)
-	if err != nil {
-		return &config, err
-	}
-
-	err = json.Unmarshal(j, &config)
+	_, err = toml.DecodeFile(u.Path, &config)
 	if err != nil {
 		return nil, err
 	}
@@ -71,10 +68,10 @@ func (fs *FileBackend) Save(config *Config) error {
 		}
 	}
 
-	j, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
+	buf := new(bytes.Buffer)
+	if err := toml.NewEncoder(buf).Encode(config); err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(config.URL().Path, j, 0644)
+	return ioutil.WriteFile(config.URL().Path, buf.Bytes(), 0600)
 }
