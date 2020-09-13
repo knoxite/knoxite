@@ -111,6 +111,7 @@ func TestVerifyRepo(t *testing.T) {
 				Excludes:    []string{},
 				Compress:    CompressionGZip,
 				Encrypt:     EncryptionAES,
+				Pedantic:    false,
 				DataParts:   1,
 				ParityParts: 0,
 			}
@@ -222,6 +223,7 @@ func TestVerifyVolume(t *testing.T) {
 				Excludes:    []string{},
 				Compress:    CompressionGZip,
 				Encrypt:     EncryptionAES,
+				Pedantic:    false,
 				DataParts:   1,
 				ParityParts: 0,
 			}
@@ -335,6 +337,7 @@ func TestVerifySnapshot(t *testing.T) {
 				Excludes:    []string{},
 				Compress:    CompressionGZip,
 				Encrypt:     EncryptionAES,
+				Pedantic:    false,
 				DataParts:   1,
 				ParityParts: 0,
 			}
