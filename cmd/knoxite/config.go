@@ -7,12 +7,13 @@
 package main
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/knoxite/knoxite/cmd/knoxite/config"
 	"github.com/muesli/gotable"
 	"github.com/spf13/cobra"
@@ -182,12 +183,12 @@ func executeConfigInfo() error {
 }
 
 func executeConfigCat() error {
-	json, err := json.MarshalIndent(cfg, "", "    ")
-	if err != nil {
+	buf := new(bytes.Buffer)
+	if err := toml.NewEncoder(buf).Encode(cfg); err != nil {
 		return err
 	}
 
-	fmt.Printf("%s\n", json)
+	fmt.Printf("%s\n", buf)
 	return nil
 }
 
