@@ -185,6 +185,10 @@ func PathToUrl(u string) (*url.URL, error) {
 	// This is needed in case the shell is unable to expand the path to the users
 	// home directory for inputs like these:
 	// crypto://password@~/path/to/config
-	url.Path, _ = homedir.Expand(url.Path)
+	var err error
+	url.Path, err = homedir.Expand(url.Path)
+	if err != nil {
+		return nil, err
+	}
 	return url, nil
 }
