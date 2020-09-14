@@ -11,6 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/mitchellh/go-homedir"
 )
 
 func TestNew(t *testing.T) {
@@ -56,9 +58,12 @@ func TestNew(t *testing.T) {
 		t.Errorf("Failed creating backend for 'foobar': %v", err)
 	}
 
-	_, err = New("~/foobar")
+	conf, err = New("~/foobar")
 	if err != nil {
 		t.Errorf("Failed creating backend for '~/foobar': %v", err)
+	}
+	if path, _ := homedir.Expand("~/foobar"); path != conf.url.Path {
+		t.Errorf("Expected '%s' as config path, got: %s", path, conf.url.Path)
 	}
 
 	_, err = New("c:\\foobar")
