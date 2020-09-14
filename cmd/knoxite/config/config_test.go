@@ -53,12 +53,12 @@ func TestNew(t *testing.T) {
 
 	_, err = New("foobar")
 	if err != nil {
-		t.Fatalf("Failed for 'foobar': %v", err)
+		t.Errorf("Failed creating backend for 'foobar': %v", err)
 	}
 
 	_, err = New("~/foobar")
 	if err != nil {
-		t.Fatalf("Failed here: %v", err)
+		t.Errorf("Failed creating backend for '~/foobar': %v", err)
 	}
 
 	_, err = New("c:\\foobar")
