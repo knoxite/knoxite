@@ -66,6 +66,14 @@ func TestNew(t *testing.T) {
 		t.Errorf("Expected '%s' as config path, got: %s", path, conf.url.Path)
 	}
 
+	conf, err = New("file://~/foobar")
+	if err != nil {
+		t.Errorf("Failed creating backend for 'file://~/foobar': %v", err)
+	}
+	if path, _ := homedir.Expand("~/foobar"); path != conf.url.Path {
+		t.Errorf("Expected '%s' as config path, got: %s", path, conf.url.Path)
+	}
+
 	_, err = New("c:\\foobar")
 	if err != nil {
 		t.Errorf("Failed to create backend for valid windows url: %s", err)
