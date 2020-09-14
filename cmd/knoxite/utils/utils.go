@@ -177,7 +177,7 @@ func PathToUrl(u string) (*url.URL, error) {
 	// In case some other path elements have wrongfully been interpreted as Host
 	// part of the url
 	if url.Host != "" {
-		url.Path = url.Host[1:] + url.Path
+		url.Path = url.Host + url.Path
 		url.Host = ""
 	}
 
