@@ -21,11 +21,11 @@ func authPath(w http.ResponseWriter, r *http.Request) (string, error) {
 	}
 
 	// check for relative path attacks
-	if strings.Index(r.URL.Path, "../") >= 0 {
+	if strings.Contains(r.URL.Path, ".."+string(os.PathSeparator)) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return "", errors.New("Security alert: url path tampering")
 	}
-	if strings.Index(auth, "../") >= 0 {
+	if strings.Contains(auth, ".."+string(os.PathSeparator)) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return "", errors.New("Security alert: auth code tampering")
 	}
