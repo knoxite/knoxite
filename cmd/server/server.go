@@ -54,7 +54,13 @@ func upload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		r.ParseMultipartForm(32 << 20)
+		err = r.ParseMultipartForm(32 << 20)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		file, handler, err := r.FormFile("uploadfile")
 		if err != nil {
 			fmt.Println(err)
@@ -62,6 +68,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer file.Close()
+
 		fmt.Fprintf(w, "%v", handler.Header)
 		f, err := os.OpenFile(filepath.Join(path, "chunks", handler.Filename), os.O_WRONLY|os.O_CREATE, 0600)
 		if err != nil {
@@ -70,7 +77,13 @@ func upload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer f.Close()
-		io.Copy(f, file)
+
+		_, err = io.Copy(f, file)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		fmt.Println("Stored chunk", filepath.Join(path, "chunks", handler.Filename))
 	}
@@ -101,7 +114,13 @@ func uploadRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.ParseMultipartForm(32 << 20)
+	err = r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	file, handler, err := r.FormFile("uploadfile")
 	if err != nil {
 		fmt.Println(err)
@@ -109,6 +128,7 @@ func uploadRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+
 	fmt.Fprintf(w, "%v", handler.Header)
 	f, err := os.OpenFile(filepath.Join(path, "repository.knoxite"), os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -117,7 +137,13 @@ func uploadRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer f.Close()
-	io.Copy(f, file)
+
+	_, err = io.Copy(f, file)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	fmt.Println("Stored repository", filepath.Join(path, "repository.knoxite"))
 }
@@ -154,7 +180,13 @@ func uploadSnapshot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.ParseMultipartForm(32 << 20)
+	err = r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	file, handler, err := r.FormFile("uploadfile")
 	if err != nil {
 		fmt.Println(err)
@@ -162,6 +194,7 @@ func uploadSnapshot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+
 	fmt.Fprintf(w, "%v", handler.Header)
 	f, err := os.OpenFile(filepath.Join(path, "snapshots", handler.Filename), os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -170,7 +203,13 @@ func uploadSnapshot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer f.Close()
-	io.Copy(f, file)
+
+	_, err = io.Copy(f, file)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	fmt.Println("Stored snapshot", filepath.Join(path, "snapshots", handler.Filename))
 }
