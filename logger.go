@@ -10,15 +10,31 @@ package knoxite
 
 import (
 	"fmt"
+	"io"
+	"os"
 )
 
 type Logger struct {
 	VerbosityLevel Verbosity
+	w              io.Writer
+}
+
+func NewLogger(v Verbosity) *Logger {
+	return &Logger{
+		VerbosityLevel: v,
+		w:              os.Stdout,
+	}
+}
+
+func (l *Logger) WithWriter(w io.Writer) *Logger {
+	l.w = w
+	return l
 }
 
 func (l Logger) printV(verbosity Verbosity, v ...interface{}) {
-	fmt.Print(verbosity.String() + ": ")
-	fmt.Println(v...)
+	_, _ = l.w.Write([]byte(verbosity.String() + ": "))
+	_, _ = l.w.Write([]byte(fmt.Sprint(v...)))
+	_, _ = l.w.Write([]byte("\n"))
 }
 
 func (l Logger) Warn(v ...interface{}) {
