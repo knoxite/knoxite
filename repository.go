@@ -27,7 +27,8 @@ type Repository struct {
 
 // Const declarations.
 const (
-	RepositoryVersion = 4
+	RepositoryVersion   = 4
+	repositoryKeyLength = 32
 )
 
 // Error declarations.
@@ -42,7 +43,7 @@ var (
 // NewRepository returns a new repository.
 func NewRepository(path, password string) (Repository, error) {
 	// A random key of 32 is considered safe right now and may be increased later
-	key, err := generateRandomKey(32)
+	key, err := generateRandomKey(repositoryKeyLength)
 	if err != nil {
 		return Repository{}, ErrGenerateRandomKeyFailed
 	}
