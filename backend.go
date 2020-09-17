@@ -62,7 +62,7 @@ type Backend interface {
 	SaveRepository(data []byte) error
 }
 
-// Error declarations
+// Error declarations.
 var (
 	ErrRepositoryExists        = errors.New("Repository seems to already exist")
 	ErrInvalidRepositoryURL    = errors.New("Invalid repository url specified")

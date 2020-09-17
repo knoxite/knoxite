@@ -20,7 +20,7 @@ type BackendManager struct {
 	lastUsedBackend int
 }
 
-// Error declarations
+// Error declarations.
 var (
 	ErrLoadChunkFailed       = errors.New("Unable to load chunk from any storage backend")
 	ErrLoadSnapshotFailed    = errors.New("Unable to load snapshot from any storage backend")

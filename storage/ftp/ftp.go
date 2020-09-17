@@ -32,7 +32,7 @@ type FTPStorage struct {
 	knoxite.StorageFilesystem
 }
 
-// Error declaration
+// Error declarations.
 var (
 	ErrInvalidAuthentication = errors.New("Wrong Username or Password")
 )

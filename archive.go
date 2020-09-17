@@ -12,7 +12,7 @@ import (
 	"os"
 )
 
-// Which type
+// Types of archives.
 const (
 	File      = iota // A File
 	Directory        // A Directory

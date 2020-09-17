@@ -25,12 +25,12 @@ type Repository struct {
 	password string // password for knoxite repository file
 }
 
-// Const declarations
+// Const declarations.
 const (
 	RepositoryVersion = 4
 )
 
-// Error declarations
+// Error declarations.
 var (
 	ErrRepositoryIncompatible  = errors.New("The repository is not compatible with this version of Knoxite")
 	ErrOpenRepositoryFailed    = errors.New("Wrong password or corrupted repository")

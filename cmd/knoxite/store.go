@@ -24,7 +24,7 @@ import (
 	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 )
 
-// Error declarations
+// Error declarations.
 var (
 	ErrRedundancyAmount = errors.New("failure tolerance can't be equal or higher as the number of storage backends")
 )

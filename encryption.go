@@ -20,7 +20,7 @@ const (
 	EncryptionAES
 )
 
-// Error declarations
+// Error declarations.
 var (
 	ErrInvalidPassword = errors.New("Empty password not permitted")
 )
