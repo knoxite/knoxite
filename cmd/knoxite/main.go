@@ -2,6 +2,7 @@
  * knoxite
  *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
  *     Copyright (c) 2020,      Nicolas Martin <penguwin@penguwin.eu>
+ *     Copyright (c) 2020,      Matthias Hartmann <mahartma@mahartma.com>
  *
  *   For license see LICENSE
  */
@@ -70,7 +71,7 @@ func main() {
 
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Repo, "repo", "r", "", "Repository directory to backup to/restore from (default: current working dir)")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Alias, "alias", "R", "", "Repository alias to backup to/restore from")
-	RootCmd.PersistentFlags().StringVarP(&globalOpts.Password, "password", "p", "", "Password to use for data encryption")
+	RootCmd.PersistentFlags().StringVar(&globalOpts.Password, "password", "", "Password to use for data encryption")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.ConfigURL, "configURL", "C", config.DefaultPath(), "Path to the configuration file")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Verbosity, "verbose", "v", "Warning", "Verbose output: possible levels are Debug, Info and Warning")
 
