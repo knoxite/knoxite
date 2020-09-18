@@ -26,9 +26,11 @@ Make sure you have a working Go environment. Follow the [Go install instructions
 
 To install knoxite, simply run:
 
-    go get github.com/knoxite/knoxite/cmd/...
+    git clone https://github.com/knoxite/knoxite.git
+    cd knoxite
+    go build ./cmd/knoxite/
 
-Run knoxite --help to see a full list of options.
+Run `knoxite --help` to see a full list of options.
 
 ## Getting started
 
