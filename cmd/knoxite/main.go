@@ -1,7 +1,8 @@
 /*
  * knoxite
- *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
- *     Copyright (c) 2020,      Nicolas Martin <penguwin@penguwin.eu>
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser 	<muesli@gmail.com>
+ *     Copyright (c) 2020,      Nicolas Martin			<penguwin@penguwin.eu>
+ *     Copyright (c) 2020,      Matthias Hartmann 		<mahartma@mahartma.com>
  *
  *   For license see LICENSE
  */
@@ -113,16 +114,20 @@ func initConfig() {
 	}
 
 	var err error
+	logger.Info("Initialising config with ConfigURL")
 	cfg, err = config.New(globalOpts.ConfigURL)
 	if err != nil {
 		logger.Fatalf("error reading the config file: %v", err)
 		return
 	}
+	logger.Info("Initialised config")
 
+	logger.Info("Loading config")
 	if err = cfg.Load(); err != nil {
 		logger.Fatalf("error parsing the toml config file at '%s': %v", cfg.URL().Path, err)
 		return
 	}
+	logger.Info("Loaded config")
 
 	// There can occur a panic due to an entry assigment in nil map when theres
 	// no map initialized to store the RepoConfigs. This will prevent this from
