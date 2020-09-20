@@ -89,7 +89,10 @@ func (b *AESBackend) Load(u *url.URL) (*Config, error) {
 	}
 	u.Path = path
 
-	config := &Config{url: u}
+	config := &Config{
+		backend: b,
+		url:     u,
+	}
 
 	if !exist(u.Path) {
 		return config, nil
@@ -97,7 +100,7 @@ func (b *AESBackend) Load(u *url.URL) (*Config, error) {
 
 	ciphertext, err := ioutil.ReadFile(u.Path)
 	if err != nil {
-		return nil, err
+		return config, err
 	}
 	ftype := ciphertext[0:len(EncryptedHeaderPrefix)]
 	if string(ftype) != EncryptedHeaderPrefix {
@@ -106,21 +109,18 @@ func (b *AESBackend) Load(u *url.URL) (*Config, error) {
 
 	p, err := getPassword(u)
 	if err != nil {
-		return nil, err
+		return config, err
 	}
 
 	plaintext, err := decrypt(ciphertext[len(EncryptedHeaderPrefix):], []byte(p))
 	if err != nil {
-		return nil, err
+		return config, err
 	}
 
 	_, err = toml.Decode(string(plaintext), &config)
 	if err != nil {
-		return nil, err
+		return config, err
 	}
-
-	config.backend = b
-	config.url = u
 
 	return config, nil
 }
