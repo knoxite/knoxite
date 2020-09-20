@@ -40,35 +40,54 @@ func init() {
 }
 
 func executeLs(snapshotID string) error {
+	logger.Info("Opening repository")
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
-	if err == nil {
-		tab := gotable.NewTable([]string{"Perms", "User", "Group", "Size", "ModTime", "Name"},
-			[]int64{-10, -8, -5, 12, -19, -48},
-			"No files found.")
+	if err != nil {
+		return err
+	}
+	logger.Info("Opened repository")
 
-		_, snapshot, err := repository.FindSnapshot(snapshotID)
-		if err != nil {
-			return err
+	logger.Debug("Initialising new gotable for output")
+	tab := gotable.NewTable([]string{"Perms", "User", "Group", "Size", "ModTime", "Name"},
+		[]int64{-10, -8, -5, 12, -19, -48},
+		"No files found.")
+
+	logger.Info("Finding snapshot " + snapshotID)
+	_, snapshot, err := repository.FindSnapshot(snapshotID)
+	if err != nil {
+		return err
+	}
+	logger.Info("Found snapshot " + snapshot.Description)
+
+	logger.Debug("Iterating over archives to print details")
+	for _, archive := range snapshot.Archives {
+		username := strconv.FormatInt(int64(archive.UID), 10)
+
+		logger.Info(fmt.Sprintf("Looking up OS username with archive's UID %d", archive.UID))
+		u, err := user.LookupId(username)
+		if err == nil {
+			logger.Info(fmt.Sprintf("Username found: %s", u.Username))
+			username = u.Username
+		} else {
+			logger.Warn("Looking up username failed. Using default value.")
 		}
-
-		for _, archive := range snapshot.Archives {
-			username := strconv.FormatInt(int64(archive.UID), 10)
-			u, err := user.LookupId(username)
-			if err == nil {
-				username = u.Username
-			}
-			groupname := strconv.FormatInt(int64(archive.GID), 10)
-			tab.AppendRow([]interface{}{
-				archive.Mode,
-				username,
-				groupname,
-				knoxite.SizeToString(archive.Size),
-				time.Unix(archive.ModTime, 0).Format(timeFormat),
-				archive.Path})
-		}
-
-		_ = tab.Print()
+		
+		groupname := strconv.FormatInt(int64(archive.GID), 10)
+		tab.AppendRow([]interface{}{
+			archive.Mode,
+			username,
+			groupname,
+			knoxite.SizeToString(archive.Size),
+			time.Unix(archive.ModTime, 0).Format(timeFormat),
+			archive.Path})
 	}
 
-	return err
+	logger.Debug("Printing ls output")
+	err = tab.Print()
+	if err != nil {
+		return err
+	}
+	logger.Debug("Printed ls output")
+
+	return nil
 }
