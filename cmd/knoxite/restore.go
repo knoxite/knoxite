@@ -19,7 +19,7 @@ import (
 	"github.com/knoxite/knoxite"
 )
 
-// Error declarations
+// Error declarations.
 var (
 	ErrTargetMissing = errors.New("please specify a directory to restore to")
 )

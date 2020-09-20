@@ -74,71 +74,105 @@ func init() {
 }
 
 func executeVolumeInit(name, description string) error {
-	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	// we don't want these next calls to be interrupted
+	logger.Info("Acquiring shutdown lock")
 	lock := shutdown.Lock()
 	if lock == nil {
 		return nil
 	}
-	defer lock()
+	logger.Info("Acquired and locked shutdown lock")
 
+	defer lock()
+	defer logger.Info("Shutdown lock released")
+
+	logger.Info("Opening repository")
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
 
+	logger.Info(fmt.Sprintf("Creating volume %s", description))
 	vol, err := knoxite.NewVolume(name, description)
 	if err != nil {
 		return err
 	}
+	logger.Info(fmt.Sprintf("Created volume %s", vol.ID))
 
+	logger.Info(fmt.Sprintf("Adding volume %s to repository", vol.ID))
 	err = repository.AddVolume(vol)
 	if err != nil {
 		return fmt.Errorf("Creating volume %s failed: %v", name, err)
 	}
+	logger.Info("Added volume to repository")
 
 	annotation := "Name: " + vol.Name
 	if len(vol.Description) > 0 {
 		annotation += ", Description: " + vol.Description
 	}
 	fmt.Printf("Volume %s (%s) created\n", vol.ID, annotation)
-	return repository.Save()
+
+	logger.Info("Saving repository")
+	err = repository.Save()
+	if err != nil {
+		return err
+	}
+	logger.Info("Saved repository")
+	return nil
 }
 
 func executeVolumeRemove(volumeID string) error {
+	logger.Info("Opening repository")
 	repo, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
 
+	logger.Info("Opening chunk index")
 	chunkIndex, err := knoxite.OpenChunkIndex(&repo)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened chunk index")
 
+	logger.Info(fmt.Sprintf("Finding volume %s", volumeID))
 	vol, err := repo.FindVolume(volumeID)
 	if err != nil {
 		return err
 	}
+	logger.Info("Found volume")
 
+	logger.Info(fmt.Sprintf("Iterating over all snapshots of volume %s to remove them", volumeID))
 	for _, s := range vol.Snapshots {
+		logger.Debug(fmt.Sprintf("Removing snapshot %s", s))
 		if err := vol.RemoveSnapshot(s); err != nil {
 			return err
 		}
 
 		chunkIndex.RemoveSnapshot(s)
+		logger.Debug("Removed snapshot")
 	}
+	logger.Info("Removed all snapshots from volume")
 
+	logger.Info(fmt.Sprintf("Removing volume %s from repository", volumeID))
 	if err := repo.RemoveVolume(vol); err != nil {
 		return err
 	}
+	logger.Info("Removed volume from repository")
 
+	logger.Info("Saving chunk index")
 	if err := chunkIndex.Save(&repo); err != nil {
 		return err
 	}
+	logger.Info("Saved chunk index")
 
+	logger.Info("Saving repository")
 	if err := repo.Save(); err != nil {
 		return err
 	}
+	logger.Info("Saved repository")
+
 
 	fmt.Printf("Volume %s '%s' successfully removed\n", vol.ID, vol.Name)
 	fmt.Println("Do not forget to run 'repo pack' to delete un-referenced chunks and free up storage space!")
@@ -146,17 +180,27 @@ func executeVolumeRemove(volumeID string) error {
 }
 
 func executeVolumeList() error {
+	logger.Info("Opening repository")
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
 
+	logger.Debug("Initializing new gotable for output")
 	tab := gotable.NewTable([]string{"ID", "Name", "Description"},
 		[]int64{-8, -32, -48}, "No volumes found. This repository is empty.")
+
+	logger.Debug("Iterating over volumes to print details")
 	for _, volume := range repository.Volumes {
 		tab.AppendRow([]interface{}{volume.ID, volume.Name, volume.Description})
 	}
 
-	_ = tab.Print()
+	logger.Debug("Printing volume list output")
+	err = tab.Print()
+	if err != nil {
+		return err
+	}
+	logger.Debug("Printed output")
 	return nil
 }
