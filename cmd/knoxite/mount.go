@@ -48,22 +48,33 @@ func init() {
 }
 
 func executeMount(snapshotID, mountpoint string) error {
+	logger.Info("Opening repository")
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
+
+	logger.Info("Finding snapshot " + snapshotID)
 	_, snapshot, err := repository.FindSnapshot(snapshotID)
 	if err != nil {
 		return err
 	}
+	logger.Info("Found snapshot " + snapshot.Description)
 
 	if _, err := os.Stat(mountpoint); os.IsNotExist(err) {
 		fmt.Printf("Mountpoint %s doesn't exist, creating it\n", mountpoint)
+
+		logger.Warn(fmt.Sprintf("Mountpoint %s doesn't exist, creating it", mountpoint))
 		err = os.Mkdir(mountpoint, os.ModeDir|0700)
 		if err != nil {
 			return err
 		}
+		logger.Warn("Created mountpoint")
+
 	}
+
+	logger.Info("Mounting fuse")
 	c, err := fuse.Mount(
 		mountpoint,
 		fuse.ReadOnly(),
@@ -72,12 +83,15 @@ func executeMount(snapshotID, mountpoint string) error {
 	if err != nil {
 		return err
 	}
+	logger.Info("Mounted fuse")
 
 	roottree := fs.Tree{}
 
 	fmt.Println("Updating index")
 	updateIndex(&repository, snapshot)
-	fmt.Println("Updating index done")
+	fmt.Println("Updated index")
+
+	logger.Debug("Adding items to root tree")
 	for _, arc := range root.Items {
 		roottree.Add(arc.Archive.Path, arc)
 	}
@@ -88,10 +102,12 @@ func executeMount(snapshotID, mountpoint string) error {
 
 	errServe := make(chan error)
 	go func() {
+		logger.Info("Serving file system")
 		err = fs.Serve(c, &roottree)
 		if err != nil {
 			errServe <- err
 		}
+		logger.Info("Served file system")
 
 		<-c.Ready
 		errServe <- c.MountError
@@ -101,11 +117,21 @@ func executeMount(snapshotID, mountpoint string) error {
 	case err := <-errServe:
 		return err
 	case <-done:
+		logger.Info("Unmounting fuse")
 		err := fuse.Unmount(mountpoint)
 		if err != nil {
 			fmt.Printf("Error umounting: %s\n", err)
 		}
-		return c.Close()
+		logger.Info("Unmounted fuse")
+
+		logger.Info("Closing file system")
+		err = c.Close()
+		if err != nil {
+			return err
+		}
+		logger.Info("Closed file system")
+
+		return nil
 	}
 }
 
@@ -123,8 +149,9 @@ var (
 
 func node(name string, arc knoxite.Archive, repository *knoxite.Repository) *Node {
 	l := strings.Split(name, string(filepath.Separator))
-
 	item := root
+
+	logger.Debug("Iterating over filepath")
 	for k, s := range l {
 		if len(s) == 0 {
 			continue
@@ -133,6 +160,7 @@ func node(name string, arc knoxite.Archive, repository *knoxite.Repository) *Nod
 		v, ok := item.Items[s]
 		if !ok {
 			path := filepath.Join(l[:k+1]...)
+			logger.Debug(fmt.Sprintf("Adding %s to tree", path))
 			fmt.Println("Adding to tree:", path)
 			if name != path {
 				// We stored an absolute path and need to fake the parent
@@ -162,6 +190,8 @@ func node(name string, arc knoxite.Archive, repository *knoxite.Repository) *Nod
 func updateIndex(repository *knoxite.Repository, snapshot *knoxite.Snapshot) {
 	root = &Node{}
 	root.Items = make(map[string]*Node)
+
+	logger.Debug("Iterating over archives")
 	for _, arc := range snapshot.Archives {
 		path := arc.Path
 		if path[0] == '/' {
@@ -169,6 +199,7 @@ func updateIndex(repository *knoxite.Repository, snapshot *knoxite.Snapshot) {
 			// Strip the leading slash for mounting
 			path = path[1:]
 		}
+		logger.Debug(fmt.Sprintf("Adding %s to index", path))
 		fmt.Println("Adding to index:", path)
 		node(path, *arc, repository)
 	}
@@ -227,7 +258,12 @@ func (node *Node) ReadDirAll(_ context.Context) ([]fuse.Dirent, error) {
 // Open opens a file.
 func (node *Node) Open(_ context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
 	if !req.Flags.IsReadOnly() {
-		return nil, fuse.Errno(syscall.EACCES)
+		logger.Info(fmt.Sprintf("Opening file from %s", node.Archive.Path))
+		err := fuse.Errno(syscall.EACCES)
+		if err != 0 {
+			return nil, err
+		}
+		logger.Info("Opened file")
 	}
 	resp.Flags |= fuse.OpenKeepCache
 	return node, nil
@@ -235,6 +271,7 @@ func (node *Node) Open(_ context.Context, req *fuse.OpenRequest, resp *fuse.Open
 
 // Read reads from a file.
 func (node *Node) Read(_ context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
+	logger.Info(fmt.Sprintf("Reading archive %s", node.Archive.Path))
 	d, err := knoxite.ReadArchive(*node.Repository, node.Archive, int(req.Offset), req.Size)
 	if err != nil {
 		if err != io.EOF {
@@ -242,6 +279,7 @@ func (node *Node) Read(_ context.Context, req *fuse.ReadRequest, resp *fuse.Read
 		}
 		resp.Data = nil
 	} else {
+		logger.Info("Read archive")
 		resp.Data = *d
 	}
 
