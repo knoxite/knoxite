@@ -19,7 +19,7 @@ import (
 	"github.com/knoxite/knoxite"
 )
 
-// Error declarations.
+// Error declarations
 var (
 	ErrTargetMissing = errors.New("please specify a directory to restore to")
 )
@@ -76,25 +76,33 @@ func init() {
 }
 
 func executeRestore(snapshotID, target string, opts RestoreOptions) error {
+	logger.Info("Opening repository")
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
 
+	logger.Info(fmt.Sprintf("Finding snapshot %s", snapshotID))
 	_, snapshot, err := repository.FindSnapshot(snapshotID)
 	if err != nil {
 		return err
 	}
+	logger.Info(fmt.Sprintf("Found snapshot %s", snapshot.Description))
 
+	logger.Info(fmt.Sprintf("Decoding snapshot %s", snapshot.ID))
 	progress, err := knoxite.DecodeSnapshot(repository, snapshot, target, opts.Excludes, opts.Pedantic)
 	if err != nil {
 		return err
 	}
+	logger.Info("Decoded snapshot")
 
+	logger.Debug("Initializing new goprogressbar for output")
 	pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
 	stats := knoxite.Stats{}
 	lastPath := ""
 
+	logger.Debug("Iterating over progress to print details")
 	errs := make(map[string]error)
 	for p := range progress {
 		if p.Error != nil {
@@ -125,7 +133,7 @@ func executeRestore(snapshotID, target string, opts RestoreOptions) error {
 			// We have just finished restoring an item
 			stats.Add(p.TotalStatistics)
 		}
-
+		
 		pb.LazyPrint()
 	}
 	fmt.Println()
