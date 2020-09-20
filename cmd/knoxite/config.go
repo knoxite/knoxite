@@ -102,11 +102,17 @@ func init() {
 
 func executeConfigInit() error {
 	log.Printf("Writing configuration file to: %s\n", cfg.URL().Path)
-	return cfg.Save()
+	err := cfg.Save()
+	if err != nil {
+		return err
+	}
+	logger.Info(fmt.Sprintf("Wrote configuration file to: %s", cfg.URL().Path))
+	return nil
 }
 
 func executeConfigAlias(alias string) error {
 	// At first check if the configuration file already exists
+	logger.Debug("Adding alias to config")
 	cfg.Repositories[alias] = config.RepoConfig{
 		Url: globalOpts.Repo,
 		// Compression: utils.CompressionText(knoxite.CompressionNone),
@@ -114,11 +120,17 @@ func executeConfigAlias(alias string) error {
 		// Encryption:  utils.EncryptionText(knoxite.EncryptionAES),
 	}
 
-	return cfg.Save()
+	logger.Info("Saving config")
+	err := cfg.Save()
+	if err != nil {
+		return err
+	}
+	logger.Info("Saved config")
+	return nil
 }
 
 func executeConfigSet(option string, values []string) error {
-	// This probably wont scale for more complex configuration options but works
+	// This probably won't scale for more complex configuration options but works
 	// fine for now.
 	parts := strings.Split(option, ".")
 	if len(parts) != 2 {
@@ -126,11 +138,14 @@ func executeConfigSet(option string, values []string) error {
 	}
 
 	// The first part should be the repos alias
+	logger.Info("Looking up repository config")
 	repo, ok := cfg.Repositories[strings.ToLower(parts[0])]
 	if !ok {
 		return fmt.Errorf("No alias with name %s found", parts[0])
 	}
+	logger.Info(fmt.Sprintf("Found repository configuration for alias %s", parts[0]))
 
+	logger.Info("Setting config options according to flags")
 	opt := strings.ToLower(parts[1])
 	switch opt {
 	case "url":
@@ -159,17 +174,27 @@ func executeConfigSet(option string, values []string) error {
 	default:
 		return fmt.Errorf("Unknown configuration option: %s", opt)
 	}
+	logger.Info("Set config options")
+
 	cfg.Repositories[strings.ToLower(parts[0])] = repo
 
-	return cfg.Save()
+	logger.Info("Saving config")
+	err := cfg.Save()
+	if err != nil {
+		return err
+	}
+	logger.Info("Saved config")
+	return nil
 }
 
 func executeConfigInfo() error {
+	logger.Debug("Initialising new gotable for output")
 	tab := gotable.NewTable(
 		[]string{"Alias", "Storage URL", "Compression", "Tolerance", "Encryption"},
 		[]int64{-15, -35, -15, -15, 15},
 		"No repository configurations found.")
 
+	logger.Debug("Iterating over repositories to print details")
 	for alias, repo := range cfg.Repositories {
 		tab.AppendRow([]interface{}{
 			alias,
@@ -184,9 +209,11 @@ func executeConfigInfo() error {
 
 func executeConfigCat() error {
 	buf := new(bytes.Buffer)
+	logger.Info("Marshalling json config")
 	if err := toml.NewEncoder(buf).Encode(cfg); err != nil {
 		return err
 	}
+	logger.Info("Marshalled json config")
 
 	fmt.Printf("%s\n", buf)
 	return nil
@@ -194,21 +221,39 @@ func executeConfigCat() error {
 
 func executeConfigConvert(source string, target string) error {
 	// Load the source config
+	logger.Info("Loading source config")
+	logger.Info("Creating new config struct from source")
 	scr, err := config.New(source)
 	if err != nil {
 		return err
 	}
+	logger.Info("Created new config")
+
+	logger.Info("Loading source config")
 	if err = scr.Load(); err != nil {
 		return err
 	}
+	logger.Info("Loaded source config")
 
+	logger.Info("Creating empty target config")
 	// Create the target
 	tar, err := config.New(target)
 	if err != nil {
 		return err
 	}
+	logger.Info("Created target config")
 
+	logger.Info("Copying repo configs from source to target")
 	// copy over the repo configs and save the target
 	tar.Repositories = scr.Repositories
-	return tar.Save()
+
+	logger.Info("Saving target config")
+	err = tar.Save()
+	if err != nil {
+		return err
+	}
+	logger.Info("Saved target config")
+	logger.Debug("You may now delete your old config")
+
+	return nil
 }
