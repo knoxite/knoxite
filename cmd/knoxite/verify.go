@@ -50,11 +50,14 @@ func init() {
 }
 
 func executeVerifyRepo(opts VerifyOptions) error {
+	logger.Info("Opening repository")
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
 
+	logger.Info("Verifying repository and get knoxite progress")
 	progress, err := knoxite.VerifyRepo(repository, opts.Percentage)
 	if err != nil {
 		return err
@@ -68,11 +71,14 @@ func executeVerifyRepo(opts VerifyOptions) error {
 }
 
 func executeVerifyVolume(volumeId string, opts VerifyOptions) error {
+	logger.Info("Opening repository")
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
 
+	logger.Info(fmt.Sprintf("Verifying volume %s and get knoxite progress", volumeId))
 	progress, err := knoxite.VerifyVolume(repository, volumeId, opts.Percentage)
 	if err != nil {
 		return err
@@ -86,11 +92,14 @@ func executeVerifyVolume(volumeId string, opts VerifyOptions) error {
 }
 
 func executeVerifySnapshot(snapshotId string, opts VerifyOptions) error {
+	logger.Info("Opening repository")
 	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
 
+	logger.Info(fmt.Sprintf("Verifying snapshot %s and get knoxite progress", snapshotId))
 	progress, err := knoxite.VerifySnapshot(repository, snapshotId, opts.Percentage)
 	if err != nil {
 		return err
@@ -106,9 +115,11 @@ func executeVerifySnapshot(snapshotId string, opts VerifyOptions) error {
 func verify(progress chan knoxite.Progress) []error {
 	var errors []error
 
+	logger.Debug("Initializing new goprogressbar for output")
 	pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}
 	lastPath := ""
 
+	logger.Debug("Iterating over progress to print details")
 	for p := range progress {
 		if p.Error != nil {
 			fmt.Println()
