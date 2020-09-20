@@ -113,20 +113,16 @@ func initConfig() {
 	}
 
 	var err error
-	//logger.Info("Initialising config with ConfigURL")
 	cfg, err = config.New(globalOpts.ConfigURL)
 	if err != nil {
 		log.Fatalf("error reading the config file: %v\n", err)
 		return
 	}
-	//logger.Info("Initialised config")
 
-	//logger.Info("Loading config")
 	if err = cfg.Load(); err != nil {
 		log.Fatalf("error loading the config file: %v\n", err)
 		return
 	}
-	//logger.Info("Loaded config")
 
 	// There can occur a panic due to an entry assigment in nil map when theres
 	// no map initialized to store the RepoConfigs. This will prevent this from
