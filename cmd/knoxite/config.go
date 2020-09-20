@@ -209,11 +209,11 @@ func executeConfigInfo() error {
 
 func executeConfigCat() error {
 	buf := new(bytes.Buffer)
-	logger.Info("Marshalling json config")
+	logger.Info("Marshalling toml config")
 	if err := toml.NewEncoder(buf).Encode(cfg); err != nil {
 		return err
 	}
-	logger.Info("Marshalled json config")
+	logger.Info("Marshalled toml config")
 
 	fmt.Printf("%s\n", buf)
 	return nil
