@@ -91,13 +91,18 @@ func init() {
 }
 
 func executeRepoInit() error {
-	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	// we don't want these next calls to be interrupted
+	logger.Info("Acquiring shutdown lock")
 	lock := shutdown.Lock()
 	if lock == nil {
 		return nil
 	}
-	defer lock()
+	logger.Info("Acquired and locked shutdown lock")
 
+	defer lock()
+	defer logger.Info("Shutdown lock released")
+
+	logger.Info("Creating new repository")
 	r, err := newRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return fmt.Errorf("Creating repository at %s failed: %v", globalOpts.Repo, err)
@@ -108,106 +113,141 @@ func executeRepoInit() error {
 }
 
 func executeRepoChangePassword() error {
+	logger.Info("Opening repository")
 	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
 
+	logger.Debug("Expecting user input for password, twice")
 	password, err := utils.ReadPasswordTwice("Enter new password:", "Confirm password:")
 	if err != nil {
 		return err
 	}
+	logger.Debug("User input read")
 
+	logger.Info("Changing password of repository")
 	err = r.ChangePassword(password)
 	if err != nil {
 		return err
 	}
-
 	fmt.Printf("Changed password successfully\n")
 	return nil
 }
 
 func executeRepoAdd(url string) error {
-	// acquire a shutdown lock. we don't want these next calls to be interrupted
+	// we don't want these next calls to be interrupted
+	logger.Info("Acquiring shutdown lock")
 	lock := shutdown.Lock()
 	if lock == nil {
 		return nil
 	}
-	defer lock()
+	logger.Info("Acquired and locked shutdown lock")
 
+	defer lock()
+	defer logger.Info("Shutdown lock released")
+
+	logger.Info("Opening repository")
 	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
 
+	logger.Info("Find backend from url")
 	backend, err := knoxite.BackendFromURL(url)
 	if err != nil {
 		return err
 	}
+	logger.Info(fmt.Sprintf("Found backend with protocols: %s", backend.Protocols()))
 
+	logger.Info("Initializing repository")
 	err = backend.InitRepository()
 	if err != nil {
 		return err
 	}
+	logger.Info("Initialized repository")
 
+	logger.Debug("Adding backend to backend manager")
 	r.BackendManager().AddBackend(&backend)
 
+	logger.Info("Saving repository")
 	err = r.Save()
 	if err != nil {
 		return err
 	}
+	logger.Info("Saved repository")
 	fmt.Printf("Added %s to repository\n", backend.Location())
 	return nil
 }
 
 func executeRepoCat() error {
+	logger.Info("Opening repository")
 	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
 
+	logger.Info("Marshalling repo json")
 	json, err := json.MarshalIndent(r, "", "    ")
 	if err != nil {
 		return err
 	}
+	logger.Info("Marshalled repo json")
+
 	fmt.Printf("%s\n", json)
 	return nil
 }
 
 func executeRepoPack() error {
+	logger.Info("Opening repository")
 	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
+
+	logger.Info("Opening chunk index")
 	index, err := knoxite.OpenChunkIndex(&r)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened chunk index")
 
+	logger.Info("Packing chunk index")
 	freedSize, err := index.Pack(&r)
 	if err != nil {
 		return err
 	}
+	logger.Info("Packed chunk index")
 
+	logger.Info("Saving repository")
 	err = index.Save(&r)
 	if err != nil {
 		return err
 	}
+	logger.Info("Saved repository")
 
 	fmt.Printf("Freed storage space: %s\n", knoxite.SizeToString(freedSize))
 	return nil
 }
 
 func executeRepoInfo() error {
+	logger.Info("Opening repository")
 	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
 		return err
 	}
+	logger.Info("Opened repository")
 
+	logger.Debug("Initializing new gotable for output")
 	tab := gotable.NewTable([]string{"Storage URL", "Available Space"},
 		[]int64{-48, 15},
 		"No backends found.")
 
+	logger.Debug("Iterating over backends to print output")
 	for _, be := range r.BackendManager().Backends {
 		space, _ := (*be).AvailableSpace()
 		tab.AppendRow([]interface{}{
@@ -215,29 +255,43 @@ func executeRepoInfo() error {
 			knoxite.SizeToString(space)})
 	}
 
-	_ = tab.Print()
+	logger.Debug("Printing output")
+	err = tab.Print()
+	if err != nil {
+		return err
+	}
+	logger.Debug("Printed output")
+
 	return nil
 }
 
 func openRepository(path, password string) (knoxite.Repository, error) {
+	logger.Info("Checking if password provided via --password flag")
 	if password == "" {
 		var err error
+
+		logger.Debug("Reading in password")
 		password, err = utils.ReadPassword("Enter password:")
 		if err != nil {
 			return knoxite.Repository{}, err
 		}
+		logger.Debug("Read in password")
 	}
 
 	return knoxite.OpenRepository(path, password)
 }
 
 func newRepository(path, password string) (knoxite.Repository, error) {
+	logger.Info("Checking if password provided via --password flag")
 	if password == "" {
 		var err error
+
+		logger.Debug("Reading in password")
 		password, err = utils.ReadPasswordTwice("Enter a password to encrypt this repository with:", "Confirm password:")
 		if err != nil {
 			return knoxite.Repository{}, err
 		}
+		logger.Debug("Read in password")
 	}
 
 	return knoxite.NewRepository(path, password)
