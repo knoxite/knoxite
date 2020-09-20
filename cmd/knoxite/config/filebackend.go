@@ -32,25 +32,23 @@ func (fs *FileBackend) Type() int {
 
 // Load a config from a URL.
 func (fs *FileBackend) Load(u *url.URL) (*Config, error) {
-	var config Config
+	config := &Config{
+		backend: fs,
+		url:     u,
+	}
 
 	path, err := url.QueryUnescape(u.Path)
 	if err != nil {
-		return nil, err
+		return config, err
 	}
-	u.Path = path
+	config.url.Path = path
 
-	if !exist(u.Path) {
-		return &Config{url: u}, nil
+	if !exist(path) {
+		return config, nil
 	}
 
-	_, err = toml.DecodeFile(u.Path, &config)
-	if err != nil {
-		return nil, err
-	}
-	config.backend = fs
-	config.url = u
-	return &config, nil
+	_, err = toml.DecodeFile(config.url.Path, config)
+	return config, err
 }
 
 // Save config.
