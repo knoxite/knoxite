@@ -55,6 +55,15 @@ func (l Logger) Debugf(format string, v ...interface{}) {
 	l.logf(LogLevelDebug, format, v...)
 }
 
+func (l Logger) Fatal(v ...interface{}) {
+	l.log(LogLevelFatal, v...)
+}
+
+func (l Logger) Fatalf(format string, v ...interface{}) {
+	l.logf(LogLevelFatal, format, v...)
+	os.Exit(1)
+}
+
 func (l Logger) log(verbosity Verbosity, v ...interface{}) {
 	if verbosity <= l.VerbosityLevel {
 		l.printV(verbosity, v...)

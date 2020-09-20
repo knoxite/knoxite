@@ -14,8 +14,9 @@ const (
 	LogLevelWarning = iota
 	LogLevelInfo
 	LogLevelDebug
+	LogLevelFatal
 )
 
 func (v Verbosity) String() string {
-	return [...]string{"Warning", "Info", "Debug"}[v]
+	return [...]string{"Warning", "Info", "Debug", "Fatal"}[v]
 }

@@ -9,7 +9,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -176,7 +175,7 @@ func Lookup() string {
 	// over the rest.
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Printf("Error getting current working directory: %v", err)
+		// log.Printf("Error getting current working directory: %v", err)
 		cwd = "."
 	}
 	cwdCfg := filepath.Join(cwd, cfgFileName)

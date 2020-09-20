@@ -108,19 +108,19 @@ func initLogger() {
 func initConfig() {
 	// We dont allow both flags to be set as this can lead to unclear instructions.
 	if RootCmd.PersistentFlags().Changed("repo") && RootCmd.PersistentFlags().Changed("alias") {
-		log.Fatalf("Specify either repository directory '-r' or an alias '-R'")
+		logger.Fatalf("Specify either repository directory '-r' or an alias '-R'")
 		return
 	}
 
 	var err error
 	cfg, err = config.New(globalOpts.ConfigURL)
 	if err != nil {
-		log.Fatalf("error reading the config file: %v\n", err)
+		logger.Fatalf("error reading the config file: %v\n", err)
 		return
 	}
 
 	if err = cfg.Load(); err != nil {
-		log.Fatalf("error loading the config file: %v\n", err)
+		logger.Fatalf("error loading the config file: %v\n", err)
 		return
 	}
 
