@@ -11,12 +11,12 @@ package knoxite
 type Verbosity int
 
 const (
-	LogLevelWarning = iota
+	LogLevelFatal = iota
+	LogLevelWarning
 	LogLevelInfo
 	LogLevelDebug
-	LogLevelFatal
 )
 
 func (v Verbosity) String() string {
-	return [...]string{"Warning", "Info", "Debug", "Fatal"}[v]
+	return [...]string{"Fatal", "Warning", "Info", "Debug"}[v]
 }

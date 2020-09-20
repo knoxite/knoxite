@@ -57,6 +57,7 @@ func (l Logger) Debugf(format string, v ...interface{}) {
 
 func (l Logger) Fatal(v ...interface{}) {
 	l.log(LogLevelFatal, v...)
+	os.Exit(1)
 }
 
 func (l Logger) Fatalf(format string, v ...interface{}) {
