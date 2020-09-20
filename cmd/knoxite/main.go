@@ -72,7 +72,7 @@ func main() {
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Alias, "alias", "R", "", "Repository alias to backup to/restore from")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Password, "password", "p", "", "Password to use for data encryption")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.ConfigURL, "configURL", "C", config.DefaultPath(), "Path to the configuration file")
-	RootCmd.PersistentFlags().StringVarP(&globalOpts.Verbosity, "verbose", "v", "Warning", "Verbose output: possible levels are debug, info and warning while warning is default")
+	RootCmd.PersistentFlags().StringVarP(&globalOpts.Verbosity, "verbose", "v", "Warning", "Verbose output: possible levels are Debug, Info and Warning")
 
 	globalOpts.Repo = os.Getenv("KNOXITE_REPOSITORY")
 	globalOpts.Password = os.Getenv("KNOXITE_PASSWORD")
