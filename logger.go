@@ -31,26 +31,44 @@ func (l *Logger) WithWriter(w io.Writer) *Logger {
 	return l
 }
 
-func (l Logger) printV(verbosity Verbosity, v ...interface{}) {
-	_, _ = l.w.Write([]byte(verbosity.String() + ": "))
-	_, _ = l.w.Write([]byte(fmt.Sprint(v...)))
-	_, _ = l.w.Write([]byte("\n"))
-}
-
 func (l Logger) Warn(v ...interface{}) {
 	l.log(LogLevelWarning, v...)
+}
+
+func (l Logger) Warnf(format string, v ...interface{}) {
+	l.logf(LogLevelWarning, format, v...)
 }
 
 func (l Logger) Info(v ...interface{}) {
 	l.log(LogLevelInfo, v...)
 }
 
+func (l Logger) Infof(format string, v ...interface{}) {
+	l.logf(LogLevelInfo, format, v...)
+}
+
 func (l Logger) Debug(v ...interface{}) {
 	l.log(LogLevelDebug, v...)
+}
+
+func (l Logger) Debugf(format string, v ...interface{}) {
+	l.logf(LogLevelDebug, format, v...)
 }
 
 func (l Logger) log(verbosity Verbosity, v ...interface{}) {
 	if verbosity <= l.VerbosityLevel {
 		l.printV(verbosity, v...)
 	}
+}
+
+func (l Logger) logf(verbosity Verbosity, format string, v ...interface{}) {
+	if verbosity <= l.VerbosityLevel {
+		l.printV(verbosity, fmt.Sprintf(format, v...))
+	}
+}
+
+func (l Logger) printV(verbosity Verbosity, v ...interface{}) {
+	_, _ = l.w.Write([]byte(verbosity.String() + ": "))
+	_, _ = l.w.Write([]byte(fmt.Sprint(v...)))
+	_, _ = l.w.Write([]byte("\n"))
 }
