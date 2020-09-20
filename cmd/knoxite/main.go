@@ -115,12 +115,12 @@ func initConfig() {
 	var err error
 	cfg, err = config.New(globalOpts.ConfigURL)
 	if err != nil {
-		logger.Fatalf("error reading the config file: %v\n", err)
+		logger.Fatalf("error reading the config file: %v", err)
 		return
 	}
 
 	if err = cfg.Load(); err != nil {
-		logger.Fatalf("error loading the config file: %v\n", err)
+		logger.Fatalf("error parsing the toml config file at '%s': %v", cfg.URL().Path, err)
 		return
 	}
 
@@ -134,7 +134,7 @@ func initConfig() {
 	if globalOpts.Alias != "" {
 		rep, ok := cfg.Repositories[globalOpts.Alias]
 		if !ok {
-			log.Fatalf("error loading the specified alias\n")
+			logger.Fatalf("error loading the specified alias")
 			return
 		}
 
