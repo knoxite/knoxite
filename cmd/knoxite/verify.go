@@ -78,7 +78,7 @@ func executeVerifyVolume(volumeId string, opts VerifyOptions) error {
 	}
 	logger.Info("Opened repository")
 
-	logger.Info(fmt.Sprintf("Verifying volume %s and get knoxite progress", volumeId))
+	logger.Infof("Verifying volume %s and get knoxite progress", volumeId)
 	progress, err := knoxite.VerifyVolume(repository, volumeId, opts.Percentage)
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func executeVerifySnapshot(snapshotId string, opts VerifyOptions) error {
 	}
 	logger.Info("Opened repository")
 
-	logger.Info(fmt.Sprintf("Verifying snapshot %s and get knoxite progress", snapshotId))
+	logger.Infof("Verifying snapshot %s and get knoxite progress", snapshotId)
 	progress, err := knoxite.VerifySnapshot(repository, snapshotId, opts.Percentage)
 	if err != nil {
 		return err

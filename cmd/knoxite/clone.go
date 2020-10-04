@@ -68,20 +68,20 @@ func executeClone(snapshotID string, args []string, opts StoreOptions) error {
 	}
 	logger.Info("Opened repository")
 
-	logger.Info(fmt.Sprintf("Finding snapshot %s", snapshotID))
+	logger.Infof("Finding snapshot %s", snapshotID)
 	volume, s, err := repository.FindSnapshot(snapshotID)
 	if err != nil {
 		return err
 	}
-	logger.Info(fmt.Sprintf("Found snapshot %s", s.Description))
+	logger.Infof("Found snapshot %s", s.Description)
 
 	logger.Info("Cloning snapshot")
 	snapshot, err := s.Clone()
 	if err != nil {
 		return err
 	}
-	logger.Info(fmt.Sprintf("Cloned snapshot. New snapshot: ID: %s, "+
-		"Description: %s.", snapshot.ID, snapshot.Description))
+	logger.Infof("Cloned snapshot. New snapshot: ID: %s, "+
+		"Description: %s.", snapshot.ID, snapshot.Description)
 
 	logger.Info("Opening chunk index")
 	chunkIndex, err := knoxite.OpenChunkIndex(&repository)
@@ -93,12 +93,12 @@ func executeClone(snapshotID string, args []string, opts StoreOptions) error {
 	lock()
 	logger.Info("Released shutdown lock")
 
-	logger.Info(fmt.Sprintf("Storing cloned snapshot %s", snapshot.ID))
+	logger.Infof("Storing cloned snapshot %s", snapshot.ID)
 	err = store(&repository, &chunkIndex, snapshot, targets, opts)
 	if err != nil {
 		return err
 	}
-	logger.Info(fmt.Sprintf("Stored clone %s of snapshot %s", snapshot.ID, s.ID))
+	logger.Infof("Stored clone %s of snapshot %s", snapshot.ID, s.ID)
 
 	// acquire another shutdown lock. we don't want these next calls to be interrupted
 	logger.Info("Acquiring shutdown lock")
@@ -111,14 +111,14 @@ func executeClone(snapshotID string, args []string, opts StoreOptions) error {
 	defer lock()
 	defer logger.Info("Shutdown lock released")
 
-	logger.Info(fmt.Sprintf("Saving snapshot %s", snapshot.ID))
+	logger.Infof("Saving snapshot %s", snapshot.ID)
 	err = snapshot.Save(&repository)
 	if err != nil {
 		return err
 	}
 	logger.Info("Saved snapshot")
 
-	logger.Info(fmt.Sprintf("Adding snapshot to volume %s", volume.ID))
+	logger.Infof("Adding snapshot to volume %s", volume.ID)
 	err = volume.AddSnapshot(snapshot.ID)
 	if err != nil {
 		return err

@@ -83,14 +83,14 @@ func executeRestore(snapshotID, target string, opts RestoreOptions) error {
 	}
 	logger.Info("Opened repository")
 
-	logger.Info(fmt.Sprintf("Finding snapshot %s", snapshotID))
+	logger.Infof("Finding snapshot %s", snapshotID)
 	_, snapshot, err := repository.FindSnapshot(snapshotID)
 	if err != nil {
 		return err
 	}
-	logger.Info(fmt.Sprintf("Found snapshot %s", snapshot.Description))
+	logger.Infof("Found snapshot %s", snapshot.Description)
 
-	logger.Info(fmt.Sprintf("Decoding snapshot %s", snapshot.ID))
+	logger.Infof("Decoding snapshot %s", snapshot.ID)
 	progress, err := knoxite.DecodeSnapshot(repository, snapshot, target, opts.Excludes, opts.Pedantic)
 	if err != nil {
 		return err

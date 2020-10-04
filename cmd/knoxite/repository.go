@@ -160,7 +160,7 @@ func executeRepoAdd(url string) error {
 	if err != nil {
 		return err
 	}
-	logger.Info(fmt.Sprintf("Found backend with protocols: %s", backend.Protocols()))
+	logger.Infof("Found backend with protocols: %s", backend.Protocols())
 
 	logger.Info("Initializing repository")
 	err = backend.InitRepository()

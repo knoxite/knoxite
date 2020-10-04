@@ -68,21 +68,21 @@ func executeSnapshotRemove(snapshotID string) error {
 	}
 	logger.Info("Opened chunk index")
 
-	logger.Info(fmt.Sprintf("Finding snapshot %s", snapshotID))
+	logger.Infof("Finding snapshot %s", snapshotID)
 	volume, snapshot, err := repository.FindSnapshot(snapshotID)
 	if err != nil {
 		return err
 	}
 	logger.Info("Found snapshot")
 
-	logger.Info(fmt.Sprintf("Removing snapshot %s. Description: %s. Date: %s", snapshotID, snapshot.Description, snapshot.Date))
+	logger.Infof("Removing snapshot %s. Description: %s. Date: %s", snapshotID, snapshot.Description, snapshot.Date)
 	err = volume.RemoveSnapshot(snapshot.ID)
 	if err != nil {
 		return err
 	}
 	logger.Info("Removed snapshot")
 
-	logger.Info(fmt.Sprintf("Removing snapshot %s from chunk index", snapshotID))
+	logger.Infof("Removing snapshot %s from chunk index", snapshotID)
 	chunkIndex.RemoveSnapshot(snapshot.ID)
 
 	logger.Info("Saving chunk index for repository")
@@ -112,7 +112,7 @@ func executeSnapshotList(volID string) error {
 	}
 	logger.Info("Opened repository")
 
-	logger.Info(fmt.Sprintf("Finding volume %s", volID))
+	logger.Infof("Finding volume %s", volID)
 	volume, err := repository.FindVolume(volID)
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func executeSnapshotList(volID string) error {
 
 	logger.Debug("Iterating over snapshots to print details")
 	for _, snapshotID := range volume.Snapshots {
-		logger.Debug(fmt.Sprintf("Loading snapshot %s", snapshotID))
+		logger.Debugf("Loading snapshot %s", snapshotID)
 		snapshot, err := volume.LoadSnapshot(snapshotID, &repository)
 		if err != nil {
 			return err

@@ -106,7 +106,7 @@ func executeConfigInit() error {
 	if err != nil {
 		return err
 	}
-	logger.Info(fmt.Sprintf("Wrote configuration file to: %s", cfg.URL().Path))
+	logger.Infof("Wrote configuration file to: %s", cfg.URL().Path)
 	return nil
 }
 
@@ -143,7 +143,7 @@ func executeConfigSet(option string, values []string) error {
 	if !ok {
 		return fmt.Errorf("No alias with name %s found", parts[0])
 	}
-	logger.Info(fmt.Sprintf("Found repository configuration for alias %s", parts[0]))
+	logger.Infof("Found repository configuration for alias %s", parts[0])
 
 	logger.Info("Setting config options according to flags")
 	opt := strings.ToLower(parts[1])

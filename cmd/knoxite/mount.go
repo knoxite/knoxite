@@ -65,7 +65,7 @@ func executeMount(snapshotID, mountpoint string) error {
 	if _, err := os.Stat(mountpoint); os.IsNotExist(err) {
 		fmt.Printf("Mountpoint %s doesn't exist, creating it\n", mountpoint)
 
-		logger.Warn(fmt.Sprintf("Mountpoint %s doesn't exist, creating it", mountpoint))
+		logger.Warnf("Mountpoint %s doesn't exist, creating it", mountpoint)
 		err = os.Mkdir(mountpoint, os.ModeDir|0700)
 		if err != nil {
 			return err
@@ -160,7 +160,7 @@ func node(name string, arc knoxite.Archive, repository *knoxite.Repository) *Nod
 		v, ok := item.Items[s]
 		if !ok {
 			path := filepath.Join(l[:k+1]...)
-			logger.Debug(fmt.Sprintf("Adding %s to tree", path))
+			logger.Debugf("Adding %s to tree", path)
 			fmt.Println("Adding to tree:", path)
 			if name != path {
 				// We stored an absolute path and need to fake the parent
@@ -199,7 +199,7 @@ func updateIndex(repository *knoxite.Repository, snapshot *knoxite.Snapshot) {
 			// Strip the leading slash for mounting
 			path = path[1:]
 		}
-		logger.Debug(fmt.Sprintf("Adding %s to index", path))
+		logger.Debugf("Adding %s to index", path)
 		fmt.Println("Adding to index:", path)
 		node(path, *arc, repository)
 	}
@@ -258,7 +258,7 @@ func (node *Node) ReadDirAll(_ context.Context) ([]fuse.Dirent, error) {
 // Open opens a file.
 func (node *Node) Open(_ context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
 	if !req.Flags.IsReadOnly() {
-		logger.Info(fmt.Sprintf("Opening file from %s", node.Archive.Path))
+		logger.Infof("Opening file from %s", node.Archive.Path)
 		err := fuse.Errno(syscall.EACCES)
 		if err != 0 {
 			return nil, err
@@ -271,7 +271,7 @@ func (node *Node) Open(_ context.Context, req *fuse.OpenRequest, resp *fuse.Open
 
 // Read reads from a file.
 func (node *Node) Read(_ context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
-	logger.Info(fmt.Sprintf("Reading archive %s", node.Archive.Path))
+	logger.Infof("Reading archive %s", node.Archive.Path)
 	d, err := knoxite.ReadArchive(*node.Repository, node.Archive, int(req.Offset), req.Size)
 	if err != nil {
 		if err != io.EOF {

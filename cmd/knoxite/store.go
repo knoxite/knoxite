@@ -108,7 +108,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 	if err != nil {
 		return err
 	}
-	logger.Info(fmt.Sprintf("Got rooted path: %s", wd))
+	logger.Infof("Got rooted path: %s", wd)
 
 	if len(repository.BackendManager().Backends)-int(opts.FailureTolerance) <= 0 {
 		return ErrRedundancyAmount
@@ -238,14 +238,14 @@ func executeStore(volumeID string, args []string, opts StoreOptions) error {
 	}
 	logger.Info("Opened repository")
 
-	logger.Info(fmt.Sprintf("Finding volume %s", volumeID))
+	logger.Infof("Finding volume %s", volumeID)
 	volume, err := repository.FindVolume(volumeID)
 	if err != nil {
 		return err
 	}
 	logger.Info("Found volume")
 
-	logger.Info(fmt.Sprintf("Creating new snapshot: %s", opts.Description))
+	logger.Infof("Creating new snapshot: %s", opts.Description)
 	snapshot, err := knoxite.NewSnapshot(opts.Description)
 	if err != nil {
 		return err
@@ -263,7 +263,7 @@ func executeStore(volumeID string, args []string, opts StoreOptions) error {
 	lock()
 	logger.Info("Shutdown lock released")
 
-	logger.Info(fmt.Sprintf("Storing snapshot %s", snapshot.ID))
+	logger.Infof("Storing snapshot %s", snapshot.ID)
 	err = store(&repository, &chunkIndex, snapshot, targets, opts)
 	if err != nil {
 		return err
@@ -286,7 +286,7 @@ func executeStore(volumeID string, args []string, opts StoreOptions) error {
 	}
 	logger.Info("Saved snapshot")
 
-	logger.Info(fmt.Sprintf("Adding snapshot to volume %s", volume.ID))
+	logger.Infof("Adding snapshot to volume %s", volume.ID)
 	err = volume.AddSnapshot(snapshot.ID)
 	if err != nil {
 		return err

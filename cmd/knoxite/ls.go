@@ -63,15 +63,15 @@ func executeLs(snapshotID string) error {
 	for _, archive := range snapshot.Archives {
 		username := strconv.FormatInt(int64(archive.UID), 10)
 
-		logger.Info(fmt.Sprintf("Looking up OS username with archive's UID %d", archive.UID))
+		logger.Infof("Looking up OS username with archive's UID %d", archive.UID)
 		u, err := user.LookupId(username)
 		if err == nil {
-			logger.Info(fmt.Sprintf("Username found: %s", u.Username))
+			logger.Infof("Username found: %s", u.Username)
 			username = u.Username
 		} else {
 			logger.Warn("Looking up username failed. Using default value.")
 		}
-		
+
 		groupname := strconv.FormatInt(int64(archive.GID), 10)
 		tab.AppendRow([]interface{}{
 			archive.Mode,

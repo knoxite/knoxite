@@ -92,14 +92,14 @@ func executeVolumeInit(name, description string) error {
 	}
 	logger.Info("Opened repository")
 
-	logger.Info(fmt.Sprintf("Creating volume %s", description))
+	logger.Infof("Creating volume %s", description)
 	vol, err := knoxite.NewVolume(name, description)
 	if err != nil {
 		return err
 	}
-	logger.Info(fmt.Sprintf("Created volume %s", vol.ID))
+	logger.Infof("Created volume %s", vol.ID)
 
-	logger.Info(fmt.Sprintf("Adding volume %s to repository", vol.ID))
+	logger.Infof("Adding volume %s to repository", vol.ID)
 	err = repository.AddVolume(vol)
 	if err != nil {
 		return fmt.Errorf("Creating volume %s failed: %v", name, err)
@@ -136,16 +136,16 @@ func executeVolumeRemove(volumeID string) error {
 	}
 	logger.Info("Opened chunk index")
 
-	logger.Info(fmt.Sprintf("Finding volume %s", volumeID))
+	logger.Infof("Finding volume %s", volumeID)
 	vol, err := repo.FindVolume(volumeID)
 	if err != nil {
 		return err
 	}
 	logger.Info("Found volume")
 
-	logger.Info(fmt.Sprintf("Iterating over all snapshots of volume %s to remove them", volumeID))
+	logger.Infof("Iterating over all snapshots of volume %s to remove them", volumeID)
 	for _, s := range vol.Snapshots {
-		logger.Debug(fmt.Sprintf("Removing snapshot %s", s))
+		logger.Debugf("Removing snapshot %s", s)
 		if err := vol.RemoveSnapshot(s); err != nil {
 			return err
 		}
@@ -155,7 +155,7 @@ func executeVolumeRemove(volumeID string) error {
 	}
 	logger.Info("Removed all snapshots from volume")
 
-	logger.Info(fmt.Sprintf("Removing volume %s from repository", volumeID))
+	logger.Infof("Removing volume %s from repository", volumeID)
 	if err := repo.RemoveVolume(vol); err != nil {
 		return err
 	}
@@ -172,7 +172,6 @@ func executeVolumeRemove(volumeID string) error {
 		return err
 	}
 	logger.Info("Saved repository")
-
 
 	fmt.Printf("Volume %s '%s' successfully removed\n", vol.ID, vol.Name)
 	fmt.Println("Do not forget to run 'repo pack' to delete un-referenced chunks and free up storage space!")
