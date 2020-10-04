@@ -157,7 +157,7 @@ func (b *AESBackend) Save(config *Config) error {
 	}
 
 	marked := []byte(EncryptedHeaderPrefix)
-	err = ioutil.WriteFile(u.Path, append(marked, ciphertext...), 0644)
+	err = ioutil.WriteFile(u.Path, append(marked, ciphertext...), 0600)
 
 	return err
 }
