@@ -13,7 +13,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/knoxite/knoxite"
 	"github.com/knoxite/knoxite/cmd/knoxite/config"
+	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 	"github.com/muesli/gotable"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
@@ -108,10 +110,10 @@ func executeConfigInit() error {
 func executeConfigAlias(alias string) error {
 	// At first check if the configuration file already exists
 	cfg.Repositories[alias] = config.RepoConfig{
-		Url: globalOpts.Repo,
-		// Compression: utils.CompressionText(knoxite.CompressionNone),
+		Url:         globalOpts.Repo,
+		Compression: utils.CompressionText(knoxite.CompressionNone),
 		// Tolerance:   0,
-		// Encryption:  utils.EncryptionText(knoxite.EncryptionAES),
+		Encryption: utils.EncryptionText(knoxite.EncryptionAES),
 	}
 
 	return cfg.Save()
