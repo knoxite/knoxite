@@ -113,7 +113,7 @@ func TestFileSave(t *testing.T) {
 	backend = NewFileBackend()
 	err = backend.Save(c)
 	if err != nil {
-		t.Errorf("Failed to save the config to %s", u)
+		t.Errorf("Failed to save the config to %s: %v", u, err)
 	}
 	if !exist(p) {
 		t.Errorf("Configuration file wasn't saved to %s", p)
