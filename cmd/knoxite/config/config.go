@@ -30,13 +30,13 @@ var cfgFileName = "knoxite.conf"
 
 // The RepoConfig struct contains all the default values for a a repository.
 type RepoConfig struct {
-	Url             string   `toml:"url"`
-	Compression     string   `toml:"compression"`
-	Tolerance       uint     `toml:"tolerance"`
-	Encryption      string   `toml:"encryption"`
-	Pedantic        bool     `toml:"pedantic"`
-	StoreExcludes   []string `toml:"store_excludes"`
-	RestoreExcludes []string `toml:"restore_excludes"`
+	Url             string   `toml:"url" comment:"Repository directory to backup to/restore from"`
+	Compression     string   `toml:"compression" comment:"Compressoin algo to use: none (default), flate, gzip, lzma, zlib, zstd"`
+	Tolerance       uint     `toml:"tolerance" comment:"Failure tolerance against n backend failures"`
+	Encryption      string   `toml:"encryption" comment:"Encryption algo to used: aes (default), none"`
+	Pedantic        bool     `toml:"pedantic" comment:"Stop backup operation after the first error occurred"`
+	StoreExcludes   []string `toml:"store_excludes" comment:"Specify excludes for the store operation"`
+	RestoreExcludes []string `toml:"restore_excludes" comment:"Specify excludes for the restore operation"`
 }
 
 type Config struct {
