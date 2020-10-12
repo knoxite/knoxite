@@ -102,7 +102,7 @@ func TestAESBackendSave(t *testing.T) {
 	backend, _ = NewAESBackend(u)
 	err = backend.Save(c)
 	if err != nil {
-		t.Errorf("failed to save the config to %s", u)
+		t.Errorf("failed to save the config to %s: %v", u, err)
 	}
 	if !exist(absPath) {
 		t.Errorf("configuration file wasn't saved to %s", absPath)
