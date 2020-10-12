@@ -18,8 +18,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/BurntSushi/toml"
 	"github.com/knoxite/knoxite/cmd/knoxite/utils"
+	"github.com/pelletier/go-toml"
 	"golang.org/x/crypto/scrypt"
 )
 
@@ -117,12 +117,10 @@ func (b *AESBackend) Load(u *url.URL) (*Config, error) {
 		return config, err
 	}
 
-	_, err = toml.Decode(string(plaintext), &config)
-	if err != nil {
-		return config, err
-	}
-
-	return config, nil
+	err = toml.Unmarshal(plaintext, config)
+	config.url = u
+	config.backend = b
+	return config, err
 }
 
 // Save encrypts then saves the configuration.
@@ -142,7 +140,7 @@ func (b *AESBackend) Save(config *Config) error {
 	}
 
 	buf := new(bytes.Buffer)
-	if err := toml.NewEncoder(buf).Encode(config); err != nil {
+	if err := toml.NewEncoder(buf).Encode(*config); err != nil {
 		return err
 	}
 

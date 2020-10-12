@@ -14,7 +14,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml"
 )
 
 // FileBackend implements a filesystem backend for the configuration.
@@ -47,7 +47,14 @@ func (fs *FileBackend) Load(u *url.URL) (*Config, error) {
 		return config, nil
 	}
 
-	_, err = toml.DecodeFile(config.url.Path, config)
+	content, err := ioutil.ReadFile(config.url.Path)
+	if err != nil {
+		return config, err
+	}
+
+	err = toml.Unmarshal(content, config)
+	config.backend = fs
+	config.url = u
 	return config, err
 }
 
@@ -67,7 +74,7 @@ func (fs *FileBackend) Save(config *Config) error {
 	}
 
 	buf := new(bytes.Buffer)
-	if err := toml.NewEncoder(buf).Encode(config); err != nil {
+	if err := toml.NewEncoder(buf).Encode(*config); err != nil {
 		return err
 	}
 

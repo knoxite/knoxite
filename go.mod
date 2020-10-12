@@ -6,7 +6,6 @@ require (
 	bazil.org/fuse v0.0.0-20191225233854-3a99aca11732
 	cloud.google.com/go/storage v1.10.0
 	github.com/Azure/azure-storage-file-go v0.8.0
-	github.com/BurntSushi/toml v0.3.1
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-ini/ini v1.51.1 // indirect
@@ -25,6 +24,7 @@ require (
 	github.com/muesli/goprogressbar v0.0.0-20200829150239-abc87a99d0c4
 	github.com/muesli/gotable v0.0.0-20190807045009-bcaa6df995ab
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
+	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/sftp v1.12.0
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7 // indirect
 	github.com/restic/chunker v0.4.0

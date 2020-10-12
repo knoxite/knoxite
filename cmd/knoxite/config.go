@@ -13,9 +13,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BurntSushi/toml"
 	"github.com/knoxite/knoxite/cmd/knoxite/config"
 	"github.com/muesli/gotable"
+	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 )
 
@@ -184,7 +184,7 @@ func executeConfigInfo() error {
 
 func executeConfigCat() error {
 	buf := new(bytes.Buffer)
-	if err := toml.NewEncoder(buf).Encode(cfg); err != nil {
+	if err := toml.NewEncoder(buf).Encode(*cfg); err != nil {
 		return err
 	}
 
