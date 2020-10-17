@@ -1,35 +1,26 @@
-/*
- * knoxite
- *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
- *     Copyright (c) 2016, Stefan Luecke <glaxx@glaxx.net>
- *
- *   For license see LICENSE
- */
-
 package s3
 
 import (
 	"bytes"
-	"errors"
-	"io/ioutil"
+	"io"
 	"net/url"
-	"os"
+	"path"
 	"strconv"
-	"strings"
 
-	"github.com/minio/minio-go"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	awsSession "github.com/aws/aws-sdk-go/aws/session"
+	awsS3 "github.com/aws/aws-sdk-go/service/s3"
 
 	"github.com/knoxite/knoxite"
 )
 
 // S3Storage stores data on a remote AmazonS3.
 type S3Storage struct {
-	url              url.URL
-	chunkBucket      string
-	snapshotBucket   string
-	repositoryBucket string
-	region           string
-	client           *minio.Client
+	Client       *awsS3.S3
+	URL          url.URL
+	BucketName   string
+	BucketPrefix string
 }
 
 func init() {
@@ -38,56 +29,31 @@ func init() {
 
 // NewBackend returns a S3Storage backend.
 func (*S3Storage) NewBackend(URL url.URL) (knoxite.Backend, error) {
-	var ssl bool
-	switch URL.Scheme {
-	case "s3":
-		ssl = false
-	case "s3s":
-		ssl = true
-	default:
-		return &S3Storage{}, errors.New("Invalid s3 url scheme")
+	sessionConfig := &aws.Config{}
+
+	// Set AWS region if supplied in query
+	if region := URL.Query().Get("region"); region != "" {
+		sessionConfig.Region = &region
 	}
 
-	var username, pw string
-	if URL.User != nil {
-		username = URL.User.Username()
-		pw, _ = URL.User.Password()
-	}
-	if len(username) == 0 {
-		username = os.Getenv("AWS_ACCESS_KEY_ID")
-		if len(username) == 0 {
-			return &S3Storage{}, knoxite.ErrInvalidUsername
-		}
-	}
-	if len(pw) == 0 {
-		pw = os.Getenv("AWS_SECRET_ACCESS_KEY")
-		if len(pw) == 0 {
-			return &S3Storage{}, knoxite.ErrInvalidPassword
-		}
+	// Set AWS Endpoint URL if supplied in query
+	if endpointURL := URL.Query().Get("endpoint"); endpointURL != "" {
+		sessionConfig.Endpoint = &endpointURL
 	}
 
-	regionAndBucketPrefix := strings.Split(URL.Path, "/")
-	if len(regionAndBucketPrefix) != 3 {
-		return &S3Storage{}, knoxite.ErrInvalidRepositoryURL
+	new := &S3Storage{
+		Client:       awsS3.New(awsSession.New(sessionConfig)),
+		BucketName:   URL.Host,
+		BucketPrefix: URL.Path,
+		URL:          URL,
 	}
 
-	cl, err := minio.New(URL.Host, username, pw, ssl)
-	if err != nil {
-		return &S3Storage{}, err
-	}
-
-	return &S3Storage{url: URL,
-		client:           cl,
-		region:           regionAndBucketPrefix[1],
-		chunkBucket:      regionAndBucketPrefix[2] + "-chunks",
-		snapshotBucket:   regionAndBucketPrefix[2] + "-snapshots",
-		repositoryBucket: regionAndBucketPrefix[2] + "-repository",
-	}, nil
+	return new, nil
 }
 
 // Location returns the type and location of the repository.
 func (backend *S3Storage) Location() string {
-	return backend.url.String()
+	return backend.URL.String()
 }
 
 // Close the backend.
@@ -112,136 +78,132 @@ func (backend *S3Storage) AvailableSpace() (uint64, error) {
 
 // LoadChunk loads a Chunk from network.
 func (backend *S3Storage) LoadChunk(shasum string, part, totalParts uint) ([]byte, error) {
-	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
-	obj, err := backend.client.GetObject(backend.chunkBucket, fileName, minio.GetObjectOptions{})
-	if err != nil {
-		return nil, err
-	}
-	defer obj.Close()
-
-	return ioutil.ReadAll(obj)
+	return backend.s3Load(backend.chunkPath(shasum, part, totalParts))
 }
 
 // StoreChunk stores a single Chunk on network.
 func (backend *S3Storage) StoreChunk(shasum string, part, totalParts uint, data []byte) (size uint64, err error) {
-	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
+	chunkKey := backend.chunkPath(shasum, part, totalParts)
 
-	if _, err = backend.client.StatObject(backend.chunkBucket, fileName, minio.StatObjectOptions{}); err == nil {
-		// Chunk is already stored
+	// Check if chunk already exists, return 0 otherwise.
+	_, err = backend.Client.HeadObject(&awsS3.HeadObjectInput{
+		Bucket: &backend.BucketName,
+		Key:    &chunkKey,
+	})
+
+	// Here, we expect either no error at all (which means the chunk already
+	// exists) or an erorr with Error Code `NotFound` or `NoSuchKey`, which means
+	// the chunk doesn't exist yet and we have to write it.
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			// An unexpected error happened during our HEAD request, which
+			// means we shouldn't continue.
+			switch awsErr.Code() {
+			case "NotFound":
+			case "NoSuchKey":
+			default:
+				return 0, err
+			}
+		}
+	} else {
+		// chunk already exists
 		return 0, nil
 	}
 
-	buf := bytes.NewBuffer(data)
-	i, err := backend.client.PutObject(backend.chunkBucket, fileName, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
-	return uint64(i), err
+	return uint64(len(data)), backend.s3Store(data, chunkKey)
 }
 
 // DeleteChunk deletes a single Chunk.
 func (backend *S3Storage) DeleteChunk(shasum string, part, totalParts uint) error {
-	fileName := shasum + "." + strconv.FormatUint(uint64(part), 10) + "_" + strconv.FormatUint(uint64(totalParts), 10)
+	key := backend.chunkPath(shasum, part, totalParts)
 
-	err := backend.client.RemoveObject(backend.chunkBucket, fileName)
-	if err != nil {
-		return err
-	}
+	_, err := backend.Client.DeleteObject(&awsS3.DeleteObjectInput{
+		Bucket: &backend.BucketName,
+		Key:    &key,
+	})
 
-	return nil
+	return err
 }
 
 // LoadSnapshot loads a snapshot.
 func (backend *S3Storage) LoadSnapshot(id string) ([]byte, error) {
-	obj, err := backend.client.GetObject(backend.snapshotBucket, id, minio.GetObjectOptions{})
-	if err != nil {
-		return nil, err
-	}
-	defer obj.Close()
-
-	return ioutil.ReadAll(obj)
+	key := path.Join(backend.BucketPrefix, "snapshots", id)
+	return backend.s3Load(key)
 }
 
 // SaveSnapshot stores a snapshot.
 func (backend *S3Storage) SaveSnapshot(id string, data []byte) error {
-	buf := bytes.NewBuffer(data)
-	_, err := backend.client.PutObject(backend.snapshotBucket, id, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
-	return err
+	key := path.Join(backend.BucketPrefix, "snapshots", id)
+	return backend.s3Store(data, key)
 }
 
 // LoadChunkIndex reads the chunk-index.
 func (backend *S3Storage) LoadChunkIndex() ([]byte, error) {
-	obj, err := backend.client.GetObject(backend.chunkBucket, knoxite.ChunkIndexFilename, minio.GetObjectOptions{})
-	if err != nil {
-		return nil, err
-	}
-	defer obj.Close()
-
-	return ioutil.ReadAll(obj)
+	key := path.Join(backend.BucketPrefix, "chunks", "index")
+	return backend.s3Load(key)
 }
 
 // SaveChunkIndex stores the chunk-index.
 func (backend *S3Storage) SaveChunkIndex(data []byte) error {
-	buf := bytes.NewBuffer(data)
-	_, err := backend.client.PutObject(backend.chunkBucket, knoxite.ChunkIndexFilename, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
-	return err
+	key := path.Join(backend.BucketPrefix, "chunks", "index")
+	return backend.s3Store(data, key)
 }
 
 // InitRepository creates a new repository.
 func (backend *S3Storage) InitRepository() error {
-	chunkBucketExist, err := backend.client.BucketExists(backend.chunkBucket)
-	if err != nil {
-		return err
-	}
-	if !chunkBucketExist {
-		err = backend.client.MakeBucket(backend.chunkBucket, backend.region)
-		if err != nil {
-			return err
-		}
-	} else {
-		return knoxite.ErrRepositoryExists
-	}
-
-	snapshotBucketExist, err := backend.client.BucketExists(backend.snapshotBucket)
-	if err != nil {
-		return err
-	}
-	if !snapshotBucketExist {
-		err = backend.client.MakeBucket(backend.snapshotBucket, backend.region)
-		if err != nil {
-			return err
-		}
-	} else {
-		return knoxite.ErrRepositoryExists
-	}
-
-	repositoryBucketExist, err := backend.client.BucketExists(backend.repositoryBucket)
-	if err != nil {
-		return err
-	}
-	if !repositoryBucketExist {
-		err = backend.client.MakeBucket(backend.repositoryBucket, backend.region)
-		if err != nil {
-			return err
-		}
-	} else {
-		return knoxite.ErrRepositoryExists
-	}
-
 	return nil
 }
 
 // LoadRepository reads the metadata for a repository.
 func (backend *S3Storage) LoadRepository() ([]byte, error) {
-	obj, err := backend.client.GetObject(backend.repositoryBucket, knoxite.RepoFilename, minio.GetObjectOptions{})
-	if err != nil {
-		return nil, err
-	}
-	defer obj.Close()
-
-	return ioutil.ReadAll(obj)
+	key := path.Join(backend.BucketPrefix, knoxite.RepoFilename)
+	return backend.s3Load(key)
 }
 
 // SaveRepository stores the metadata for a repository.
 func (backend *S3Storage) SaveRepository(data []byte) error {
-	buf := bytes.NewBuffer(data)
-	_, err := backend.client.PutObject(backend.repositoryBucket, knoxite.RepoFilename, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
+	key := path.Join(backend.BucketPrefix, knoxite.RepoFilename)
+	return backend.s3Store(data, key)
+}
+
+func (backend *S3Storage) s3Store(data []byte, key string) error {
+	_, err := backend.Client.PutObject(
+		&awsS3.PutObjectInput{
+			Body:   bytes.NewReader(data),
+			Bucket: &backend.BucketName,
+			Key:    &key,
+		},
+	)
+
+	// spew.Dump(out)
+
 	return err
+}
+
+func (backend *S3Storage) s3Load(key string) ([]byte, error) {
+	out, err := backend.Client.GetObject(
+		&awsS3.GetObjectInput{
+			Bucket: &backend.BucketName,
+			Key:    &key,
+		},
+	)
+
+	if err != nil {
+		return []byte{}, err
+	}
+
+	data := make([]byte, *out.ContentLength)
+	if _, err := out.Body.Read(data); err != io.EOF {
+		return data, err
+	}
+
+	// spew.Dump(data)
+
+	return data, err
+}
+
+func (backend *S3Storage) chunkPath(shasum string, part, totalParts uint) string {
+	return path.Join(
+		backend.BucketPrefix, "chunks", shasum+"."+strconv.FormatUint(uint64(part), 10)+"_"+strconv.FormatUint(uint64(totalParts), 10),
+	)
 }

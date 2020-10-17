@@ -22,7 +22,7 @@ var (
 
 func TestMain(m *testing.M) {
 	// create a random bucket name to avoid collisions
-	rnd := storage.RandomSuffix()
+	// rnd := storage.RandomSuffix()
 
 	amazons3url := os.Getenv("KNOXITE_AMAZONS3_URL")
 	if len(amazons3url) == 0 {
@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 	}
 
 	backendTest = &storage.BackendTest{
-		URL:         amazons3url + rnd,
+		URL:         amazons3url, // + rnd,
 		Protocols:   []string{"s3", "s3s"},
 		Description: "Amazon S3 Storage",
 		TearDown:    func(tb *storage.BackendTest) {},

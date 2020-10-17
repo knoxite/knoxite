@@ -7,24 +7,29 @@
 #   For license see LICENSE
 #
 
-export MINIO_ACCESS_KEY=USWUXHGYZQYFYFFIT3RE
-export MINIO_SECRET_KEY=MOJRH0mkL1IPauahWITSVvyDrQbEEIwljvmxdq03
+# export MINIO_ACCESS_KEY=USWUXHGYZQYFYFFIT3RE
+# export MINIO_SECRET_KEY=MOJRH0mkL1IPauahWITSVvyDrQbEEIwljvmxdq03
 
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    OS="linux"
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    OS="darwin"
-fi
+# if [[ "$OSTYPE" == "linux-gnu" ]]; then
+#     OS="linux"
+# elif [[ "$OSTYPE" == "darwin"* ]]; then
+#     OS="darwin"
+# fi
 
-# download mino
-curl https://dl.minio.io/server/minio/release/${OS}-amd64/minio --output minio_test
+# # download mino
+# curl https://dl.minio.io/server/minio/release/${OS}-amd64/minio --output minio_test
 
-# create dirs
-chmod +x ./minio_test
-mkdir s3test
+# # create dirs
+# chmod +x ./minio_test
+# mkdir s3test
 
-# start minio
-./minio_test server ./s3test &
+# # start minio
+# ./minio_test server ./s3test &
 
-# wait for minio to boot up
-sleep 5
+# # wait for minio to boot up
+# sleep 5
+
+sudo apt-get install -y python3-setuptools
+pip3 install localstack
+localstack start --host &
+sleeep 10
