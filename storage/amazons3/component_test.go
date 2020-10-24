@@ -1,5 +1,13 @@
 // +build backend
 
+/*
+ * knoxite
+ *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2016, Johannes Fürmann <fuermannj+floss@gmail.com>
+ *
+ *   For license see LICENSE
+ */
+
 package amazons3
 
 import (
