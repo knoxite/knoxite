@@ -16,7 +16,7 @@ import (
 	"github.com/knoxite/knoxite"
 )
 
-// Stat returns the size of the object with key `path` if successfull and 0 as
+// Stat returns the size of the object with key `path` if successful and 0 as
 // well as an error otherwise.
 func (backend *AmazonS3StorageBackend) Stat(path string) (uint64, error) {
 	out, err := backend.service.HeadObject(&s3.HeadObjectInput{

@@ -20,7 +20,7 @@ func init() {
 	knoxite.RegisterStorageBackend(&AmazonS3StorageBackend{})
 }
 
-// NewBackend initializes an Amazon S3 Storage Backend
+// NewBackend initializes an Amazon S3 Storage Backend.
 func (*AmazonS3StorageBackend) NewBackend(url url.URL) (knoxite.Backend, error) {
 	// Set up Session for Amazon S3 Client
 	sessionConfig := aws.NewConfig()
@@ -36,9 +36,14 @@ func (*AmazonS3StorageBackend) NewBackend(url url.URL) (knoxite.Backend, error) 
 		sessionConfig.S3ForcePathStyle = aws.Bool(true)
 	}
 
+	sesn, err := session.NewSession(sessionConfig)
+	if err != nil {
+		return &AmazonS3StorageBackend{}, err
+	}
+
 	new := &AmazonS3StorageBackend{
 		url:        url,
-		service:    s3.New(session.New(sessionConfig)),
+		service:    s3.New(sesn),
 		bucketName: url.Hostname(),
 	}
 
@@ -52,7 +57,7 @@ func (*AmazonS3StorageBackend) NewBackend(url url.URL) (knoxite.Backend, error) 
 	return new, nil
 }
 
-// Protocols returns a list of supported Protocol Handlers
+// Protocols returns a list of supported Protocol Handlers.
 func (*AmazonS3StorageBackend) Protocols() []string {
 	return []string{"amazons3"}
 }
