@@ -1,6 +1,6 @@
 /*
  * knoxite
- *     Copyright (c) 2016, Johannes Fürmann <fuermannj+floss@gmail.com>
+ *     Copyright (c) 2020, Johannes Fürmann <fuermannj+floss@gmail.com>
  *
  *   For license see LICENSE
  */
