@@ -142,6 +142,13 @@ $ knoxite -r /tmp/knoxite mount [snapshot ID] /mnt
 
 ### Backup. No more excuses.
 
+## Configuration System
+Knoxite comes bundled with a configuration system. You can declare shorthands
+for your repositories and provide default values for settings like encryption,
+compression or excludes. For more information refer to the documentation on our
+[website](https://knoxite.com/docs/configuration-system/) or take a look into
+the `knoxite config` command.
+
 ## Optional environment variables
 Optionally you can set the `KNOXITE_REPOSITORY` and `KNOXITE_PASSWORD` environment
 variables to provide default settings for when no options have been passed to `knoxite`.
