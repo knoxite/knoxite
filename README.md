@@ -16,7 +16,7 @@ You can always extend your storage size or move your stored data to another mach
 ### :rocket: It's efficient
 knoxite cleverly de-duplicates your data before storing it and supports multiple compression algorithms.
 ### :link: It's connected
-You can use multiple storage backends, even parallely: local disks, Dropbox, Amazon S3 & others.
+You can use multiple storage backends, even parallely: local disks, Dropbox, Amazon S3 & [others](https://knoxite.com/docs/storage-backends/).
 ### :heart: It's OpenSource
 knoxite is free software. Contribute and spread the word!
 
