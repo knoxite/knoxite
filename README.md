@@ -75,6 +75,11 @@ other.txt             4.17 MiB / 4.17 MiB [#####################################
 Snapshot cebc1213 created: 9 files, 8 dirs, 0 symlinks, 0 errors, 1.23 GiB Original Size, 1.23 GiB Storage Size
 ```
 
+When errors occur while storing individual data-chunks knoxite still tries to
+complete the store operation for the remaining chunks. You can toggle this
+behaviour to immediately exit on the first erroroneus data-chunk by setting the
+`--pedantic` command line flag.
+
 ### List all snapshots
 Now you can get an overview of all snapshots stored in this volume:
 
