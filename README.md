@@ -9,15 +9,15 @@ knoxite is a secure data storage & backup system.
 
 Join the discussion on IRC in #knoxite (on irc.freenode.net) or our [Gitter chat room](https://gitter.im/knoxite/chat)!
 
-### It's secure
+### :lock: It's secure
 knoxite uses AES-encryption to safely store your data.
-### It's flexible
+### :muscle: It's flexible
 You can always extend your storage size or move your stored data to another machine.
-### It's efficient
+### :rocket: It's efficient
 knoxite cleverly de-duplicates your data before storing it and supports multiple compression algorithms.
-### It's connected
+### :link: It's connected
 You can use multiple storage backends, even parallely: local disks, Dropbox, Amazon S3 & others.
-### It's OpenSource
+### :heart: It's OpenSource
 knoxite is free software. Contribute and spread the word!
 
 ## Installation
