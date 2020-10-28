@@ -30,6 +30,11 @@ To install knoxite, simply run:
     cd knoxite
     go build ./cmd/knoxite/
 
+Or use your favourite package manager:
+
+    # Arch Linux (btw)
+    yay -S knoxite-git
+
 Run `knoxite --help` to see a full list of options.
 
 ## Getting started
