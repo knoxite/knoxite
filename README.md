@@ -9,15 +9,15 @@ knoxite is a secure data storage & backup system.
 
 Join the discussion on IRC in #knoxite (on irc.freenode.net) or our [Gitter chat room](https://gitter.im/knoxite/chat)!
 
-### It's secure
+### :lock: It's secure
 knoxite uses AES-encryption to safely store your data.
-### It's flexible
+### :muscle: It's flexible
 You can always extend your storage size or move your stored data to another machine.
-### It's efficient
+### :rocket: It's efficient
 knoxite cleverly de-duplicates your data before storing it and supports multiple compression algorithms.
-### It's connected
-You can use multiple storage backends, even parallely: local disks, Dropbox, Amazon S3 & others.
-### It's OpenSource
+### :link: It's connected
+You can use multiple storage backends, even parallely: local disks, Dropbox, Amazon S3 & [others](https://knoxite.com/docs/storage-backends/).
+### :heart: It's OpenSource
 knoxite is free software. Contribute and spread the word!
 
 ## Installation
@@ -29,6 +29,11 @@ To install knoxite, simply run:
     git clone https://github.com/knoxite/knoxite.git
     cd knoxite
     go build ./cmd/knoxite/
+
+Or use your favourite package manager:
+
+    # Arch Linux (btw)
+    yay -S knoxite-git
 
 Run `knoxite --help` to see a full list of options.
 
@@ -74,6 +79,11 @@ other.txt             4.17 MiB / 4.17 MiB [#####################################
 ...
 Snapshot cebc1213 created: 9 files, 8 dirs, 0 symlinks, 0 errors, 1.23 GiB Original Size, 1.23 GiB Storage Size
 ```
+
+When errors occur while storing individual data-chunks knoxite still tries to
+complete the store operation for the remaining chunks. You can toggle this
+behaviour to immediately exit on the first erroroneus data-chunk by setting the
+`--pedantic` command line flag.
 
 ### List all snapshots
 Now you can get an overview of all snapshots stored in this volume:
@@ -136,6 +146,13 @@ $ knoxite -r /tmp/knoxite mount [snapshot ID] /mnt
 ```
 
 ### Backup. No more excuses.
+
+## Configuration System
+Knoxite comes bundled with a configuration system. You can declare shorthands
+for your repositories and provide default values for settings like encryption,
+compression or excludes. For more information refer to the documentation on our
+[website](https://knoxite.com/docs/configuration-system/) or take a look into
+the `knoxite config` command.
 
 ## Optional environment variables
 Optionally you can set the `KNOXITE_REPOSITORY` and `KNOXITE_PASSWORD` environment
