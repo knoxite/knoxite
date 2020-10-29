@@ -14,7 +14,7 @@ head -c 1M </dev/urandom >data/stuff.txt
 
 # demo
 pe "mkdir backup"
-pe "knoxite -r backup/ -p password repo init"
+pe "knoxite -r backup/ --password password repo init"
 pe "export KNOXITE_REPOSITORY=backup/"
 pe "export KNOXITE_PASSWORD=password"
 pe "knoxite volume init \"Backups\" -d \"System backups\""
