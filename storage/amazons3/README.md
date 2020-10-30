@@ -19,7 +19,7 @@ Optionally, some configuration parameters may be supplied as GET style parameter
 
 For security reasons, we recommend setting up an S3 bucket and using short-lived credentials such as EC2 instance roles whenever feasible.
 
-In situations where this is not possible, long-lived credentials such as IAM users are a good options.
+In situations where this is not possible, long-lived credentials such as IAM users are a good option.
 
 In both cases, we recommend sticking to the principle of least privilege as outlined in [AWS IAM's best practices][2].
 
