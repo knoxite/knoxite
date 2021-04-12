@@ -11,13 +11,12 @@ require (
 	github.com/go-ini/ini v1.51.1 // indirect
 	github.com/google/readahead v0.0.0-20161222183148-eaceba169032 // indirect
 	github.com/jlaffaye/ftp v0.0.0-20200331144919-d4caf6ffcab8
-	github.com/klauspost/compress v1.10.11
-	github.com/klauspost/reedsolomon v1.9.9
+	github.com/klauspost/compress v1.11.13
+	github.com/klauspost/reedsolomon v1.9.12
 	github.com/klauspost/shutdown2 v1.1.0
-	github.com/minio/highwayhash v1.0.0
+	github.com/minio/highwayhash v1.0.2
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mmcloughlin/avo v0.0.0-20200523190732-4439b6b2c061 // indirect
 	github.com/muesli/combinator v0.3.0
 	github.com/muesli/crunchy v0.4.0
 	github.com/muesli/go-app-paths v0.2.1
