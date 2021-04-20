@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  This template sets up a test environment for knoxite's S3 backend. This environment
+  mainly consists of an S3 bucket and an IAM user that has acces _only to the test
+  bucket_.
+
+Resources:
+  KnoxiteTestBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+
+  KnoxiteTestUser:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: "TestBucketAccess"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              Effect: Allow
+              Action:
+                - "s3:GetObject"
+                - "s3:HeadObject"
+                - "s3:PutObject"
+                - "s3:DeleteObject"
+              Resource:
+                Fn::Sub:
+                  - "${BucketArn}/*"
+                  - BucketArn: !GetAtt KnoxiteTestBucket.Arn
