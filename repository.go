@@ -11,6 +11,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 )
 
 // A Repository is a collection of backup snapshots.
@@ -250,4 +251,49 @@ func (r *Repository) Migrate() error {
 		}
 	}
 	return ErrRepositoryIncompatible
+}
+
+func (r *Repository) ChangeLocation(oldLocation, newLocation string) error {
+	// Create temp backend with old URL
+	b, err := BackendFromURL(oldLocation)
+	if err != nil {
+		return err
+	}
+
+	oldLocation = b.Location()
+
+	// Look for backend by sanitized URL
+	fmt.Println("Looking for old Backend")
+	var oldBackendIdx int = -1
+	for idx, backend := range r.backend.Backends {
+		if (*backend).Location() == oldLocation {
+			oldBackendIdx = idx
+		}
+	}
+
+	if oldBackendIdx < 0 {
+		return fmt.Errorf("Old Location was not found")
+	}
+
+	// Remove old backend
+	fmt.Println("Creating new backend")
+	r.backend.Backends = append(r.backend.Backends[:oldBackendIdx], r.backend.Backends[oldBackendIdx+1:]...)
+
+	// Create Backend with new URL
+	b, err = BackendFromURL(newLocation)
+	if err != nil {
+		return err
+	}
+
+	// Add Backend
+	r.backend.Backends = append(r.backend.Backends, &b)
+
+	// Save Repository
+	fmt.Println("Saving Repository")
+	err = r.Save()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
