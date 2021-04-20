@@ -78,6 +78,16 @@ var (
 			return executeRepoPack()
 		},
 	}
+	setURLCmd = &cobra.Command{
+		Use:   "set-url <new-url>",
+		Short: "set a new URL for the repository",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("New URL is needed for changing URL")
+			}
+			return executeRepoChangeLocation(args[0])
+		},
+	}
 )
 
 func init() {
@@ -87,6 +97,7 @@ func init() {
 	repoCmd.AddCommand(repoInfoCmd)
 	repoCmd.AddCommand(repoAddCmd)
 	repoCmd.AddCommand(repoPackCmd)
+	repoCmd.AddCommand(setURLCmd)
 	RootCmd.AddCommand(repoCmd)
 }
 
@@ -216,6 +227,21 @@ func executeRepoInfo() error {
 	}
 
 	_ = tab.Print()
+	return nil
+}
+
+func executeRepoChangeLocation(newLocation string) error {
+	r, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	if err != nil {
+		return err
+	}
+
+	err = r.ChangeLocation(globalOpts.Repo, newLocation)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Location successfully changed to \"%s\"\n", newLocation)
 	return nil
 }
 
