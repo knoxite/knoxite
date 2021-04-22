@@ -101,7 +101,7 @@ func init() {
 }
 
 func initLogger() {
-	logger = *knoxite.NewLogger(utils.VerbosityTypeFromString(globalOpts.Verbosity)).
+	logger = *NewLogger(utils.VerbosityTypeFromString(globalOpts.Verbosity)).
 		WithWriter(os.Stdout)
 }
 
