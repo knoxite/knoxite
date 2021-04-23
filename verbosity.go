@@ -8,7 +8,7 @@
 
 package knoxite
 
-// verbosity levels for logging
+// verbosity levels for logging.
 type Verbosity int
 
 const (
