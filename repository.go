@@ -264,7 +264,6 @@ func (r *Repository) ChangeLocation(oldLocation, newLocation string) error {
 	oldLocation = b.Location()
 
 	// Look for backend by sanitized URL
-	fmt.Println("Looking for old Backend")
 	var oldBackendIdx int = -1
 	for idx, backend := range r.backend.Backends {
 		if (*backend).Location() == oldLocation {
@@ -281,7 +280,6 @@ func (r *Repository) ChangeLocation(oldLocation, newLocation string) error {
 	}
 
 	// Remove old backend
-	fmt.Println("Creating new backend")
 	r.backend.Backends = append(r.backend.Backends[:oldBackendIdx], r.backend.Backends[oldBackendIdx+1:]...)
 
 	// Create Backend with new URL
