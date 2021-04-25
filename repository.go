@@ -12,6 +12,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // A Repository is a collection of backup snapshots.
@@ -272,7 +273,11 @@ func (r *Repository) ChangeLocation(oldLocation, newLocation string) error {
 	}
 
 	if oldBackendIdx < 0 {
-		return fmt.Errorf("Old Location was not found")
+		locations := []string{}
+		for _, backend := range r.backend.Backends {
+			locations = append(locations, (*backend).Location())
+		}
+		return fmt.Errorf("Old Location was not found. Available Locations are: %s", strings.Join(locations, ","))
 	}
 
 	// Remove old backend
