@@ -15,9 +15,10 @@ import (
 	"strings"
 )
 
-func findFiles(rootPath string, excludes []string) chan ArchiveResult {
+func findFiles(rootPath string, excludes []string) <-chan ArchiveResult {
 	c := make(chan ArchiveResult)
 	go func() {
+		defer close(c)
 		err := filepath.Walk(rootPath, func(path string, fi os.FileInfo, err error) error {
 			if err != nil {
 				if os.IsNotExist(err) {
@@ -93,7 +94,6 @@ func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 		if err != nil {
 			c <- ArchiveResult{Archive: nil, Error: err}
 		}
-		close(c)
 	}()
 	return c
 }

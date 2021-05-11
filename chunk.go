@@ -87,7 +87,7 @@ func processChunk(password string, opts StoreOptions, jobs <-chan inputChunk, ch
 }
 
 // chunkFile divides filename into chunks of 1MiB each.
-func chunkFile(filename string, password string, opts StoreOptions) (chan ChunkResult, error) {
+func chunkFile(filename string, password string, opts StoreOptions) (<-chan ChunkResult, error) {
 	c := make(chan ChunkResult)
 
 	file, err := os.Open(filename)

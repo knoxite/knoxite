@@ -12,10 +12,11 @@ import (
 	"math/rand"
 )
 
-func VerifyRepo(repository Repository, percentage int) (chan Progress, error) {
+func VerifyRepo(repository Repository, percentage int) (<-chan Progress, error) {
 	prog := make(chan Progress)
 
 	go func() {
+		defer close(prog)
 		archiveToSnapshot := make(map[string]*Snapshot)
 
 		for _, volume := range repository.Volumes {
@@ -66,16 +67,16 @@ func VerifyRepo(repository Repository, percentage int) (chan Progress, error) {
 			p.CurrentItemStats.Transferred += (*snapshot.Archives[archiveKey]).Size
 			prog <- p
 		}
-		close(prog)
 	}()
 
 	return prog, nil
 }
 
-func VerifyVolume(repository Repository, volumeId string, percentage int) (chan Progress, error) {
+func VerifyVolume(repository Repository, volumeId string, percentage int) (<-chan Progress, error) {
 	prog := make(chan Progress)
 
 	go func() {
+		defer close(prog)
 		volume, err := repository.FindVolume(volumeId)
 		if err != nil {
 			prog <- newProgressError(err)
@@ -129,16 +130,16 @@ func VerifyVolume(repository Repository, volumeId string, percentage int) (chan 
 			p.CurrentItemStats.Transferred += (*snapshot.Archives[archiveKey]).Size
 			prog <- p
 		}
-		close(prog)
 	}()
 
 	return prog, nil
 }
 
-func VerifySnapshot(repository Repository, snapshotId string, percentage int) (chan Progress, error) {
+func VerifySnapshot(repository Repository, snapshotId string, percentage int) (<-chan Progress, error) {
 	prog := make(chan Progress)
 
 	go func() {
+		defer close(prog)
 		_, snapshot, err := repository.FindSnapshot(snapshotId)
 		if err != nil {
 			prog <- newProgressError(err)
@@ -178,7 +179,6 @@ func VerifySnapshot(repository Repository, snapshotId string, percentage int) (c
 			p.CurrentItemStats.Transferred += (*snapshot.Archives[archiveKey]).Size
 			prog <- p
 		}
-		close(prog)
 	}()
 
 	return prog, nil
