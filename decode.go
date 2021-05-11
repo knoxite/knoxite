@@ -66,9 +66,10 @@ func (e *DataReconstructionError) Error() string {
 }
 
 // DecodeSnapshot restores an entire snapshot to dst.
-func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string, excludes []string, pedantic bool) (chan Progress, error) {
+func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string, excludes []string, pedantic bool) (<-chan Progress, error) {
 	prog := make(chan Progress)
 	go func() {
+		defer close(prog)
 		for _, arc := range snapshot.Archives {
 			path := filepath.Join(dst, arc.Path)
 
@@ -100,7 +101,6 @@ func DecodeSnapshot(repository Repository, snapshot *Snapshot, dst string, exclu
 				continue
 			}
 		}
-		close(prog)
 	}()
 
 	return prog, nil
@@ -178,7 +178,7 @@ func loadChunk(repository Repository, archive Archive, chunk Chunk) ([]byte, err
 }
 
 // DecodeArchive restores a single archive to path.
-func DecodeArchive(progress chan Progress, repository Repository, arc Archive, path string) error {
+func DecodeArchive(progress chan<- Progress, repository Repository, arc Archive, path string) error {
 	p := newProgress(&arc)
 
 	if arc.Type == Directory {

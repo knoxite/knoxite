@@ -103,7 +103,7 @@ func executeVerifySnapshot(snapshotId string, opts VerifyOptions) error {
 	return nil
 }
 
-func verify(progress chan knoxite.Progress) []error {
+func verify(progress <-chan knoxite.Progress) []error {
 	var errors []error
 
 	pb := &goprogressbar.ProgressBar{Total: 1000, Width: 40}

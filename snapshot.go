@@ -58,7 +58,7 @@ func NewSnapshot(description string) (*Snapshot, error) {
 	return &snapshot, nil
 }
 
-func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, excludes []string) chan ArchiveResult {
+func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, excludes []string) <-chan ArchiveResult {
 	ch := make(chan ArchiveResult)
 	var wg sync.WaitGroup
 
@@ -121,12 +121,13 @@ func (snapshot *Snapshot) gatherTargetInformation(cwd string, paths []string, ex
 }
 
 // Add adds a path to a Snapshot.
-func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opts StoreOptions) chan Progress {
+func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opts StoreOptions) <-chan Progress {
 	progress := make(chan Progress)
 
 	ch := snapshot.gatherTargetInformation(opts.CWD, opts.Paths, opts.Excludes)
 
 	go func() {
+		defer close(progress)
 		for result := range ch {
 			if result.Error != nil {
 				p := newProgressError(result.Error)
@@ -178,7 +179,6 @@ func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opt
 						p.Path = archive.Path
 						progress <- p
 						if opts.Pedantic {
-							close(progress)
 							return
 						}
 						continue
@@ -193,7 +193,6 @@ func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opt
 						p.Path = archive.Path
 						progress <- p
 						if opts.Pedantic {
-							close(progress)
 							return
 						}
 						continue
@@ -221,7 +220,6 @@ func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opt
 			chunkIndex.AddArchive(archive, snapshot.ID)
 		}
 
-		close(progress)
 	}()
 
 	return progress
