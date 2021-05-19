@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/knoxite/knoxite/workflows/build/badge.svg)](https://github.com/knoxite/knoxite/actions)
 [![Coverage Status](https://coveralls.io/repos/github/knoxite/knoxite/badge.svg?branch=master)](https://coveralls.io/github/knoxite/knoxite?branch=master)
-[![Go ReportCard](http://goreportcard.com/badge/knoxite/knoxite)](http://goreportcard.com/report/knoxite/knoxite)
+[![Go ReportCard](https://goreportcard.com/badge/knoxite/knoxite)](https://goreportcard.com/report/knoxite/knoxite)
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://pkg.go.dev/github.com/knoxite/knoxite?tab=doc)
 
 knoxite is a secure data storage & backup system.
@@ -22,7 +22,7 @@ knoxite is free software. Contribute and spread the word!
 
 ## Installation
 
-Make sure you have a working Go environment. Follow the [Go install instructions](http://golang.org/doc/install.html).
+Make sure you have a working Go environment. Follow the [Go install instructions](https://golang.org/doc/install.html).
 
 To install knoxite, simply run:
 
