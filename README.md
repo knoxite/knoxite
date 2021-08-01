@@ -128,7 +128,7 @@ Restore done: 9 files, 8 dirs, 0 symlinks, 0 errors, 1.23 GiB Original Size, 1.2
 ```
 
 ### Cloning a snapshot
-It's easy to clone an existing snapshot, adding files to or updating existing files in it:
+Adds target file or directory to an existing snapshot:
 
 ```
 $ knoxite -r /tmp/knoxite clone [snapshot ID] $HOME
