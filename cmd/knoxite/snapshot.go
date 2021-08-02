@@ -24,7 +24,7 @@ var (
 		RunE:  nil,
 	}
 	snapshotListCmd = &cobra.Command{
-		Use:   "list <volume>",
+		Use:   "list [volume]",
 		Short: "list all snapshots inside a volume",
 		Long:  `The list command lists all snapshots stored in a volume`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -35,7 +35,7 @@ var (
 		},
 	}
 	snapshotRemoveCmd = &cobra.Command{
-		Use:   "remove <snapshot>",
+		Use:   "remove [snapshot]",
 		Short: "remove a snapshot",
 		Long:  `The remove command deletes a snapshot from a volume`,
 		RunE: func(cmd *cobra.Command, args []string) error {

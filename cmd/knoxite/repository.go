@@ -60,7 +60,7 @@ var (
 		},
 	}
 	repoAddCmd = &cobra.Command{
-		Use:   "add <url>",
+		Use:   "add [url]",
 		Short: "add another storage backend to a repository",
 		Long:  `The add command adds another storage backend to a repository`,
 		RunE: func(cmd *cobra.Command, args []string) error {

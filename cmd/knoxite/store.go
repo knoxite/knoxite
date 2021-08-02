@@ -43,7 +43,7 @@ var (
 	storeOpts = StoreOptions{}
 
 	storeCmd = &cobra.Command{
-		Use:   "store <volume> <dir/file> [...]",
+		Use:   "store [volume] [dir/file] [...]",
 		Short: "store files/directories",
 		Long:  `The store command creates a snapshot of a file or directory`,
 		RunE: func(cmd *cobra.Command, args []string) error {

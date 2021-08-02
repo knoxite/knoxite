@@ -23,7 +23,7 @@ const timeFormat = "2006-01-02 15:04:05"
 
 var (
 	lsCmd = &cobra.Command{
-		Use:   "ls <snapshot>",
+		Use:   "ls [snapshot]",
 		Short: "list files",
 		Long:  `The ls command lists all files stored in a snapshot`,
 		RunE: func(cmd *cobra.Command, args []string) error {

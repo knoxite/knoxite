@@ -59,6 +59,7 @@ var (
 			"Complete documentation is available at https://github.com/knoxite/knoxite",
 		SilenceErrors: true,
 		SilenceUsage:  true,
+		DisableAutoGenTag: true,
 	}
 
 	logger knoxite.Logger
