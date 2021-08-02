@@ -28,7 +28,7 @@ import (
 
 var (
 	mountCmd = &cobra.Command{
-		Use:   "mount <snapshot> <target>",
+		Use:   "mount [snapshot] [target]",
 		Short: "mount a snapshot",
 		Long:  `The mount command mounts a repository read-only to a given directory`,
 		RunE: func(cmd *cobra.Command, args []string) error {

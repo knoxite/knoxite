@@ -33,7 +33,7 @@ var (
 	restoreOpts = RestoreOptions{}
 
 	restoreCmd = &cobra.Command{
-		Use:   "restore <snapshot> <destination>",
+		Use:   "restore [snapshot] [destination]",
 		Short: "restore a snapshot",
 		Long:  `The restore command restores a snapshot to a directory`,
 		RunE: func(cmd *cobra.Command, args []string) error {

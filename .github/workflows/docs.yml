@@ -1,0 +1,25 @@
+name: docs
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  docs:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup go
+        uses: actions/setup-go@v2
+
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: docs
+        run: ./scripts/gen_docs.sh
+
+      - name: Git Auto Commit
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "docs: update cmd docs"

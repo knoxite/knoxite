@@ -36,7 +36,7 @@ var (
 		},
 	}
 	configAliasCmd = &cobra.Command{
-		Use:   "alias <alias>",
+		Use:   "alias [alias]",
 		Short: "Set an alias for the storage backend url to a repository",
 		Long:  `The set command adds an alias for the storage backend url to a repository`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -47,7 +47,7 @@ var (
 		},
 	}
 	configSetCmd = &cobra.Command{
-		Use:   "set <option> <value>",
+		Use:   "set [option] [value]",
 		Short: "set configuration values for an alias",
 		Long:  "The set command lets you set configuration values for an alias",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -77,7 +77,7 @@ var (
 		},
 	}
 	configConvertCmd = &cobra.Command{
-		Use:   "convert <source> <target>",
+		Use:   "convert [source] [target]",
 		Short: "convert between several configuration backends",
 		Long:  "The convert command translates between several configuration backends",
 		RunE: func(cmd *cobra.Command, args []string) error {

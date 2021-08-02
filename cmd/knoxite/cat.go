@@ -18,7 +18,7 @@ import (
 
 var (
 	catCmd = &cobra.Command{
-		Use:   "cat <snapshot> <file>",
+		Use:   "cat [snapshot] [file]",
 		Short: "print file",
 		Long:  `The cat command prints a file on the standard output`,
 		RunE: func(cmd *cobra.Command, args []string) error {

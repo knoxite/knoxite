@@ -25,7 +25,7 @@ var (
 	verifyOpts = VerifyOptions{}
 
 	verifyCmd = &cobra.Command{
-		Use:   "verify [<volume> [<snapshot>]]",
+		Use:   "verify [volume [snapshot]]",
 		Short: "verify a repo, volume or snapshot",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
