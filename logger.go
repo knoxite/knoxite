@@ -13,6 +13,8 @@ type Logger interface {
 	Fatalf(format string, v ...interface{})
 	Warn(v ...interface{})
 	Warnf(format string, v ...interface{})
+	Print(v ...interface{})
+	Printf(format string, v ...interface{})
 	Info(v ...interface{})
 	Infof(format string, v ...interface{})
 	Debug(v ...interface{})
@@ -27,13 +29,21 @@ func SetLogger(l Logger) {
 	log = l
 }
 
-// NopLogger will be used by default if no logger has been set via SetLogger().
+// The quiet NopLogger will be used by default if no logger has been set via SetLogger().
 type NopLogger struct {
 }
+
+func (nl NopLogger) Fatal(v ...interface{}) {}
+
+func (nl NopLogger) Fatalf(format string, v ...interface{}) {}
 
 func (nl NopLogger) Warn(v ...interface{}) {}
 
 func (nl NopLogger) Warnf(format string, v ...interface{}) {}
+
+func (nl NopLogger) Print(v ...interface{}) {}
+
+func (nl NopLogger) Printf(format string, v ...interface{}) {}
 
 func (nl NopLogger) Info(v ...interface{}) {}
 
@@ -42,7 +52,3 @@ func (nl NopLogger) Infof(format string, v ...interface{}) {}
 func (nl NopLogger) Debug(v ...interface{}) {}
 
 func (nl NopLogger) Debugf(format string, v ...interface{}) {}
-
-func (nl NopLogger) Fatal(v ...interface{}) {}
-
-func (nl NopLogger) Fatalf(format string, v ...interface{}) {}

@@ -24,9 +24,10 @@ import (
 )
 
 var (
-	ErrPasswordMismatch   = errors.New("Passwords did not match")
+	ErrPasswordMismatch   = errors.New("passwords did not match")
 	ErrEncryptionUnknown  = errors.New("unknown encryption format")
 	ErrCompressionUnknown = errors.New("unknown compression format")
+	ErrLogLevelUnknown    = errors.New("unknown log level")
 )
 
 func ReadPassword(prompt string) (string, error) {
@@ -193,16 +194,21 @@ func PathToUrl(u string) (*url.URL, error) {
 	return url, nil
 }
 
-// VerbosityTypeFromString returns the verbosity type from a user-specified string.
-func VerbosityTypeFromString(s string) knoxite.Verbosity {
+// LogLevelFromString returns the log level from a user-specified string.
+// returns log level print as default.
+func LogLevelFromString(s string) (knoxite.LogLevel, error) {
 	switch strings.ToLower(s) {
+	case "fatal":
+		return knoxite.LogLevelFatal, nil
 	case "warning":
-		return knoxite.LogLevelWarning
+		return knoxite.LogLevelWarning, nil
+	case "print":
+		return knoxite.LogLevelPrint, nil
 	case "info":
-		return knoxite.LogLevelInfo
+		return knoxite.LogLevelInfo, nil
 	case "debug":
-		return knoxite.LogLevelDebug
+		return knoxite.LogLevelDebug, nil
 	default:
-		return knoxite.LogLevelWarning
+		return knoxite.LogLevelPrint, ErrLogLevelUnknown
 	}
 }
