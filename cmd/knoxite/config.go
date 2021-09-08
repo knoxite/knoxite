@@ -147,6 +147,12 @@ func executeConfigSet(option string, values []string) error {
 			return fmt.Errorf("Failed to convert %s to uint for the fault tolerance option: %v", opt, err)
 		}
 		repo.Tolerance = uint(tol)
+	case "verify_store":
+		b, err := strconv.ParseBool(values[0])
+		if err != nil {
+			return fmt.Errorf("Failed to convert '%s' to bool: %v", values[0], err)
+		}
+		repo.VerifyStore = b
 	case "store_excludes":
 		repo.StoreExcludes = values
 	case "restore_excludes":
