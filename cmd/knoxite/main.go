@@ -10,9 +10,6 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 	"syscall"
 
@@ -41,7 +38,8 @@ type GlobalOptions struct {
 	Alias     string
 	Password  string
 	ConfigURL string
-	Verbosity string
+	Verbose   bool
+	LogLevel  string
 }
 
 var (
@@ -57,31 +55,32 @@ var (
 		Short: "Knoxite is a data storage & backup tool",
 		Long: "Knoxite is a secure and flexible data storage and backup tool\n" +
 			"Complete documentation is available at https://github.com/knoxite/knoxite",
-		SilenceErrors: true,
-		SilenceUsage:  true,
+		SilenceErrors:     true,
+		SilenceUsage:      true,
 		DisableAutoGenTag: true,
 	}
 
-	logger knoxite.Logger
+	log knoxite.Logger
 )
 
 func main() {
 	shutdown.OnSignal(0, os.Interrupt, syscall.SIGTERM)
-	// quiet shutdown logger
-	shutdown.Logger = shutdown.LogPrinter(log.New(ioutil.Discard, "", log.LstdFlags))
+	// use quiet knoxite.NopLogger as shutdown logger
+	shutdown.Logger = shutdown.LogPrinter(knoxite.NopLogger{})
 	// shutdown.SetTimeout(0)
 
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Repo, "repo", "r", "", "Repository directory to backup to/restore from (default: current working dir)")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.Alias, "alias", "R", "", "Repository alias to backup to/restore from")
 	RootCmd.PersistentFlags().StringVar(&globalOpts.Password, "password", "", "Password to use for data encryption")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.ConfigURL, "configURL", "C", config.DefaultPath(), "Path to the configuration file")
-	RootCmd.PersistentFlags().StringVarP(&globalOpts.Verbosity, "verbose", "v", "Warning", "Verbose output: possible levels are Debug, Info and Warning")
+	RootCmd.PersistentFlags().StringVar(&globalOpts.LogLevel, "loglevel", "Print", "Verbose output. Possible levels are Debug, Info, Warning and Fatal")
+	RootCmd.PersistentFlags().BoolVarP(&globalOpts.Verbose, "verbose", "v", false, "Verbose output on log level Info. Use --loglevel to choose between Debug, Info, Warning and Fatal")
 
 	globalOpts.Repo = os.Getenv("KNOXITE_REPOSITORY")
 	globalOpts.Password = os.Getenv("KNOXITE_PASSWORD")
 
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		os.Exit(-1)
 	}
 }
@@ -101,8 +100,21 @@ func init() {
 }
 
 func initLogger() {
-	logger = *NewLogger(utils.VerbosityTypeFromString(globalOpts.Verbosity)).
+	if globalOpts.Verbose {
+		globalOpts.LogLevel = "Info"
+	}
+
+	logLevel, err := utils.LogLevelFromString(globalOpts.LogLevel)
+
+	log = *NewLogger(logLevel).
 		WithWriter(os.Stdout)
+
+	if err != nil {
+		log.Warnf("Error setting log level \"%s\": %s. Using default log level Info instead.", globalOpts.LogLevel, err)
+	}
+
+	// set logger for knoxite lib
+	knoxite.SetLogger(log)
 }
 
 // initConfig initializes the configuration for knoxite.
@@ -111,19 +123,19 @@ func initLogger() {
 func initConfig() {
 	// We dont allow both flags to be set as this can lead to unclear instructions.
 	if RootCmd.PersistentFlags().Changed("repo") && RootCmd.PersistentFlags().Changed("alias") {
-		logger.Fatalf("Specify either repository directory '-r' or an alias '-R'")
+		log.Fatalf("Specify either repository directory '-r' or an alias '-R'")
 		return
 	}
 
 	var err error
 	cfg, err = config.New(globalOpts.ConfigURL)
 	if err != nil {
-		logger.Fatalf("error reading the config file: %v", err)
+		log.Fatalf("Error reading the config file: %v", err)
 		return
 	}
 
 	if err = cfg.Load(); err != nil {
-		logger.Fatalf("error parsing the toml config file at '%s': %v", cfg.URL().Path, err)
+		log.Fatalf("Error parsing the toml config file at '%s': %v", cfg.URL().Path, err)
 		return
 	}
 
@@ -137,7 +149,7 @@ func initConfig() {
 	if globalOpts.Alias != "" {
 		rep, ok := cfg.Repositories[globalOpts.Alias]
 		if !ok {
-			logger.Fatalf("error loading the specified alias")
+			log.Fatalf("Error loading the specified alias")
 			return
 		}
 

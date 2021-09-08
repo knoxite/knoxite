@@ -17,14 +17,14 @@ import (
 )
 
 type Logger struct {
-	VerbosityLevel knoxite.Verbosity
-	w              io.Writer
+	LogLevel knoxite.LogLevel
+	w        io.Writer
 }
 
-func NewLogger(v knoxite.Verbosity) *Logger {
+func NewLogger(l knoxite.LogLevel) *Logger {
 	return &Logger{
-		VerbosityLevel: v,
-		w:              os.Stdout,
+		LogLevel: l,
+		w:        os.Stdout,
 	}
 }
 
@@ -33,12 +33,30 @@ func (l *Logger) WithWriter(w io.Writer) *Logger {
 	return l
 }
 
+func (l Logger) Fatal(v ...interface{}) {
+	l.log(knoxite.LogLevelFatal, v...)
+	os.Exit(1)
+}
+
+func (l Logger) Fatalf(format string, v ...interface{}) {
+	l.logf(knoxite.LogLevelFatal, format, v...)
+	os.Exit(1)
+}
+
 func (l Logger) Warn(v ...interface{}) {
 	l.log(knoxite.LogLevelWarning, v...)
 }
 
 func (l Logger) Warnf(format string, v ...interface{}) {
 	l.logf(knoxite.LogLevelWarning, format, v...)
+}
+
+func (l Logger) Print(v ...interface{}) {
+	l.log(knoxite.LogLevelPrint, v...)
+}
+
+func (l Logger) Printf(format string, v ...interface{}) {
+	l.logf(knoxite.LogLevelPrint, format, v...)
 }
 
 func (l Logger) Info(v ...interface{}) {
@@ -57,30 +75,22 @@ func (l Logger) Debugf(format string, v ...interface{}) {
 	l.logf(knoxite.LogLevelDebug, format, v...)
 }
 
-func (l Logger) Fatal(v ...interface{}) {
-	l.log(knoxite.LogLevelFatal, v...)
-	os.Exit(1)
-}
-
-func (l Logger) Fatalf(format string, v ...interface{}) {
-	l.logf(knoxite.LogLevelFatal, format, v...)
-	os.Exit(1)
-}
-
-func (l Logger) log(verbosity knoxite.Verbosity, v ...interface{}) {
-	if verbosity <= l.VerbosityLevel {
-		l.printV(verbosity, v...)
+func (l Logger) log(logLevel knoxite.LogLevel, v ...interface{}) {
+	if logLevel <= l.LogLevel {
+		l.printV(logLevel, v...)
 	}
 }
 
-func (l Logger) logf(verbosity knoxite.Verbosity, format string, v ...interface{}) {
-	if verbosity <= l.VerbosityLevel {
-		l.printV(verbosity, fmt.Sprintf(format, v...))
+func (l Logger) logf(logLevel knoxite.LogLevel, format string, v ...interface{}) {
+	if logLevel <= l.LogLevel {
+		l.printV(logLevel, fmt.Sprintf(format, v...))
 	}
 }
 
-func (l Logger) printV(verbosity knoxite.Verbosity, v ...interface{}) {
-	_, _ = l.w.Write([]byte(verbosity.String() + ": "))
+func (l Logger) printV(logLevel knoxite.LogLevel, v ...interface{}) {
+	if logLevel != knoxite.LogLevelPrint {
+		_, _ = l.w.Write([]byte(logLevel.String() + ": "))
+	}
 	_, _ = l.w.Write([]byte(fmt.Sprint(v...)))
 	_, _ = l.w.Write([]byte("\n"))
 }
