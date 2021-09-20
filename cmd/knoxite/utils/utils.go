@@ -20,7 +20,7 @@ import (
 	"github.com/knoxite/knoxite"
 	"github.com/mitchellh/go-homedir"
 	"github.com/muesli/crunchy"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 var (
@@ -39,7 +39,7 @@ func ReadPassword(prompt string) (string, error) {
 	}
 
 	fmt.Fprint(tty, prompt+" ")
-	buf, err := terminal.ReadPassword(int(syscall.Stdin))
+	buf, err := term.ReadPassword(int(syscall.Stdin))
 	fmt.Fprintln(tty)
 
 	return string(buf), err
