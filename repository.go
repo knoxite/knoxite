@@ -28,7 +28,7 @@ type Repository struct {
 // Const declarations.
 const (
 	RepositoryVersion   = 4
-	repositoryKeyLength = 32
+	repositoryKeyLength = 32 // A random key of 32 is considered safe right now and may be increased later
 )
 
 // Error declarations.
@@ -42,7 +42,7 @@ var (
 
 // NewRepository returns a new repository.
 func NewRepository(path, password string) (Repository, error) {
-	// A random key of 32 is considered safe right now and may be increased later
+	log.Info("Creating new repository...")
 	key, err := generateRandomKey(repositoryKeyLength)
 	if err != nil {
 		return Repository{}, ErrGenerateRandomKeyFailed
@@ -56,6 +56,7 @@ func NewRepository(path, password string) (Repository, error) {
 
 	backend, err := BackendFromURL(path)
 	if err != nil {
+		log.Fatal("Couldn't get backend from URL")
 		return repository, err
 	}
 	repository.backend.AddBackend(&backend)
@@ -66,28 +67,31 @@ func NewRepository(path, password string) (Repository, error) {
 
 // generateRandomKey generates a random key with a specific length.
 func generateRandomKey(length int) (string, error) {
+	log.Debug("Generating random key for repository encryption")
 	b := make([]byte, length)
 
 	_, err := rand.Read(b)
 	if err != nil {
 		return "", err
 	}
-
 	return base64.URLEncoding.EncodeToString(b), nil
 }
 
 // OpenRepository opens an existing repository and migrates it if possible.
 func OpenRepository(path, password string) (Repository, error) {
+	log.Debug("Opening repository...")
 	repository := Repository{
 		password: password,
 	}
 
 	backend, err := BackendFromURL(path)
 	if err != nil {
+		log.Fatal("Couldn't get backend from URL")
 		return repository, err
 	}
 	b, err := backend.LoadRepository()
 	if err != nil {
+		log.Fatal("Couldn't load repository")
 		return repository, err
 	}
 
@@ -103,6 +107,7 @@ func OpenRepository(path, password string) (Repository, error) {
 		// migrate to current version
 		err = repository.Migrate()
 		if err != nil {
+			log.Fatalf("Couldn't migrate repository")
 			return repository, err
 		}
 	}
@@ -110,6 +115,7 @@ func OpenRepository(path, password string) (Repository, error) {
 	for _, url := range repository.Paths {
 		backend, err := BackendFromURL(url)
 		if err != nil {
+			log.Fatalf("Couldn't get backend from URL")
 			return repository, err
 		}
 		repository.backend.AddBackend(&backend)
@@ -120,12 +126,14 @@ func OpenRepository(path, password string) (Repository, error) {
 
 // AddVolume adds a volume to a repository.
 func (r *Repository) AddVolume(volume *Volume) error {
+	log.Infof("Adding volume %s to repository...", volume.ID)
 	r.Volumes = append(r.Volumes, volume)
 	return nil
 }
 
 // RemoveVolume removes a volume from a repository.
 func (r *Repository) RemoveVolume(volume *Volume) error {
+	log.Infof("Removing volume %s from repository...", volume.ID)
 	for i, v := range r.Volumes {
 		if v == volume {
 			r.Volumes = append(r.Volumes[:i], r.Volumes[i+1:]...)
@@ -137,6 +145,7 @@ func (r *Repository) RemoveVolume(volume *Volume) error {
 
 // FindVolume finds a volume within a repository.
 func (r *Repository) FindVolume(id string) (*Volume, error) {
+	log.Debugf("Finding volume %s...", id)
 	if id == "latest" && len(r.Volumes) > 0 {
 		return r.Volumes[len(r.Volumes)-1], nil
 	}
@@ -152,6 +161,7 @@ func (r *Repository) FindVolume(id string) (*Volume, error) {
 
 // FindSnapshot finds a snapshot within a repository.
 func (r *Repository) FindSnapshot(id string) (*Volume, *Snapshot, error) {
+	log.Debugf("Finding snapshot %s...", id)
 	if id == "latest" {
 		latestVolume := &Volume{}
 		latestSnapshot := &Snapshot{}
@@ -204,6 +214,7 @@ func (r *Repository) BackendManager() *BackendManager {
 func (r *Repository) init() error {
 	err := r.backend.InitRepository()
 	if err != nil {
+		log.Fatal("Couldn't initialize repository")
 		return err
 	}
 
@@ -212,6 +223,7 @@ func (r *Repository) init() error {
 
 // Save writes a repository's metadata.
 func (r *Repository) Save() error {
+	log.Infof("Saving repository...")
 	r.Paths = r.backend.Locations()
 
 	pipe, err := NewEncodingPipeline(CompressionNone, EncryptionAES, r.password)
@@ -222,11 +234,16 @@ func (r *Repository) Save() error {
 	if err != nil {
 		return err
 	}
-	return r.backend.SaveRepository(b)
+	err = r.backend.SaveRepository(b)
+	if err == nil {
+		log.Info("Saved repository successfully")
+	}
+	return err
 }
 
 // Changes password of repository.
 func (r *Repository) ChangePassword(newPassword string) error {
+	log.Info("Changing password...")
 	r.password = newPassword
 
 	return r.Save()
@@ -234,10 +251,12 @@ func (r *Repository) ChangePassword(newPassword string) error {
 
 // Migrates a repository to the current version, if possible.
 func (r *Repository) Migrate() error {
+	log.Infof("Trying to migrate from repository version %s to version %s", r.Version, RepositoryVersion)
 	switch v := r.Version; {
 	case v < 3:
 		return ErrRepositoryIncompatible
 	case v == 3:
+		log.Infof("Migrating from repository version %s to version 4", v)
 		// since the introduction of the repo passwd command there are two keys:
 		// - Key is for encryption of the data and will be stored in encrypted repo file
 		// - password is for the encryption of the repository (which holds Key)
@@ -246,7 +265,11 @@ func (r *Repository) Migrate() error {
 			r.Key = r.password
 			r.Version = 4
 
-			return r.Save()
+			err := r.Save()
+			if err == nil {
+				log.Infof("Migrated to repository verion 4 successfully")
+			}
+			return err
 		}
 	}
 	return ErrRepositoryIncompatible
