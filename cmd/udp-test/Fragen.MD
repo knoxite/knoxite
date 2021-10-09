@@ -1,0 +1,6 @@
+- Registrierungsprozess: Registriert sich der Client beim Server, oder wird beim Client ein Token generiert, der beim Server einggeben wird?
+- Datenhaltung: Wie speichern wir was wo? (sqlite-DB, wo und wie werden die config-Dateien abgespeichert (verschlüsselt))
+- Bwewerbung für Prototype Fund?
+- Wozu HHTP-Server? Storage Backend oder Admin-Interface oder beides?
+- Server als subcommand? Startprozess?
+- Client-Register als Subcommand?
