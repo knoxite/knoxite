@@ -1,7 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2016-2020, Christian Muehlhaeuser <muesli@gmail.com>
- *     Copyright (c) 2020,      Nicolas Martin <penguwin@penguwin.eu>
+ *     Copyright (c) 2020-2021, Nicolas Martin <penguwin@penguwin.eu>
  *     Copyright (c) 2020,      Matthias Hartmann <mahartma@mahartma.com>
  *
  *   For license see LICENSE
@@ -15,6 +15,7 @@ import (
 
 	shutdown "github.com/klauspost/shutdown2"
 	"github.com/spf13/cobra"
+	"github.com/rsteube/carapace"
 
 	"github.com/knoxite/knoxite"
 	"github.com/knoxite/knoxite/cmd/knoxite/config"
@@ -78,6 +79,9 @@ func main() {
 
 	globalOpts.Repo = os.Getenv("KNOXITE_REPOSITORY")
 	globalOpts.Password = os.Getenv("KNOXITE_PASSWORD")
+
+	// add the `completion` command via carapace
+	carapace.Gen(RootCmd)
 
 	if err := RootCmd.Execute(); err != nil {
 		log.Fatal(err)
