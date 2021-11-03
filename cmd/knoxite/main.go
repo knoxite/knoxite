@@ -38,7 +38,7 @@ type GlobalOptions struct {
 	Alias     string
 	Password  string
 	ConfigURL string
-	Verbose   bool
+	Verbose   int
 	LogLevel  string
 }
 
@@ -74,7 +74,7 @@ func main() {
 	RootCmd.PersistentFlags().StringVar(&globalOpts.Password, "password", "", "Password to use for data encryption")
 	RootCmd.PersistentFlags().StringVarP(&globalOpts.ConfigURL, "configURL", "C", config.DefaultPath(), "Path to the configuration file")
 	RootCmd.PersistentFlags().StringVar(&globalOpts.LogLevel, "loglevel", "Print", "Verbose output. Possible levels are Debug, Info, Warning and Fatal")
-	RootCmd.PersistentFlags().BoolVarP(&globalOpts.Verbose, "verbose", "v", false, "Verbose output on log level Info. Use --loglevel to choose between Debug, Info, Warning and Fatal")
+	RootCmd.PersistentFlags().CountVarP(&globalOpts.Verbose, "verbose", "v", "Verbose output on log level Info (-v) or Debug (-vv). Use --loglevel to choose between Debug, Info, Warning and Fatal")
 
 	globalOpts.Repo = os.Getenv("KNOXITE_REPOSITORY")
 	globalOpts.Password = os.Getenv("KNOXITE_PASSWORD")
@@ -100,8 +100,11 @@ func init() {
 }
 
 func initLogger() {
-	if globalOpts.Verbose {
+	switch level := globalOpts.Verbose; {
+	case level == 1:
 		globalOpts.LogLevel = "Info"
+	case level >= 2:
+		globalOpts.LogLevel = "Debug"
 	}
 
 	logLevel, err := utils.LogLevelFromString(globalOpts.LogLevel)
