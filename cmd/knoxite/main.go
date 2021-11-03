@@ -100,10 +100,10 @@ func init() {
 }
 
 func initLogger() {
-	switch level := globalOpts.Verbose; {
-	case level == 1:
+	switch {
+	case globalOpts.Verbose == 1:
 		globalOpts.LogLevel = "Info"
-	case level >= 2:
+	case globalOpts.Verbose >= 2:
 		globalOpts.LogLevel = "Debug"
 	}
 
