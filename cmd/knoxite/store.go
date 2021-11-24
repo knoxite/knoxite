@@ -209,7 +209,7 @@ func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snaps
 
 	fmt.Printf("\nSnapshot %s created: %s\n", snapshot.ID, snapshot.Stats.String())
 	for file, err := range errs {
-		fmt.Printf("'%s': failed to store: %v\n", file, err)
+		fmt.Printf("Failed to store '%s': %v\n", file, err)
 	}
 	return nil
 }
