@@ -51,6 +51,9 @@ func TestFileLoad(t *testing.T) {
 	if repo.Tolerance != 0 {
 		t.Errorf("Expected repoTolerance of 0, got: %v", repo.Tolerance)
 	}
+	if repo.VerifyStore != true {
+		t.Errorf("Expected verify_store to be set to 'true', got %v", repo.VerifyStore)
+	}
 	excludes := []string{"just", "an", "example"}
 	if !reflect.DeepEqual(repo.StoreExcludes, excludes) {
 		t.Errorf("Store Excludes did not match:\nExpected: %v\nGot: %v", excludes, repo.StoreExcludes)

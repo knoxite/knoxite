@@ -35,6 +35,7 @@ type RepoConfig struct {
 	Tolerance       uint     `toml:"tolerance" comment:"Failure tolerance against n backend failures"`
 	Encryption      string   `toml:"encryption" comment:"Encryption algo to use: aes (default), none"`
 	Pedantic        bool     `toml:"pedantic" comment:"Stop backup operation after the first error occurred"`
+	VerifyStore     bool     `toml:"verify_store" comment:"Verify each written chunk for the store operation"`
 	StoreExcludes   []string `toml:"store_excludes" comment:"Specify excludes for the store operation"`
 	RestoreExcludes []string `toml:"restore_excludes" comment:"Specify excludes for the restore operation"`
 }

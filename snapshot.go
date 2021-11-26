@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2016-2018, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2021,      Nicolas Martin <penguwin@penguwin.eu>
  *
  *   For license see LICENSE
  */
@@ -8,6 +9,8 @@
 package knoxite
 
 import (
+	"bytes"
+	"fmt"
 	"math"
 	"os"
 	"path/filepath"
@@ -39,6 +42,7 @@ type StoreOptions struct {
 	Pedantic    bool
 	DataParts   uint
 	ParityParts uint
+	Verify      bool
 }
 
 // NewSnapshot creates a new snapshot.
@@ -196,6 +200,30 @@ func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opt
 							return
 						}
 						continue
+					}
+
+					if opts.Verify {
+						for i, data := range *chunk.Data {
+							b, err := repository.backend.LoadChunk(chunk, uint(i))
+							if err != nil {
+								p = newProgressError(fmt.Errorf("Failed to re-load %s: %v", archive.Path, err))
+								p.Path = archive.Path
+								progress <- p
+								if opts.Pedantic {
+									return
+								}
+								continue
+							}
+
+							if !bytes.Equal(b, data) {
+								p = newProgressError(fmt.Errorf("Stored and loaded chunks vary"))
+								p.Path = archive.Path
+								progress <- p
+								if opts.Pedantic {
+									return
+								}
+							}
+						}
 					}
 
 					// release the memory, we don't need the data anymore
