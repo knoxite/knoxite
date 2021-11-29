@@ -12,7 +12,9 @@ import (
 	"fmt"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/action"
 	"github.com/muesli/goprogressbar"
+	"github.com/rsteube/carapace"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -47,6 +49,13 @@ func initVerifyFlags(f func() *pflag.FlagSet) {
 func init() {
 	initVerifyFlags(verifyCmd.Flags)
 	RootCmd.AddCommand(verifyCmd)
+
+	carapace.Gen(verifyCmd).PositionalCompletion(
+		action.ActionVolumes(verifyCmd),
+		carapace.ActionCallback(func(c carapace.Context) carapace.Action {
+			return action.ActionSnapshots(verifyCmd, c.Args[0])
+		}),
+	)
 }
 
 func executeVerifyRepo(opts VerifyOptions) error {

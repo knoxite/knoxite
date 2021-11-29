@@ -12,6 +12,8 @@ import (
 	"os"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/action"
+	"github.com/rsteube/carapace"
 
 	"github.com/spf13/cobra"
 )
@@ -32,6 +34,13 @@ var (
 
 func init() {
 	RootCmd.AddCommand(catCmd)
+
+	carapace.Gen(catCmd).PositionalCompletion(
+		action.ActionSnapshots(catCmd, ""),
+		carapace.ActionCallback(func(c carapace.Context) carapace.Action {
+			return action.ActionSnapshotPaths(catCmd, c.Args[0]).Invoke(c).ToMultiPartsA("/")
+		}),
+	)
 }
 
 func executeCat(snapshotID string, file string) error {

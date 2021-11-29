@@ -14,9 +14,11 @@ import (
 
 	shutdown "github.com/klauspost/shutdown2"
 	"github.com/muesli/gotable"
+	"github.com/rsteube/carapace"
 	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/action"
 	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 )
 
@@ -88,6 +90,10 @@ func init() {
 	repoCmd.AddCommand(repoAddCmd)
 	repoCmd.AddCommand(repoPackCmd)
 	RootCmd.AddCommand(repoCmd)
+
+	carapace.Gen(repoAddCmd).PositionalCompletion(
+		action.ActionRepo(),
+	)
 }
 
 func executeRepoInit() error {

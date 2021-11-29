@@ -12,9 +12,11 @@ import (
 	"path/filepath"
 
 	shutdown "github.com/klauspost/shutdown2"
+	"github.com/rsteube/carapace"
 	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/action"
 )
 
 var (
@@ -39,8 +41,16 @@ var (
 )
 
 func init() {
-	initStoreFlags(cloneCmd.Flags, &cloneOpts)
+	initStoreFlags(cloneCmd, &cloneOpts)
 	RootCmd.AddCommand(cloneCmd)
+
+	carapace.Gen(cloneCmd).PositionalCompletion(
+		action.ActionSnapshots(cloneCmd, ""),
+	)
+
+	carapace.Gen(cloneCmd).PositionalAnyCompletion(
+		carapace.ActionFiles(),
+	)
 }
 
 func executeClone(snapshotID string, args []string, opts StoreOptions) error {

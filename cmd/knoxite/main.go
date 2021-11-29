@@ -14,10 +14,11 @@ import (
 	"syscall"
 
 	shutdown "github.com/klauspost/shutdown2"
-	"github.com/spf13/cobra"
 	"github.com/rsteube/carapace"
+	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/action"
 	"github.com/knoxite/knoxite/cmd/knoxite/config"
 	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 	_ "github.com/knoxite/knoxite/storage/amazons3"
@@ -81,7 +82,12 @@ func main() {
 	globalOpts.Password = os.Getenv("KNOXITE_PASSWORD")
 
 	// add the `completion` command via carapace
-	carapace.Gen(RootCmd)
+	carapace.Gen(RootCmd).FlagCompletion(carapace.ActionMap{
+		"alias":     action.ActionAliases(RootCmd),
+		"repo":      action.ActionRepo(),
+		"configURL": carapace.ActionFiles(),
+		"loglevel":  carapace.ActionValues("Debug", "Info", "Warning", "Fatal"),
+	})
 
 	if err := RootCmd.Execute(); err != nil {
 		log.Fatal(err)

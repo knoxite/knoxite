@@ -14,9 +14,11 @@ import (
 	"time"
 
 	"github.com/muesli/gotable"
+	"github.com/rsteube/carapace"
 	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/action"
 )
 
 const timeFormat = "2006-01-02 15:04:05"
@@ -37,6 +39,10 @@ var (
 
 func init() {
 	RootCmd.AddCommand(lsCmd)
+
+	carapace.Gen(lsCmd).PositionalCompletion(
+		action.ActionSnapshots(lsCmd, ""),
+	)
 }
 
 func executeLs(snapshotID string) error {

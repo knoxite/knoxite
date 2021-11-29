@@ -13,10 +13,12 @@ import (
 	"fmt"
 
 	"github.com/muesli/goprogressbar"
+	"github.com/rsteube/carapace"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/action"
 )
 
 // Error declarations.
@@ -73,6 +75,11 @@ func initRestoreFlags(f func() *pflag.FlagSet) {
 func init() {
 	initRestoreFlags(restoreCmd.Flags)
 	RootCmd.AddCommand(restoreCmd)
+
+	carapace.Gen(restoreCmd).PositionalCompletion(
+		action.ActionSnapshots(restoreCmd, ""),
+		carapace.ActionDirectories(),
+	)
 }
 
 func executeRestore(snapshotID, target string, opts RestoreOptions) error {
