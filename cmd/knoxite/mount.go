@@ -20,10 +20,12 @@ import (
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
+	"github.com/rsteube/carapace"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/action"
 )
 
 var (
@@ -45,6 +47,11 @@ var (
 
 func init() {
 	RootCmd.AddCommand(mountCmd)
+
+	carapace.Gen(mountCmd).PositionalCompletion(
+		action.ActionSnapshots(mountCmd, ""),
+		carapace.ActionDirectories(),
+	)
 }
 
 func executeMount(snapshotID, mountpoint string) error {

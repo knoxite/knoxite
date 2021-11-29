@@ -17,10 +17,11 @@ import (
 	humanize "github.com/dustin/go-humanize"
 	shutdown "github.com/klauspost/shutdown2"
 	"github.com/muesli/goprogressbar"
+	"github.com/rsteube/carapace"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/action"
 	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 )
 
@@ -84,18 +85,31 @@ func configureStoreOpts(cmd *cobra.Command, opts *StoreOptions) {
 	}
 }
 
-func initStoreFlags(f func() *pflag.FlagSet, opts *StoreOptions) {
-	f().StringVarP(&opts.Description, "desc", "d", "", "a description or comment for this volume")
-	f().StringVarP(&opts.Compression, "compression", "c", "", "compression algo to use: none (default), flate, gzip, lzma, zlib, zstd")
-	f().StringVarP(&opts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
-	f().UintVarP(&opts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
-	f().StringArrayVarP(&opts.Excludes, "excludes", "x", []string{}, "list of excludes")
-	f().BoolVar(&opts.Pedantic, "pedantic", false, "exit on first error")
+func initStoreFlags(cmd *cobra.Command, opts *StoreOptions) {
+	cmd.Flags().StringVarP(&opts.Description, "desc", "d", "", "a description or comment for this volume")
+	cmd.Flags().StringVarP(&opts.Compression, "compression", "c", "", "compression algo to use: none (default), flate, gzip, lzma, zlib, zstd")
+	cmd.Flags().StringVarP(&opts.Encryption, "encryption", "e", "", "encryption algo to use: aes (default), none")
+	cmd.Flags().UintVarP(&opts.FailureTolerance, "tolerance", "t", 0, "failure tolerance against n backend failures")
+	cmd.Flags().StringArrayVarP(&opts.Excludes, "excludes", "x", []string{}, "list of excludes")
+	cmd.Flags().BoolVar(&opts.Pedantic, "pedantic", false, "exit on first error")
+
+	carapace.Gen(cmd).FlagCompletion(carapace.ActionMap{
+		"compression": carapace.ActionValues("none", "flate", "gzip", "lzma", "zlib", "zstd"),
+		"encryption":  carapace.ActionValues("aes", "none"),
+	})
 }
 
 func init() {
-	initStoreFlags(storeCmd.Flags, &storeOpts)
+	initStoreFlags(storeCmd, &storeOpts)
 	RootCmd.AddCommand(storeCmd)
+
+	carapace.Gen(storeCmd).PositionalCompletion(
+		action.ActionVolumes(storeCmd),
+	)
+
+	carapace.Gen(storeCmd).PositionalAnyCompletion(
+		carapace.ActionFiles(),
+	)
 }
 
 func store(repository *knoxite.Repository, chunkIndex *knoxite.ChunkIndex, snapshot *knoxite.Snapshot, targets []string, opts StoreOptions) error {

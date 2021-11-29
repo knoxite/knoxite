@@ -13,10 +13,12 @@ import (
 	"strings"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/action"
 	"github.com/knoxite/knoxite/cmd/knoxite/config"
 	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 	"github.com/muesli/gotable"
 	"github.com/pelletier/go-toml"
+	"github.com/rsteube/carapace"
 	"github.com/spf13/cobra"
 )
 
@@ -99,6 +101,25 @@ func init() {
 	configCmd.AddCommand(configCatCmd)
 	configCmd.AddCommand(configConvertCmd)
 	RootCmd.AddCommand(configCmd)
+
+	carapace.Gen(configSetCmd).PositionalCompletion(
+		action.ActionConfigKeys(configSetCmd),
+		carapace.ActionCallback(func(c carapace.Context) carapace.Action {
+			if splitted := strings.Split(c.Args[0], "."); len(splitted) == 2 {
+				return action.ActionConfigValues(splitted[1])
+			}
+			return carapace.ActionValues()
+		}),
+	)
+
+	carapace.Gen(configAliasCmd).PositionalCompletion(
+		action.ActionAliases(configAliasCmd),
+	)
+
+	carapace.Gen(configConvertCmd).PositionalCompletion(
+		action.ActionRepo(),
+		action.ActionRepo(),
+	)
 }
 
 func executeConfigInit() error {

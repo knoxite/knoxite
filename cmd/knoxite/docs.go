@@ -14,16 +14,16 @@ package main
 import (
 	"fmt"
 	"time"
-	
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )
 
 var (
 	docsCmd = &cobra.Command{
-		Use: "docs [directory]",
+		Use:   "docs [directory]",
 		Short: "Generates docs",
-		Long: `Generates documentation as manpages to the given directory path`,
+		Long:  `Generates documentation as manpages to the given directory path`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return fmt.Errorf("docs needs a target directory")
@@ -32,7 +32,6 @@ var (
 		},
 	}
 )
-
 
 func init() {
 	RootCmd.AddCommand(docsCmd)

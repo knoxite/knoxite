@@ -11,9 +11,11 @@ import (
 	"fmt"
 
 	"github.com/muesli/gotable"
+	"github.com/rsteube/carapace"
 	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
+	"github.com/knoxite/knoxite/cmd/knoxite/action"
 )
 
 var (
@@ -51,6 +53,14 @@ func init() {
 	snapshotCmd.AddCommand(snapshotListCmd)
 	snapshotCmd.AddCommand(snapshotRemoveCmd)
 	RootCmd.AddCommand(snapshotCmd)
+
+	carapace.Gen(snapshotListCmd).PositionalCompletion(
+		action.ActionVolumes(snapshotListCmd),
+	)
+
+	carapace.Gen(snapshotRemoveCmd).PositionalCompletion(
+		action.ActionSnapshots(snapshotRemoveCmd, ""),
+	)
 }
 
 func executeSnapshotRemove(snapshotID string) error {

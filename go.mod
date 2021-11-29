@@ -30,7 +30,7 @@ require (
 	github.com/pkg/sftp v1.13.0
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7 // indirect
 	github.com/restic/chunker v0.4.0
-	github.com/rsteube/carapace v0.8.14
+	github.com/rsteube/carapace v0.10.3
 	github.com/segmentio/go-env v1.1.0 // indirect
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
