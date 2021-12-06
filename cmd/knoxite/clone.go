@@ -22,8 +22,9 @@ var (
 
 	cloneCmd = &cobra.Command{
 		Use:   "clone [snapshot] [dir/file] [...]",
-		Short: "clone a snapshot",
-		Long:  `The clone command clones an existing snapshot and adds a file or directory`,
+		Short: "Add to a snapshot",
+		Long:  `Adds target file or directory to an existing snapshot`,
+
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
 				return fmt.Errorf("clone needs to know which snapshot to clone")
