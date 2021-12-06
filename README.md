@@ -7,7 +7,7 @@
 
 knoxite is a secure data storage & backup system.
 
-Join the discussion on IRC in #knoxite (on irc.freenode.net) or our [Gitter chat room](https://gitter.im/knoxite/chat)!
+Join the discussion on IRC in #knoxite (on irc.libera.chat) or our [Gitter chat room](https://gitter.im/knoxite/chat)!
 
 ### :lock: It's secure
 knoxite uses AES-encryption to safely store your data.

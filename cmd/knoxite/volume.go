@@ -33,7 +33,7 @@ var (
 		RunE:  nil,
 	}
 	volumeInitCmd = &cobra.Command{
-		Use:   "init <name>",
+		Use:   "init [name]",
 		Short: "initialize a new volume",
 		Long:  `The init command initializes a new volume`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -44,7 +44,7 @@ var (
 		},
 	}
 	volumeRemoveCmd = &cobra.Command{
-		Use:   "remove <volume>",
+		Use:   "remove [volume]",
 		Short: "remove a volume from a repository",
 		Long:  `The remove command removes a volume from a repository`,
 		RunE: func(cmd *cobra.Command, args []string) error {

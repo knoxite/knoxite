@@ -1,84 +1,54 @@
 /*
  * knoxite
- *     Copyright (c) 2020, Matthias Hartmann <mahartma@mahartma.com>
- *     Copyright (c) 2020, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2021, Matthias Hartmann <mahartma@mahartma.com>
  *
  *   For license see LICENSE
  */
 
 package knoxite
 
-import (
-	"fmt"
-	"io"
-	"os"
+// Logger is used for levelled logging and verbose flag.
+type Logger interface {
+	Fatal(v ...interface{})
+	Fatalf(format string, v ...interface{})
+	Warn(v ...interface{})
+	Warnf(format string, v ...interface{})
+	Print(v ...interface{})
+	Printf(format string, v ...interface{})
+	Info(v ...interface{})
+	Infof(format string, v ...interface{})
+	Debug(v ...interface{})
+	Debugf(format string, v ...interface{})
+}
+
+var (
+	log Logger = NopLogger{}
 )
 
-type Logger struct {
-	VerbosityLevel Verbosity
-	w              io.Writer
+func SetLogger(l Logger) {
+	log = l
 }
 
-func NewLogger(v Verbosity) *Logger {
-	return &Logger{
-		VerbosityLevel: v,
-		w:              os.Stdout,
-	}
+// The quiet NopLogger will be used by default if no logger has been set via SetLogger().
+type NopLogger struct {
 }
 
-func (l *Logger) WithWriter(w io.Writer) *Logger {
-	l.w = w
-	return l
-}
+func (nl NopLogger) Fatal(v ...interface{}) {}
 
-func (l Logger) Warn(v ...interface{}) {
-	l.log(LogLevelWarning, v...)
-}
+func (nl NopLogger) Fatalf(format string, v ...interface{}) {}
 
-func (l Logger) Warnf(format string, v ...interface{}) {
-	l.logf(LogLevelWarning, format, v...)
-}
+func (nl NopLogger) Warn(v ...interface{}) {}
 
-func (l Logger) Info(v ...interface{}) {
-	l.log(LogLevelInfo, v...)
-}
+func (nl NopLogger) Warnf(format string, v ...interface{}) {}
 
-func (l Logger) Infof(format string, v ...interface{}) {
-	l.logf(LogLevelInfo, format, v...)
-}
+func (nl NopLogger) Print(v ...interface{}) {}
 
-func (l Logger) Debug(v ...interface{}) {
-	l.log(LogLevelDebug, v...)
-}
+func (nl NopLogger) Printf(format string, v ...interface{}) {}
 
-func (l Logger) Debugf(format string, v ...interface{}) {
-	l.logf(LogLevelDebug, format, v...)
-}
+func (nl NopLogger) Info(v ...interface{}) {}
 
-func (l Logger) Fatal(v ...interface{}) {
-	l.log(LogLevelFatal, v...)
-	os.Exit(1)
-}
+func (nl NopLogger) Infof(format string, v ...interface{}) {}
 
-func (l Logger) Fatalf(format string, v ...interface{}) {
-	l.logf(LogLevelFatal, format, v...)
-	os.Exit(1)
-}
+func (nl NopLogger) Debug(v ...interface{}) {}
 
-func (l Logger) log(verbosity Verbosity, v ...interface{}) {
-	if verbosity <= l.VerbosityLevel {
-		l.printV(verbosity, v...)
-	}
-}
-
-func (l Logger) logf(verbosity Verbosity, format string, v ...interface{}) {
-	if verbosity <= l.VerbosityLevel {
-		l.printV(verbosity, fmt.Sprintf(format, v...))
-	}
-}
-
-func (l Logger) printV(verbosity Verbosity, v ...interface{}) {
-	_, _ = l.w.Write([]byte(verbosity.String() + ": "))
-	_, _ = l.w.Write([]byte(fmt.Sprint(v...)))
-	_, _ = l.w.Write([]byte("\n"))
-}
+func (nl NopLogger) Debugf(format string, v ...interface{}) {}

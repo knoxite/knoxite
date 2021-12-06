@@ -8,15 +8,17 @@
 
 package knoxite
 
-type Verbosity int
+// log levels for logging.
+type LogLevel int
 
 const (
 	LogLevelFatal = iota
 	LogLevelWarning
+	LogLevelPrint
 	LogLevelInfo
 	LogLevelDebug
 )
 
-func (v Verbosity) String() string {
-	return [...]string{"Fatal", "Warning", "Info", "Debug"}[v]
+func (l LogLevel) String() string {
+	return [...]string{"Fatal", "Warning", "Print", "Info", "Debug"}[l]
 }
