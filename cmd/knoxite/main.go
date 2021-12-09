@@ -10,6 +10,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"syscall"
 
@@ -90,7 +91,7 @@ func main() {
 	})
 
 	if err := RootCmd.Execute(); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 		os.Exit(-1)
 	}
 }

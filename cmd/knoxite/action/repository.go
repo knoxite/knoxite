@@ -27,7 +27,6 @@ func actionRepository(cmd *cobra.Command, f func(repository knoxite.Repository) 
 		}
 
 		if f := cmd.Flag("alias"); f.Changed {
-			var err error
 			cfg, err := config.New(cmd.Flag("configURL").Value.String())
 			if err != nil {
 				return carapace.ActionMessage(fmt.Sprintf("Error reading the config file: %v", err))
