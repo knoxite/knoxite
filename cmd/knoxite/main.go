@@ -90,6 +90,10 @@ func main() {
 		"loglevel":  carapace.ActionValues("Debug", "Info", "Warning", "Fatal"),
 	})
 
+	carapace.Override(carapace.Opts{
+		BridgeCompletion: true,
+	})
+
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)

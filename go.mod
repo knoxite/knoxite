@@ -26,13 +26,14 @@ require (
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.3
-	github.com/pelletier/go-toml v1.9.3
+	github.com/pelletier/go-toml v1.9.4
 	github.com/pkg/sftp v1.13.0
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7 // indirect
 	github.com/restic/chunker v0.4.0
-	github.com/rsteube/carapace v0.10.3
+	github.com/rsteube/carapace v0.12.1
 	github.com/segmentio/go-env v1.1.0 // indirect
-	github.com/spf13/cobra v1.2.1
+	github.com/smartystreets/goconvey v1.6.4 // indirect
+	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/studio-b12/gowebdav v0.0.0-20210203212356-8244b5a5f51a
 	github.com/t3rm1n4l/go-mega v0.0.0-20200416171014-ffad7fcb44b8
@@ -40,10 +41,10 @@ require (
 	github.com/tj/go-dropy v0.0.0-20151223190506-225699a12156
 	github.com/ulikunitz/xz v0.5.10
 	github.com/ungerik/go-dry v0.0.0-20180411133923-654ae31114c8 // indirect
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
-	golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1
-	golang.org/x/sys v0.0.0-20210510120138-977fb7262007
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
+	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
-	google.golang.org/api v0.44.0
+	google.golang.org/api v0.62.0
 	gopkg.in/kothar/go-backblaze.v0 v0.0.0-20210124194846-35409b867216
 )
