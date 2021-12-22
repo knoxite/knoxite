@@ -35,10 +35,12 @@ func (l *Logger) WithWriter(w io.Writer) *Logger {
 
 func (l Logger) Fatal(v ...interface{}) {
 	l.log(knoxite.LogLevelFatal, v...)
+	os.Exit(1)
 }
 
 func (l Logger) Fatalf(format string, v ...interface{}) {
 	l.logf(knoxite.LogLevelFatal, format, v...)
+	os.Exit(1)
 }
 
 func (l Logger) Warn(v ...interface{}) {
