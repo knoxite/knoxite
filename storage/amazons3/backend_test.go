@@ -226,7 +226,7 @@ var _ = Describe("DeleteFile", func() {
 		BeforeEach(func() {
 			backend = &AmazonS3StorageBackend{
 				service: &mockS3Client{
-					deleteObjectError: awserr.New("NotFound", "Foobar", fmt.Errorf("NotFound")),
+					deleteObjectError: awserr.New("NotFound", "Foobar", fmt.Errorf("notFound")),
 				},
 			}
 			err = backend.DeleteFile("asdf")

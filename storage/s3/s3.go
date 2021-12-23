@@ -45,7 +45,7 @@ func (*S3Storage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 	case "s3s":
 		ssl = true
 	default:
-		return &S3Storage{}, errors.New("Invalid s3 url scheme")
+		return &S3Storage{}, errors.New("invalid s3 url scheme")
 	}
 
 	var username, pw string

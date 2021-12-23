@@ -99,7 +99,7 @@ func executeVolumeInit(name, description string) error {
 
 	err = repository.AddVolume(vol)
 	if err != nil {
-		return fmt.Errorf("Creating volume %s failed: %v", name, err)
+		return fmt.Errorf("creating volume %s failed: %v", name, err)
 	}
 
 	annotation := "Name: " + vol.Name

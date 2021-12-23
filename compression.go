@@ -64,7 +64,7 @@ func (c Compressor) Process(data []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 	if n != len(data) {
-		return []byte{}, fmt.Errorf("Could not write all data to compressor")
+		return []byte{}, fmt.Errorf("could not write all data to compressor")
 	}
 	err = w.Close()
 	if err != nil {

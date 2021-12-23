@@ -22,15 +22,15 @@ type BackendManager struct {
 
 // Error declarations.
 var (
-	ErrLoadChunkFailed       = errors.New("Unable to load chunk from any storage backend")
-	ErrLoadSnapshotFailed    = errors.New("Unable to load snapshot from any storage backend")
-	ErrLoadChunkIndexFailed  = errors.New("Unable to load chunk-index from any storage backend")
-	ErrLoadRepositoryFailed  = errors.New("Unable to load repository from any storage backend")
-	ErrDeleteChunkFailed     = errors.New("Unable to delete chunk from any storage backend")
-	ErrStoreChunkFailed      = errors.New("Storing chunk failed")
-	ErrStoreSnapshotFailed   = errors.New("Storing snapshot failed")
-	ErrStoreChunkIndexFailed = errors.New("Storing chunk-index failed")
-	ErrStoreRepositoryFailed = errors.New("Storing repository failed")
+	ErrLoadChunkFailed       = errors.New("unable to load chunk from any storage backend")
+	ErrLoadSnapshotFailed    = errors.New("unable to load snapshot from any storage backend")
+	ErrLoadChunkIndexFailed  = errors.New("unable to load chunk-index from any storage backend")
+	ErrLoadRepositoryFailed  = errors.New("unable to load repository from any storage backend")
+	ErrDeleteChunkFailed     = errors.New("unable to delete chunk from any storage backend")
+	ErrStoreChunkFailed      = errors.New("storing chunk failed")
+	ErrStoreSnapshotFailed   = errors.New("storing snapshot failed")
+	ErrStoreChunkIndexFailed = errors.New("storing chunk-index failed")
+	ErrStoreRepositoryFailed = errors.New("storing repository failed")
 )
 
 // AddBackend adds a backend.
