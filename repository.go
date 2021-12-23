@@ -33,11 +33,11 @@ const (
 
 // Error declarations.
 var (
-	ErrRepositoryIncompatible  = errors.New("The repository is not compatible with this version of Knoxite")
-	ErrOpenRepositoryFailed    = errors.New("Wrong password or corrupted repository")
-	ErrVolumeNotFound          = errors.New("Volume not found")
-	ErrSnapshotNotFound        = errors.New("Snapshot not found")
-	ErrGenerateRandomKeyFailed = errors.New("Failed to generate a random encryption key for new repository")
+	ErrRepositoryIncompatible  = errors.New("the repository is not compatible with this version of Knoxite")
+	ErrOpenRepositoryFailed    = errors.New("wrong password or corrupted repository")
+	ErrVolumeNotFound          = errors.New("volume not found")
+	ErrSnapshotNotFound        = errors.New("snapshot not found")
+	ErrGenerateRandomKeyFailed = errors.New("failed to generate a random encryption key for new repository")
 )
 
 // NewRepository returns a new repository.

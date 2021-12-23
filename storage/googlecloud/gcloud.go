@@ -47,7 +47,7 @@ func (*GoogleCloudStorage) NewBackend(URL url.URL) (knoxite.Backend, error) {
 		var credentialsSet bool
 		credentialsPath, credentialsSet = os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
 		if !credentialsSet {
-			return &GoogleCloudStorage{}, errors.New("No valid JSON credentials file provided.")
+			return &GoogleCloudStorage{}, errors.New("no valid JSON credentials file provided.")
 		}
 	} else {
 		credentialsPath = URL.User.Username()

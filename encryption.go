@@ -22,7 +22,7 @@ const (
 
 // Error declarations.
 var (
-	ErrInvalidPassword = errors.New("Empty password not permitted")
+	ErrInvalidPassword = errors.New("empty password not permitted")
 )
 
 // Encryptor is a pipeline processor that encrypts data.

@@ -106,7 +106,7 @@ func executeRepoInit() error {
 
 	r, err := newRepository(globalOpts.Repo, globalOpts.Password)
 	if err != nil {
-		return fmt.Errorf("Creating repository at %s failed: %v", globalOpts.Repo, err)
+		return fmt.Errorf("creating repository at %s failed: %v", globalOpts.Repo, err)
 	}
 
 	fmt.Printf("Created new repository at %s\n", (*r.BackendManager().Backends[0]).Location())

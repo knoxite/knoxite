@@ -17,28 +17,28 @@ func authPath(w http.ResponseWriter, r *http.Request) (string, error) {
 	auth, _, ok := r.BasicAuth()
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
-		return "", errors.New("Security alert: no auth set")
+		return "", errors.New("security alert: no auth set")
 	}
 
 	// check for relative path attacks
 	if strings.Contains(r.URL.Path, ".."+string(os.PathSeparator)) {
 		w.WriteHeader(http.StatusUnauthorized)
-		return "", errors.New("Security alert: url path tampering")
+		return "", errors.New("security alert: url path tampering")
 	}
 	if strings.Contains(auth, ".."+string(os.PathSeparator)) {
 		w.WriteHeader(http.StatusUnauthorized)
-		return "", errors.New("Security alert: auth code tampering")
+		return "", errors.New("security alert: auth code tampering")
 	}
 
 	dir := filepath.Join(storagePath, auth)
 	src, err := os.Stat(dir)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		return "", errors.New("Invalid auth code: unknown user")
+		return "", errors.New("invalid auth code: unknown user")
 	}
 	if !src.IsDir() {
 		w.WriteHeader(http.StatusUnauthorized)
-		return "", errors.New("Invalid auth code: not a dir")
+		return "", errors.New("invalid auth code: not a dir")
 	}
 
 	return dir, nil

@@ -34,7 +34,7 @@ var verifyTestCases = []struct {
 			return err
 		}
 		if len(layer0) == 0 {
-			return errors.New("Files expected")
+			return errors.New("files expected")
 		}
 
 		layer1, err := ioutil.ReadDir(filepath.Join(dir, "chunks", layer0[0].Name()))
@@ -43,7 +43,7 @@ var verifyTestCases = []struct {
 		}
 
 		if len(layer1) == 0 {
-			return errors.New("Files expected")
+			return errors.New("files expected")
 		}
 
 		layer2, err := ioutil.ReadDir(filepath.Join(dir, "chunks", layer0[0].Name(), layer1[0].Name()))
@@ -52,7 +52,7 @@ var verifyTestCases = []struct {
 		}
 
 		if len(layer2) == 0 {
-			return errors.New("Files expected")
+			return errors.New("files expected")
 		}
 
 		os.Remove(filepath.Join(dir, "chunks", layer0[0].Name(), layer1[0].Name(), layer2[0].Name()))

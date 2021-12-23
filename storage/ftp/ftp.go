@@ -34,7 +34,7 @@ type FTPStorage struct {
 
 // Error declarations.
 var (
-	ErrInvalidAuthentication = errors.New("Wrong Username or Password")
+	ErrInvalidAuthentication = errors.New("wrong Username or Password")
 )
 
 func init() {

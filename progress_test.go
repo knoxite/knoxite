@@ -31,7 +31,7 @@ func TestProgressTransferSpeed(t *testing.T) {
 }
 
 func TestProgressError(t *testing.T) {
-	p := newProgressError(errors.New("TestError"))
+	p := newProgressError(errors.New("testError"))
 	if p.Error == nil {
 		t.Errorf("Expected error, got %s", p.Error)
 	}
