@@ -187,6 +187,10 @@ func DecodeArchive(progress chan<- Progress, repository Repository, arc Archive,
 		if err != nil {
 			return err
 		}
+		err = os.Chtimes(path, time.Now().Local(), time.Unix(arc.ModTime, 0))
+		if err != nil {
+			return err
+		}
 		p.TotalStatistics.Dirs++
 		progress <- p
 	} else if arc.Type == SymLink {
