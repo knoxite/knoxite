@@ -16,6 +16,7 @@ import (
 
 	shutdown "github.com/klauspost/shutdown2"
 	"github.com/rsteube/carapace"
+	"github.com/rsteube/carapace/pkg/style"
 	"github.com/spf13/cobra"
 
 	"github.com/knoxite/knoxite"
@@ -87,7 +88,7 @@ func main() {
 		"alias":     action.ActionAliases(RootCmd),
 		"repo":      action.ActionRepo(),
 		"configURL": carapace.ActionFiles(),
-		"loglevel":  carapace.ActionValues("Debug", "Info", "Warning", "Fatal"),
+		"loglevel":  carapace.ActionValues("Debug", "Info", "Warning", "Fatal").StyleF(style.ForLogLevel),
 	})
 
 	carapace.Override(carapace.Opts{

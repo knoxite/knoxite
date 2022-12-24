@@ -5,6 +5,7 @@ import (
 
 	"github.com/knoxite/knoxite"
 	"github.com/rsteube/carapace"
+	"github.com/rsteube/carapace/pkg/style"
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +19,6 @@ func ActionVolumes(cmd *cobra.Command) carapace.Action {
 				vals = append(vals, volume.ID, fmt.Sprintf("%v - %v", volume.Name, volume.Description))
 			}
 		}
-		return carapace.ActionValuesDescribed(vals...)
-	})
+		return carapace.ActionValuesDescribed(vals...).Style(style.Blue)
+	}).Tag("volumes")
 }

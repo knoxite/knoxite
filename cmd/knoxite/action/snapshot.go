@@ -5,6 +5,7 @@ import (
 
 	"github.com/knoxite/knoxite"
 	"github.com/rsteube/carapace"
+	"github.com/rsteube/carapace/pkg/style"
 	"github.com/spf13/cobra"
 )
 
@@ -22,8 +23,8 @@ func ActionSnapshots(cmd *cobra.Command, volumeID string) carapace.Action {
 				}
 			}
 		}
-		return carapace.ActionValuesDescribed(vals...)
-	})
+		return carapace.ActionValuesDescribed(vals...).Style(style.Yellow)
+	}).Tag("snapshots")
 }
 
 func ActionSnapshotPaths(cmd *cobra.Command, snapshotID string) carapace.Action {
@@ -39,6 +40,6 @@ func ActionSnapshotPaths(cmd *cobra.Command, snapshotID string) carapace.Action 
 				vals = append(vals, archive.Path)
 			}
 		}
-		return carapace.ActionValues(vals...)
-	})
+		return carapace.ActionValues(vals...).StyleF(style.ForPathExt)
+	}).Tag("snapshot paths")
 }
