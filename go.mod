@@ -41,10 +41,10 @@ require (
 	github.com/tj/go-dropy v0.0.0-20151223190506-225699a12156
 	github.com/ulikunitz/xz v0.5.10
 	github.com/ungerik/go-dry v0.0.0-20180411133923-654ae31114c8 // indirect
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
-	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
-	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d
-	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
+	golang.org/x/crypto v0.6.0
+	golang.org/x/net v0.7.0
+	golang.org/x/sys v0.5.0
+	golang.org/x/term v0.5.0
 	google.golang.org/api v0.62.0
 	gopkg.in/kothar/go-backblaze.v0 v0.0.0-20210124194846-35409b867216
 )
