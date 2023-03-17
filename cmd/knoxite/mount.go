@@ -1,5 +1,5 @@
-// +build !openbsd
-// +build !windows
+//go:build !openbsd && !windows
+// +build !openbsd,!windows
 
 /*
  * knoxite
@@ -141,22 +141,25 @@ func node(name string, arc knoxite.Archive, repository *knoxite.Repository) *Nod
 		if !ok {
 			path := filepath.Join(l[:k+1]...)
 			fmt.Println("Adding to tree:", path)
+
+			v = &Node{}
+			v.Items = make(map[string]*Node)
+			v.Repository = repository
 			if name != path {
+				fmt.Println("Absolute path try:" + path)
 				// We stored an absolute path and need to fake the parent
 				// dirs for the first item in the archive
-				arc = knoxite.Archive{
+				v.Archive = knoxite.Archive{
 					Type:    knoxite.Directory,
 					GID:     arc.GID,
 					ModTime: arc.ModTime,
 					Mode:    arc.Mode,
 					Path:    path,
 				}
+			} else {
+				v.Archive = arc
 			}
 
-			v = &Node{}
-			v.Items = make(map[string]*Node)
-			v.Archive = arc
-			v.Repository = repository
 			item.Items[s] = v
 		}
 
