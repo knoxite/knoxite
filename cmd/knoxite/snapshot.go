@@ -9,6 +9,8 @@ package main
 
 import (
 	"fmt"
+	"os/user"
+	"strconv"
 
 	"github.com/muesli/gotable"
 	"github.com/rsteube/carapace"
@@ -16,6 +18,7 @@ import (
 
 	"github.com/knoxite/knoxite"
 	"github.com/knoxite/knoxite/cmd/knoxite/action"
+	"github.com/knoxite/knoxite/cmd/knoxite/utils"
 )
 
 var (
@@ -47,11 +50,23 @@ var (
 			return executeSnapshotRemove(args[0])
 		},
 	}
+	snapshotDiffCmd = &cobra.Command{
+		Use:   "diff [snapshot1] [snapshot2]",
+		Short: "shows difference between to snapshots",
+		Long:  `The diff command shows the difference between two specified snapshots`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 2 {
+				return fmt.Errorf("diff needs two snapshot IDs to work on")
+			}
+			return executeSnapshotDiff(args[0], args[1])
+		},
+	}
 )
 
 func init() {
 	snapshotCmd.AddCommand(snapshotListCmd)
 	snapshotCmd.AddCommand(snapshotRemoveCmd)
+	snapshotCmd.AddCommand(snapshotDiffCmd)
 	RootCmd.AddCommand(snapshotCmd)
 
 	carapace.Gen(snapshotListCmd).PositionalCompletion(
@@ -61,6 +76,108 @@ func init() {
 	carapace.Gen(snapshotRemoveCmd).PositionalCompletion(
 		action.ActionSnapshots(snapshotRemoveCmd, ""),
 	)
+}
+
+func executeSnapshotDiff(snapshotID1, snapshotID2 string) error {
+	repository, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	if err != nil {
+		return err
+	}
+
+	if snapshotID1 == snapshotID2 {
+		return fmt.Errorf("diff needs to distinct snapshot IDs")
+	}
+
+	tab := gotable.NewTable([]string{"Snapshot (" + snapshotID1 + ")", "Snapshot (" + snapshotID2 + ")", "Operation", "User", "Group", "Perms"},
+		[]int64{-48, -48, -9, -8, -5, -10},
+		"No files found.")
+
+	_, snapshot1, err := repository.FindSnapshot(snapshotID1)
+	if err != nil {
+		return err
+	}
+
+	_, snapshot2, err := repository.FindSnapshot(snapshotID2)
+	if err != nil {
+		return err
+	}
+
+	if snapshot1.Date.After(snapshot2.Date) {
+		snapshot1, snapshot2 = snapshot2, snapshot1
+	}
+
+	paths1 := make([]string, 0, len(snapshot1.Archives))
+	for k := range snapshot1.Archives {
+		paths1 = append(paths1, k)
+	}
+
+	paths2 := make([]string, 0, len(snapshot2.Archives))
+	for k := range snapshot2.Archives {
+		paths2 = append(paths2, k)
+	}
+
+	for path, archive := range snapshot2.Archives {
+		username := strconv.FormatInt(int64(archive.UID), 10)
+		u, err := user.LookupId(username)
+		if err == nil {
+			username = u.Username
+		}
+		groupname := strconv.FormatInt(int64(archive.GID), 10)
+		operation := "Unchanged"
+
+		if utils.Contains(paths1, path) {
+			if archive.ModTime > snapshot1.Archives[path].ModTime {
+				operation = "Modified"
+			} else {
+				operation = "Unchanged"
+			}
+
+			tab.AppendRow([]interface{}{
+				archive.Path,
+				archive.Path,
+				operation,
+				username,
+				groupname,
+				archive.Mode,
+			})
+		} else {
+			operation = "Created"
+
+			tab.AppendRow([]interface{}{
+				"-",
+				archive.Path,
+				operation,
+				username,
+				groupname,
+				archive.Mode,
+			})
+		}
+
+	}
+
+	for path, archive := range snapshot1.Archives {
+		username := strconv.FormatInt(int64(archive.UID), 10)
+		u, err := user.LookupId(username)
+		if err == nil {
+			username = u.Username
+		}
+		groupname := strconv.FormatInt(int64(archive.GID), 10)
+
+		if !utils.Contains(paths2, path) {
+			tab.AppendRow([]interface{}{
+				archive.Path,
+				"-",
+				"Deleted",
+				username,
+				groupname,
+				archive.Mode,
+			})
+		}
+	}
+
+	_ = tab.Print()
+
+	return nil
 }
 
 func executeSnapshotRemove(snapshotID string) error {
