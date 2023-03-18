@@ -22,7 +22,7 @@ type Logger interface {
 }
 
 var (
-	log Logger = NopLogger{}
+	log Logger = NopLogger{} //nolint:unused
 )
 
 func SetLogger(l Logger) {

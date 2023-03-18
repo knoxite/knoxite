@@ -117,6 +117,7 @@ func (backend *HTTPStorage) StoreChunk(shasum string, part, totalParts uint, dat
 
 // DeleteChunk deletes a single Chunk.
 func (backend *HTTPStorage) DeleteChunk(shasum string, parts, totalParts uint) error {
+	//nolint:godox
 	// FIXME: implement this
 	return knoxite.ErrDeleteChunkFailed
 }

@@ -30,6 +30,10 @@ type BackblazeStorage struct {
 	backblaze      *backblaze.B2
 }
 
+var (
+	files []backblaze.FileStatus
+)
+
 func init() {
 	knoxite.RegisterStorageBackend(&BackblazeStorage{})
 }
@@ -234,8 +238,6 @@ func (backend *BackblazeStorage) SaveRepository(data []byte) error {
 }
 
 func (backend *BackblazeStorage) findLatestFileVersion(fileName string) ([]backblaze.FileStatus, error) {
-	var files []backblaze.FileStatus
-
 	list, err := backend.Bucket.ListFileVersions(fileName, "", 1)
 	if err != nil {
 		return files, err

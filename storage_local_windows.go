@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -11,6 +12,7 @@ package knoxite
 
 // AvailableSpace returns the free space on this backend
 func (backend *StorageLocal) AvailableSpace() (uint64, error) {
+	//nolint:godox
 	//FIXME: make this cross-platform compatible
 	return 0, nil
 }

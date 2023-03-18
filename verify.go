@@ -8,8 +8,9 @@
 package knoxite
 
 import (
+	"crypto/rand"
 	"math"
-	"math/rand"
+	"math/big"
 )
 
 func VerifyRepo(repository Repository, percentage int) (<-chan Progress, error) {
@@ -50,8 +51,11 @@ func VerifyRepo(repository Repository, percentage int) (<-chan Progress, error) 
 		// we use a map[string]bool as a Set implementation
 		selectedArchives := make(map[string]bool)
 		for len(selectedArchives) < nrOfSelectedArchives {
-			idx := rand.Intn(len(archives))
-			selectedArchives[archives[idx]] = true
+			idx, err := rand.Int(rand.Reader, big.NewInt(int64(len(archives))))
+			if err != nil {
+				prog <- newProgressError(err)
+			}
+			selectedArchives[archives[idx.Int64()]] = true
 		}
 
 		for archiveKey := range selectedArchives {
@@ -113,8 +117,11 @@ func VerifyVolume(repository Repository, volumeId string, percentage int) (<-cha
 		// we use a map[string]bool as a Set implementation
 		selectedArchives := make(map[string]bool)
 		for len(selectedArchives) < nrOfSelectedArchives {
-			idx := rand.Intn(len(archives))
-			selectedArchives[archives[idx]] = true
+			idx, err := rand.Int(rand.Reader, big.NewInt(int64(len(archives))))
+			if err != nil {
+				prog <- newProgressError(err)
+			}
+			selectedArchives[archives[idx.Int64()]] = true
 		}
 
 		for archiveKey := range selectedArchives {
@@ -163,8 +170,11 @@ func VerifySnapshot(repository Repository, snapshotId string, percentage int) (<
 		// we use a map[string]bool as a Set implementation
 		selectedArchives := make(map[string]bool)
 		for len(selectedArchives) < nrOfSelectedArchives {
-			idx := rand.Intn(len(archives))
-			selectedArchives[archives[idx]] = true
+			idx, err := rand.Int(rand.Reader, big.NewInt(int64(len(archives))))
+			if err != nil {
+				prog <- newProgressError(err)
+			}
+			selectedArchives[archives[idx.Int64()]] = true
 		}
 
 		for archiveKey := range selectedArchives {

@@ -210,6 +210,7 @@ func DecodeArchive(progress chan<- Progress, repository Repository, arc Archive,
 		p.TotalStatistics.StorageSize = arc.StorageSize
 		progress <- p
 
+		//nolint:godox
 		// FIXME: we don't always need to create the path
 		// this is just a safety measure for now
 		err := os.MkdirAll(filepath.Dir(path), 0755)
