@@ -63,7 +63,7 @@ func (*SFTPStorage) NewBackend(u url.URL) (knoxite.Backend, error) {
 	hostKeyCallback, err := kh.New(filepath.Join(usr.HomeDir, ".ssh/known_hosts"))
 	if err != nil {
 		// If no hostkey can be found, ignore it for now...
-		hostKeyCallback = ssh.InsecureIgnoreHostKey()
+		hostKeyCallback = ssh.InsecureIgnoreHostKey() //nolint:gosec
 	}
 
 	config := &ssh.ClientConfig{

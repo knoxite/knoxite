@@ -158,8 +158,10 @@ func DefaultPath() string {
 //
 // Unix:
 //   - ~/.config/knoxite/knoxite.conf
+//
 // macOS:
 //   - ~/Library/Preferences/knoxite/knoxite.conf
+//
 // Windows:
 //   - %LOCALAPPDATA%/knoxite/Config/knoxite.conf
 //

@@ -1,3 +1,4 @@
+//go:build darwin || dragonfly || freebsd || linux || netbsd || openbsd || solaris
 // +build darwin dragonfly freebsd linux netbsd openbsd solaris
 
 /*
@@ -13,6 +14,7 @@ import "syscall"
 
 // AvailableSpace returns the free space on this backend.
 func (backend *StorageLocal) AvailableSpace() (uint64, error) {
+	//nolint:godox
 	//FIXME: make this cross-platform compatible
 	var stat syscall.Statfs_t
 	err := syscall.Statfs(backend.Path, &stat)
@@ -22,5 +24,5 @@ func (backend *StorageLocal) AvailableSpace() (uint64, error) {
 
 	// Available blocks * size per block = available space in bytes
 	// we convert both types to a uint64 as their type varies on different OS
-	return uint64(stat.Bavail) * uint64(stat.Bsize), nil
+	return stat.Bavail * uint64(stat.Bsize), nil
 }
