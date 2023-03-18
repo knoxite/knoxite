@@ -11,16 +11,12 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/url"
-	"os"
 	"strings"
-	"syscall"
 
 	"github.com/knoxite/knoxite"
 	"github.com/mitchellh/go-homedir"
 	"github.com/muesli/crunchy"
-	"golang.org/x/term"
 )
 
 var (
@@ -30,22 +26,6 @@ var (
 	ErrLogLevelUnknown    = errors.New("unknown log level")
 	None                  = "none"
 )
-
-func ReadPassword(prompt string) (string, error) {
-	var tty io.WriteCloser
-	tty, err := os.OpenFile("/dev/tty", os.O_WRONLY, 0)
-	if err != nil {
-		tty = os.Stdout
-	} else {
-		defer tty.Close()
-	}
-
-	fmt.Fprint(tty, prompt+" ")
-	buf, err := term.ReadPassword(syscall.Stdin)
-	fmt.Fprintln(tty)
-
-	return string(buf), err
-}
 
 func ReadPasswordTwice(prompt, promptConfirm string) (string, error) {
 	pw, err := ReadPassword(prompt)
