@@ -212,3 +212,14 @@ func LogLevelFromString(s string) (knoxite.LogLevel, error) {
 		return knoxite.LogLevelPrint, ErrLogLevelUnknown
 	}
 }
+
+// Checks, if key is contained in slice
+// Can be removed after upgrading after 1.18
+func Contains(arr []string, search string) bool {
+	for _, s := range arr {
+		if s == search {
+			return true
+		}
+	}
+	return false
+}
