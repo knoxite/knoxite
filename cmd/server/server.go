@@ -13,6 +13,7 @@ import (
 
 const storagePath = "/tmp/knoxite.storage"
 
+// Deprecated: authPath is deprecated.
 func authPath(w http.ResponseWriter, r *http.Request) (string, error) {
 	auth, _, ok := r.BasicAuth()
 	if !ok {
@@ -44,7 +45,7 @@ func authPath(w http.ResponseWriter, r *http.Request) (string, error) {
 	return dir, nil
 }
 
-// upload logic.
+// Deprecated: upload is deprecated.
 func upload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Receiving upload")
 	if r.Method == "POST" {
@@ -89,7 +90,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// download logic.
+// Deprecated: download is deprecated.
 func download(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Serving chunk", r.URL.Path[10:])
 
@@ -104,7 +105,7 @@ func download(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// uploadRepo logic.
+// Deprecated: uploadRepo is deprecated.
 func uploadRepo(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Receiving repository")
 
@@ -148,7 +149,7 @@ func uploadRepo(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Stored repository", filepath.Join(path, "repository.knoxite"))
 }
 
-// downloadRepo logic.
+// Deprecated: downloadRepo is deprecated.
 func downloadRepo(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Serving repository")
 
@@ -161,6 +162,7 @@ func downloadRepo(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join(path, "repository.knoxite"))
 }
 
+// Deprecated: repository is deprecated.
 func repository(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
@@ -170,7 +172,7 @@ func repository(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// uploadSnapshot logic.
+// Deprecated: uploadSnapshot is deprecated.
 func uploadSnapshot(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Receiving snapshot")
 
@@ -214,7 +216,7 @@ func uploadSnapshot(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Stored snapshot", filepath.Join(path, "snapshots", handler.Filename))
 }
 
-// downloadRepo logic.
+// Deprecated: downloadSnapshot is deprecated.
 func downloadSnapshot(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Serving snapshot", r.URL.Path[10:])
 
@@ -233,7 +235,7 @@ func main() {
 	http.HandleFunc("/repository", repository)
 	http.HandleFunc("/snapshot", uploadSnapshot)
 	http.HandleFunc("/snapshot/", downloadSnapshot)
-	err := http.ListenAndServe(":42024", nil) // setting listening port
+	err := http.ListenAndServe(":42024", nil) //nolint:gosec
 	if err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}

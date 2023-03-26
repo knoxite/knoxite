@@ -213,7 +213,7 @@ func (node *Node) Lookup(_ context.Context, name string) (fs.Node, error) {
 }
 
 // ReadDirAll returns all items directly below this node.
-func (node *Node) ReadDirAll(_ context.Context) ([]fuse.Dirent, error) {
+func (node *Node) ReadDirAll(_ context.Context) []fuse.Dirent {
 	// fmt.Println("ReadDirAll:", node.Item.Path)
 	entries := []fuse.Dirent{}
 
@@ -231,7 +231,7 @@ func (node *Node) ReadDirAll(_ context.Context) ([]fuse.Dirent, error) {
 		entries = append(entries, ent)
 	}
 
-	return entries, nil
+	return entries
 }
 
 // Open opens a file.
@@ -259,8 +259,8 @@ func (node *Node) Read(_ context.Context, req *fuse.ReadRequest, resp *fuse.Read
 }
 
 // Readlink returns the target a symlink is pointing to.
-func (node *Node) Readlink(_ context.Context, _ *fuse.ReadlinkRequest) (string, error) {
-	return node.Archive.PointsTo, nil
+func (node *Node) Readlink(_ context.Context, _ *fuse.ReadlinkRequest) string {
+	return node.Archive.PointsTo
 }
 
 // ReadAll reads an entire archive's content.

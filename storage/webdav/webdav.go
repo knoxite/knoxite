@@ -86,6 +86,7 @@ func (backend *WebDAVStorage) Description() string {
 
 // AvailableSpace is not available (yet?)
 func (backend *WebDAVStorage) AvailableSpace() (uint64, error) {
+	//nolint:godox
 	// TODO: This is actually possible, but im leaving it out for now
 	return uint64(0), knoxite.ErrAvailableSpaceUnknown
 }

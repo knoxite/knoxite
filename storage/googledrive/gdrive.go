@@ -65,6 +65,7 @@ func (backend *GoogleDriveStorage) StoreChunk(shasum string, part, totalParts ui
 
 // DeleteChunk deletes a single Chunk.
 func (backend *GoogleDriveStorage) DeleteChunk(shasum string, parts, totalParts uint) error {
+	//nolint:godox
 	// FIXME: implement this
 	return knoxite.ErrDeleteChunkFailed
 }

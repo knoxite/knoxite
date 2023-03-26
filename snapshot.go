@@ -219,7 +219,6 @@ func (snapshot *Snapshot) Add(repository Repository, chunkIndex *ChunkIndex, opt
 			snapshot.AddArchive(archive)
 			chunkIndex.AddArchive(archive, snapshot.ID)
 		}
-
 	}()
 
 	return progress

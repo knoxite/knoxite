@@ -11,16 +11,12 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/url"
-	"os"
 	"strings"
-	"syscall"
 
 	"github.com/knoxite/knoxite"
 	"github.com/mitchellh/go-homedir"
 	"github.com/muesli/crunchy"
-	"golang.org/x/term"
 )
 
 var (
@@ -28,23 +24,8 @@ var (
 	ErrEncryptionUnknown  = errors.New("unknown encryption format")
 	ErrCompressionUnknown = errors.New("unknown compression format")
 	ErrLogLevelUnknown    = errors.New("unknown log level")
+	None                  = "none"
 )
-
-func ReadPassword(prompt string) (string, error) {
-	var tty io.WriteCloser
-	tty, err := os.OpenFile("/dev/tty", os.O_WRONLY, 0)
-	if err != nil {
-		tty = os.Stdout
-	} else {
-		defer tty.Close()
-	}
-
-	fmt.Fprint(tty, prompt+" ")
-	buf, err := term.ReadPassword(int(syscall.Stdin))
-	fmt.Fprintln(tty)
-
-	return string(buf), err
-}
 
 func ReadPasswordTwice(prompt, promptConfirm string) (string, error) {
 	pw, err := ReadPassword(prompt)
@@ -86,7 +67,7 @@ func CompressionTypeFromString(s string) (uint16, error) {
 	case "":
 		// default is none
 		fallthrough
-	case "none":
+	case None:
 		return knoxite.CompressionNone, nil
 	case "flate":
 		return knoxite.CompressionFlate, nil
@@ -108,7 +89,7 @@ func CompressionTypeFromString(s string) (uint16, error) {
 func CompressionText(enum int) string {
 	switch enum {
 	case knoxite.CompressionNone:
-		return "none"
+		return None
 	case knoxite.CompressionFlate:
 		return "Flate"
 	case knoxite.CompressionGZip:
@@ -132,7 +113,7 @@ func EncryptionTypeFromString(s string) (uint16, error) {
 		fallthrough
 	case "aes":
 		return knoxite.EncryptionAES, nil
-	case "none":
+	case None:
 		return knoxite.EncryptionNone, nil
 	}
 
@@ -143,7 +124,7 @@ func EncryptionTypeFromString(s string) (uint16, error) {
 func EncryptionText(enum int) string {
 	switch enum {
 	case knoxite.EncryptionNone:
-		return "none"
+		return None
 	case knoxite.EncryptionAES:
 		return "AES"
 	}
