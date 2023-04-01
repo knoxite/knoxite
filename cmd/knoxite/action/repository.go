@@ -1,7 +1,6 @@
 package action
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/knoxite/knoxite"
@@ -29,11 +28,11 @@ func actionRepository(cmd *cobra.Command, f func(repository knoxite.Repository) 
 		if f := cmd.Flag("alias"); f.Changed {
 			cfg, err := config.New(cmd.Flag("configURL").Value.String())
 			if err != nil {
-				return carapace.ActionMessage(fmt.Sprintf("Error reading the config file: %v", err))
+				return carapace.ActionMessage("Error reading the config file: %v", err)
 			}
 
 			if err = cfg.Load(); err != nil {
-				return carapace.ActionMessage(fmt.Sprintf("Error parsing the toml config file at '%s': %v", cfg.URL().Path, err))
+				return carapace.ActionMessage("Error parsing the toml config file at '%s': %v", cfg.URL().Path, err)
 			}
 
 			// There can occur a panic due to an entry assigment in nil map when theres

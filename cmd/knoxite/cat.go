@@ -14,6 +14,7 @@ import (
 	"github.com/knoxite/knoxite"
 	"github.com/knoxite/knoxite/cmd/knoxite/action"
 	"github.com/rsteube/carapace"
+	"github.com/rsteube/carapace/pkg/style"
 
 	"github.com/spf13/cobra"
 )
@@ -38,7 +39,7 @@ func init() {
 	carapace.Gen(catCmd).PositionalCompletion(
 		action.ActionSnapshots(catCmd, ""),
 		carapace.ActionCallback(func(c carapace.Context) carapace.Action {
-			return action.ActionSnapshotPaths(catCmd, c.Args[0]).Invoke(c).ToMultiPartsA("/")
+			return action.ActionSnapshotPaths(catCmd, c.Args[0]).Invoke(c).ToMultiPartsA("/").StyleF(style.ForPathExt)
 		}),
 	)
 }
