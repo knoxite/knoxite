@@ -1,6 +1,7 @@
 /*
  * knoxite
  *     Copyright (c) 2016-2018, Christian Muehlhaeuser <muesli@gmail.com>
+ *     Copyright (c) 2021,      Nicolas Martin <penguwin@penguwin.eu>
  *
  *   For license see LICENSE
  */
@@ -21,15 +22,22 @@ func findFiles(rootPath string, excludes []string) <-chan ArchiveResult {
 		defer close(c)
 		err := filepath.Walk(rootPath, func(path string, fi os.FileInfo, err error) error {
 			if err != nil {
-				if os.IsNotExist(err) {
-					return nil
+				c <- ArchiveResult{&Archive{Path: path}, err}
+				if fi != nil && fi.IsDir() {
+					return filepath.SkipDir
 				}
+
+				// if errors.Is(err, fs.ErrPermission) ||
+				// 	errors.Is(err, fs.ErrNotExist) ||
+				// 	errors.Is(err, os.ErrDeadlineExceeded) {
 				// fmt.Fprintf(os.Stderr, "Could not find %s\n", path)
-				return err
+				return nil
+				// }
 			}
 			if fi == nil {
 				// fmt.Fprintf(os.Stderr, "Could not read %s\n", path)
-				return fmt.Errorf("%s: could not read", path)
+				c <- ArchiveResult{&Archive{Path: path}, fmt.Errorf("%s: could not read", path)}
+				return nil
 			}
 
 			match := false
@@ -37,8 +45,7 @@ func findFiles(rootPath string, excludes []string) <-chan ArchiveResult {
 				// fmt.Println("Matching", path, filepath.Base(path), exclude)
 				match, err = filepath.Match(strings.ToLower(exclude), strings.ToLower(path))
 				if err != nil {
-					fmt.Println("Invalid exclude filter:", exclude)
-					return err
+					return fmt.Errorf("Invalid exclude filter '%s': %v", exclude, err)
 				}
 				if !match {
 					match, _ = filepath.Match(strings.ToLower(exclude), strings.ToLower(filepath.Base(path)))
@@ -58,7 +65,11 @@ func findFiles(rootPath string, excludes []string) <-chan ArchiveResult {
 
 			statT, ok := toStatT(fi.Sys())
 			if !ok {
-				return &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
+				c <- ArchiveResult{
+					Archive: &Archive{Path: path},
+					Error:   &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")},
+				}
+				return nil
 			}
 			archive := Archive{
 				Path:    path,
@@ -72,7 +83,7 @@ func findFiles(rootPath string, excludes []string) <-chan ArchiveResult {
 			if isSymLink(fi) {
 				symlink, err := os.Readlink(path)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "\n\nerror resolving symlink for: %v - %v\n\n", path, err)
+					c <- ArchiveResult{&archive, fmt.Errorf("error resolving symlink for: %v - %v", path, err)}
 					return nil
 				}
 
@@ -92,7 +103,7 @@ func findFiles(rootPath string, excludes []string) <-chan ArchiveResult {
 		})
 
 		if err != nil {
-			c <- ArchiveResult{Archive: nil, Error: err}
+			c <- ArchiveResult{Archive: &Archive{Path: rootPath}, Error: err}
 		}
 	}()
 	return c
