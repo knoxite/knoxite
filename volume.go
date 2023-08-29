@@ -33,6 +33,11 @@ func NewVolume(name, description string) (*Volume, error) {
 	return &vol, nil
 }
 
+func (v *Volume) RenameVolume(name string) error {
+	v.Name = name
+	return nil
+}
+
 // AddSnapshot adds a snapshot to a volume.
 func (v *Volume) AddSnapshot(id string) error {
 	v.Snapshots = append(v.Snapshots, id)

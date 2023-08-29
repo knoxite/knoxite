@@ -45,6 +45,17 @@ var (
 			return executeVolumeInit(args[0], volumeInitOpts.Description)
 		},
 	}
+	volumeRenameCmd = &cobra.Command{
+		Use: "rename [volume-id] [volume-new-name]",
+		Short: "renames an existing volume",
+		Long: `The rename command renames a volume`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 2 {
+				return fmt.Errorf("rename needs a volume id and a new name")
+			}
+			return executeVolumeRename(args[0], args[1])
+		},
+	}
 	volumeRemoveCmd = &cobra.Command{
 		Use:   "remove [volume]",
 		Short: "remove a volume from a repository",
@@ -70,6 +81,7 @@ func init() {
 	volumeInitCmd.Flags().StringVarP(&volumeInitOpts.Description, "desc", "d", "", "a description or comment for this volume")
 
 	volumeCmd.AddCommand(volumeInitCmd)
+	volumeCmd.AddCommand(volumeRenameCmd)
 	volumeCmd.AddCommand(volumeRemoveCmd)
 	volumeCmd.AddCommand(volumeListCmd)
 	RootCmd.AddCommand(volumeCmd)
@@ -77,6 +89,30 @@ func init() {
 	carapace.Gen(volumeRemoveCmd).PositionalCompletion(
 		action.ActionVolumes(volumeCmd),
 	)
+}
+
+func executeVolumeRename(volumeID, name string) error {
+	repo, err := openRepository(globalOpts.Repo, globalOpts.Password)
+	if err != nil {
+		return err
+	}
+
+	vol, err := repo.FindVolume(volumeID)
+	if err != nil {
+		return err
+	}
+
+	var old_name = vol.Name
+
+	if err := vol.RenameVolume(name); err != nil {
+		return err
+	}
+
+	if err := repo.Save(); err != nil {
+		return err
+	}
+	fmt.Printf("Volume with id %s was renamed from \"%s\" to \"%s\"\n", vol.ID, old_name, vol.Name)
+	return nil
 }
 
 func executeVolumeInit(name, description string) error {
